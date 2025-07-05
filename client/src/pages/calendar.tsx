@@ -29,9 +29,21 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   };
 
   const handleSelectDate = (date: string | Date) => {
-    const normalized = new Date(date).toLocaleDateString('en-CA'); // YYYY-MM-DD
+    let normalized: string;
+  
+    if (typeof date === 'string') {
+      normalized = date; // assume already in YYYY-MM-DD format
+    } else {
+      // convert from JS Date to YYYY-MM-DD without timezone shift
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      normalized = `${year}-${month}-${day}`;
+    }
+  
     setSelectedDate(normalized);
   };
+
 
   const handleStartTodayWorkout = async () => {
     const today = new Date().toISOString().split('T')[0];
