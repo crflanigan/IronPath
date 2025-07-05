@@ -133,28 +133,30 @@ export function CalendarGrid({
           const workout = getWorkoutForDate(dayData.date);
           const scheduledWorkout = getScheduledWorkoutForDate(dayData.date);
           const hasWorkout = workout || scheduledWorkout;
-          
+        
+          const sharedClasses = "aspect-square w-full flex flex-col items-center justify-center text-sm";
+        
           if (!dayData.isCurrentMonth) {
             return (
-              <div key={index} className="aspect-square text-gray-400 dark:text-gray-600 text-center p-2">
-                <div className="text-sm">{dayData.day}</div>
+              <div key={index} className={`${sharedClasses} text-gray-400 dark:text-gray-600`}>
+                {dayData.day}
               </div>
             );
           }
-          
+        
           if (hasWorkout) {
             const workoutType = workout?.type || scheduledWorkout?.type;
             const isCompleted = workout?.completed || false;
             const status = isCompleted ? '✅' : (dayData.isToday ? '📅' : '🕒');
-            
+        
             return (
               <Button
                 key={index}
                 variant="ghost"
-                className="aspect-square bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1 hover:shadow-md transition-shadow flex flex-col items-center justify-center"
+                className={`${sharedClasses} bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow`}
                 onClick={() => onSelectDate(dayData.date)}
               >
-                <div className={`text-sm font-medium ${dayData.isToday ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                <div className={dayData.isToday ? 'text-white' : 'text-gray-900 dark:text-white'}>
                   {dayData.day}
                 </div>
                 <div className={`text-xs font-medium truncate ${
@@ -167,7 +169,19 @@ export function CalendarGrid({
               </Button>
             );
           }
-          
+        
+          return (
+            <Button
+              key={index}
+              variant="ghost"
+              className={`${sharedClasses} ${dayData.isToday ? 'bg-primary text-white hover:bg-primary/90' : ''} rounded-lg`}
+              onClick={() => onSelectDate(dayData.date)}
+            >
+              {dayData.day}
+            </Button>
+          );
+        })}
+        
           if (dayData.isToday) {
             return (
               <Button
