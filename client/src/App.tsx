@@ -89,6 +89,8 @@ function AppContent() {
   const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [location, setLocation] = useLocation();
 
+  console.log("Current location:", location); // 👈 Add this line
+
   const navigateToWorkout = (workout: Workout) => {
     setCurrentWorkout(workout);
     setLocation('/workout');
@@ -135,6 +137,7 @@ function AppContent() {
     </div>
   );
 }
+
 
 function App() {
   return (
