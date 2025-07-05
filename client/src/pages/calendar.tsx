@@ -41,9 +41,11 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       normalized = `${year}-${month}-${day}`;
     }
   
+    console.log("➡️ handleSelectDate received:", date);
+    console.log("🧮 Normalized:", normalized);
+  
     setSelectedDate(normalized);
   };
-
 
   const handleStartTodayWorkout = async () => {
     const today = new Date().toISOString().split('T')[0];
