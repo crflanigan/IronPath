@@ -121,7 +121,7 @@ function AppContent() {
               </div>
             )
           )} />
-          <Route path="/history" component={HistoryPage} />
+          <Route path="/history" element={<HistoryPage />} />
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
