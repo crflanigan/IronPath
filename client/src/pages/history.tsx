@@ -4,18 +4,49 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout } from '@shared/schema';
-import { BarChart, Calendar, Clock, Download, FileText, TrendingUp } from 'lucide-react';
+import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
-  
-  console.log("HistoryPage loaded", workouts); // ← Add this line here
+
+  console.log("HistoryPage loaded", workouts);
+
+  const calculateWeightProgress = (completedWorkouts: Workout[]) => {
+    const exerciseProgress: { [key: string]: number[] } = {};
+
+    completedWorkouts.forEach(workout => {
+      workout.exercises.forEach(exercise => {
+        if (!exerciseProgress[exercise.machine]) {
+          exerciseProgress[exercise.machine] = [];
+        }
+
+        const maxWeight = Math.max(...exercise.sets.map(s => s.weight));
+        exerciseProgress[exercise.machine].push(maxWeight);
+      });
+    });
+
+    const improvements = Object.entries(exerciseProgress)
+      .map(([machine, weights]) => {
+        const first = weights[0];
+        const last = weights[weights.length - 1];
+        const improvement = last - first;
+        return {
+          machine,
+          improvement,
+          percentage: first > 0 ? Math.round((improvement / first) * 100) : 0
+        };
+      })
+      .filter(item => item.improvement > 0)
+      .sort((a, b) => b.improvement - a.improvement);
+
+    return improvements.slice(0, 5);
+  };
 
   const filteredWorkouts = useMemo(() => {
     const now = new Date();
     const startDate = new Date();
-    
+
     switch (selectedPeriod) {
       case 'week':
         startDate.setDate(now.getDate() - 7);
@@ -27,7 +58,7 @@ export function HistoryPage() {
         startDate.setFullYear(now.getFullYear() - 1);
         break;
     }
-    
+
     return workouts.filter(workout => new Date(workout.date) >= startDate);
   }, [workouts, selectedPeriod]);
 
@@ -36,29 +67,26 @@ export function HistoryPage() {
     const totalWorkouts = completed.length;
     const totalDuration = completed.reduce((sum, w) => sum + (w.duration || 0), 0);
     const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
-    
-    // Calculate streak
+
     const sortedWorkouts = [...workouts]
       .filter(w => w.completed)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+
     let currentStreak = 0;
     const today = new Date();
-    
+
     for (let i = 0; i < sortedWorkouts.length; i++) {
       const workoutDate = new Date(sortedWorkouts[i].date);
       const diffDays = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
-      
       if (diffDays === currentStreak) {
         currentStreak++;
       } else {
         break;
       }
     }
-    
-    // Weight progression
+
     const weightProgress = calculateWeightProgress(completed);
-    
+
     return {
       totalWorkouts,
       avgDuration,
@@ -67,33 +95,6 @@ export function HistoryPage() {
       completionRate: workouts.length > 0 ? Math.round((completed.length / workouts.length) * 100) : 0
     };
   }, [filteredWorkouts, workouts]);
-
-  const calculateWeightProgress = (completedWorkouts: Workout[]) => {
-    const exerciseProgress: { [key: string]: number[] } = {};
-    
-    completedWorkouts.forEach(workout => {
-      workout.exercises.forEach(exercise => {
-        if (!exerciseProgress[exercise.machine]) {
-          exerciseProgress[exercise.machine] = [];
-        }
-        
-        const maxWeight = Math.max(...exercise.sets.map(s => s.weight));
-        exerciseProgress[exercise.machine].push(maxWeight);
-      });
-    });
-    
-    const improvements = Object.entries(exerciseProgress)
-      .map(([machine, weights]) => {
-        const first = weights[0];
-        const last = weights[weights.length - 1];
-        const improvement = last - first;
-        return { machine, improvement, percentage: first > 0 ? Math.round((improvement / first) * 100) : 0 };
-      })
-      .filter(item => item.improvement > 0)
-      .sort((a, b) => b.improvement - a.improvement);
-    
-    return improvements.slice(0, 5); // Top 5 improvements
-  };
 
   const getWorkoutsByType = () => {
     const types: { [key: string]: number } = {};
@@ -164,21 +165,21 @@ export function HistoryPage() {
             <div className="text-sm text-gray-600 dark:text-gray-400">Workouts</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">{stats.avgDuration}m</div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Avg Duration</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">{stats.completionRate}%</div>
@@ -207,9 +208,7 @@ export function HistoryPage() {
                     <span className="text-sm text-green-600">
                       +{progress.improvement} lbs
                     </span>
-                    <Badge variant="secondary">
-                      {progress.percentage}%
-                    </Badge>
+                    <Badge variant="secondary">{progress.percentage}%</Badge>
                   </div>
                 </div>
               ))}
@@ -233,9 +232,7 @@ export function HistoryPage() {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {type}
                 </span>
-                <Badge variant="outline">
-                  {count} workouts
-                </Badge>
+                <Badge variant="outline">{count} workouts</Badge>
               </div>
             ))}
           </div>
@@ -256,20 +253,17 @@ export function HistoryPage() {
               .filter(w => w.completed)
               .slice(0, 5)
               .map(workout => (
-                <div key={workout.id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                <div
+                  key={workout.id}
+                  className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                >
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {workout.type}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(workout.date)}
-                    </div>
+                    <div className="font-medium text-gray-900 dark:text-white">{workout.type}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{formatDate(workout.date)}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-green-600 font-medium">✅</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {workout.duration}m
-                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{workout.duration}m</div>
                   </div>
                 </div>
               ))}
@@ -287,19 +281,11 @@ export function HistoryPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <Button
-              variant="outline"
-              onClick={() => handleExport('csv')}
-              className="w-full"
-            >
+            <Button variant="outline" onClick={() => handleExport('csv')} className="w-full">
               <FileText className="h-4 w-4 mr-2" />
               Export to CSV
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleExport('json')}
-              className="w-full"
-            >
+            <Button variant="outline" onClick={() => handleExport('json')} className="w-full">
               <Download className="h-4 w-4 mr-2" />
               Export to JSON
             </Button>
