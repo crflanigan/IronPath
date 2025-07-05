@@ -211,11 +211,15 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         <Card>
           <CardContent className="p-4">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              {new Date(selectedDate).toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
-              })}
+              {(() => {
+                const [year, month, day] = selectedDate.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day); // Avoids timezone shift
+                return dateObj.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                });
+              })()}
             </h3>
             
             {selectedWorkout ? (
