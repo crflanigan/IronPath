@@ -9,6 +9,8 @@ import { BarChart, Calendar, Clock, Download, FileText, TrendingUp } from 'lucid
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
+  
+  console.log("HistoryPage loaded", workouts); // ← Add this line here
 
   const filteredWorkouts = useMemo(() => {
     const now = new Date();
