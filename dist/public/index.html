@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>IronPup - Workout Tracker</title>
+    <meta name="description" content="IronPup is a progressive web app for tracking workouts with offline capabilities, calendar-based scheduling, and detailed exercise logging." />
+    <meta name="theme-color" content="#14B8A6" />
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="IronPup" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="IronPup - Workout Tracker" />
+    <meta property="og:description" content="Track your workouts with this progressive web app featuring offline capabilities and detailed exercise logging." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icon-512x512.png" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="IronPup - Workout Tracker" />
+    <meta name="twitter:description" content="Track your workouts with this progressive web app featuring offline capabilities and detailed exercise logging." />
+    <meta name="twitter:image" content="/icon-512x512.png" />
+    <script type="module" crossorigin src="/assets/index-ClCYZ4T8.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-O5Vr7LGh.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+    </script>
+    
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>
