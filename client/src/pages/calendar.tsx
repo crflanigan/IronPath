@@ -28,8 +28,9 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     setSelectedWorkout(workout || null);
   };
 
-  const handleSelectDate = (date: string) => {
-    setSelectedDate(date);
+  const handleSelectDate = (date: string | Date) => {
+    const normalized = new Date(date).toLocaleDateString('en-CA'); // YYYY-MM-DD
+    setSelectedDate(normalized);
   };
 
   const handleStartTodayWorkout = async () => {
