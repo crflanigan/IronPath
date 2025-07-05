@@ -1,0 +1,211 @@
+🧠 PROJECT NAME: IronPup
+🤝 Product Owner: Doctor Biz
+👨‍🔧 Project Manager & Engineer: ChatGPT aka FunkBite V12
+
+🧱 PROJECT OVERVIEW
+
+This is a Progressive Web App (PWA) designed to replicate and improve the YMCA ActiveTrax workout experience. The goal is to create a mobile-friendly, offline-capable workout tracker that:
+
+Rotates through predefined workout focuses (Chest, Back, Legs, etc.)
+
+Displays workouts based on a calendar view
+
+Allows detailed logging of sets, reps, weights, rest
+
+Tracks historical progress
+
+Can be installed to an iPhone via Safari (PWA behavior)
+
+The user (Doctor Biz) will later upload real workout data. For now, placeholder data will be used to scaffold the logic.
+
+🧰 TECH STACK
+
+Framework: React (or Preact)
+
+Build Tool: Vite
+
+Styling: Tailwind CSS
+
+Routing: React Router DOM
+
+Storage: IndexedDB or localStorage
+
+PWA Support: vite-plugin-pwa or Workbox
+
+🔄 WORKOUT STRUCTURE
+
+Doctor Biz cycles through multiple workout focus days. These are shown in calendar format:
+
+Chest, Shoulder Focus
+
+Back and Legs
+
+Chest, Tricep Focus
+
+Back, Biceps, and Legs
+
+Chest, Shoulders, and Back
+
+Each workout:
+
+Has a list of 8–14 machines
+
+Includes 2–3 working sets per machine
+
+Records: Weight, Reps, Rest Time
+
+Displays prefilled “BEST” target sets
+
+There are also additional sections for:
+
+Abs Block (6 possible exercises, 3 per day)
+
+Cardio Block (freeform, can log time or distance)
+
+🖥️ APP SCREENS & FUNCTIONALITY
+
+1. Home / Calendar View
+
+Show current month calendar
+
+Each workout date block shows:
+
+Workout name (e.g., Chest, Tricep Focus)
+
+Status (Performed ✅ or Pending 🕒)
+
+(view) and (edit) buttons
+
+Clicking a date opens that day’s workout (in view or edit mode)
+
+2. Workout Viewer / Logger
+
+Displays the following per exercise:
+
+Target Area, Machine Name, Expected Feel
+
+Set 1, Set 2, Set 3 inputs: Weight, Reps, Rest
+
+Optional: Prefill from "BEST" values (editable)
+
+Red/Blue color codes for increase/decrease in weight
+
+Abs Section: Show 3 exercises
+
+Log Reps (e.g., 25–30)
+
+Log Rest (optional)
+
+Cardio Section
+
+Log duration and/or distance
+
+Form Behavior
+
+Auto-save on input (optional submit button for safety)
+
+Highlight completed exercises
+
+Save state to local storage
+
+3. History / Stats View
+
+Show list or chart of past performance
+
+Allow export to CSV or JSON
+
+Optional: Graph for weight progression per machine
+
+4. Settings (Optional)
+
+Toggle Dark Mode
+
+Enable auto weight increment (if all reps completed)
+
+Reset all local data
+
+🔐 OFFLINE BEHAVIOR (PWA)
+
+Add manifest.json with:
+
+App name: IronPup
+
+Theme color
+
+App icon
+
+Add Service Worker:
+
+Cache index.html, JS/CSS files
+
+Precache workout templates
+
+Cache fallback if offline
+
+Enable install prompt on iOS Safari via “Add to Home Screen”
+
+💾 STORAGE MODEL (LOCAL)
+
+Each workout is stored like this:
+
+{
+  "date": "2025-06-01",
+  "type": "Chest, Shoulder Focus",
+  "exercises": [
+    {
+      "machine": "Cable Crossover",
+      "region": "Chest Pecs",
+      "sets": [
+        {"weight": 50, "reps": 15, "rest": "1:00"},
+        {"weight": 60, "reps": 10, "rest": "1:00"},
+        {"weight": 65, "reps": 10, "rest": "1:00"}
+      ],
+      "bestWeight": 65,
+      "feel": "Medium"
+    },
+    ...
+  ],
+  "abs": [
+    {"name": "Crunch with Legs Elevated", "reps": 30},
+    ...
+  ],
+  "cardio": {"type": "Bike", "duration": "15:00", "distance": "2.5mi"}
+}
+
+✅ DEVELOPMENT FLOW
+
+Scaffold Vite + React project
+
+Configure Tailwind + routing
+
+Add fake data for 3–4 workout types
+
+Build calendar screen with date blocks and dummy workout IDs
+
+Build workout logger screen with 3 set rows per machine
+
+Add abs + cardio logging areas
+
+Enable local save/load
+
+Add manifest + service worker for installability
+
+Test install on Safari iOS
+
+Final polish: dark mode, export button, mobile spacing
+
+🤝 FINAL NOTES FOR THE AI DEV
+
+Match styling to mobile-first layout (single-column design)
+
+Forms must be touch-friendly
+
+Logging view must auto-scroll to current exercise
+
+App should cache data to be usable offline after first load
+
+No external auth or APIs needed (local-only)
+
+Use clear file structure: /pages, /components, /data, /storage
+
+Doctor Biz will provide real workout data once app structure is confirmed. Until then, use mock data to enable full functionality and UX flow.
