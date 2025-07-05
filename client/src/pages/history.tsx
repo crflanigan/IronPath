@@ -6,7 +6,7 @@ import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout } from '@shared/schema';
 import { BarChart, Calendar, Clock, Download, FileText, TrendingUp } from 'lucide-react';
 
-export default function HistoryPage() {
+export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
 
