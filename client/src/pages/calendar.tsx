@@ -255,23 +255,24 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
               })()}
             </h3>
             
-            {selectedWorkout ? (
+            {selectedWorkout && (
               <WorkoutCard
                 workout={selectedWorkout}
                 onStart={() => onNavigateToWorkout(selectedWorkout)}
                 onView={() => onNavigateToWorkout(selectedWorkout)}
                 onDelete={handleDeleteSelectedWorkout}
               />
-            ) : (
-              <div className="text-center py-4">
+            )}
+            <div className="text-center py-4">
+              {!selectedWorkout && (
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   No workout scheduled for this date
                 </p>
-                <Button onClick={() => openTemplateSelector(selectedDate)}>
-                  Create Workout
-                </Button>
-              </div>
-            )}
+              )}
+              <Button onClick={() => openTemplateSelector(selectedDate)}>
+                {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
