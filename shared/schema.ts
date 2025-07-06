@@ -12,7 +12,7 @@ const exerciseSetSchema = z.object({
 
 // Exercise schema
 const exerciseSchema = z.object({
-  code: z.string().optional(), // <-- NEW: optional machine ID like "S16"
+  code: z.string().optional(), // Machine code like "S16"
   machine: z.string(),
   region: z.string(),
   feel: z.enum(["Light", "Medium", "Hard"]),
@@ -26,7 +26,7 @@ const exerciseSchema = z.object({
 const absExerciseSchema = z.object({
   name: z.string(),
   reps: z.number().optional(),
-  time: z.string().optional(), // for time-based exercises like planks
+  time: z.string().optional(), // For time-based exercises like planks
   completed: z.boolean().default(false)
 });
 
@@ -38,14 +38,15 @@ const cardioSchema = z.object({
   completed: z.boolean().default(false)
 });
 
-// Workout types
+// Workout types (add all valid workout templates here)
 export const workoutTypes = [
   "Chest, Shoulder Focus",
   "Back and Legs",
   "Chest, Tricep Focus",
   "Back, Biceps, and Legs",
   "Chest, Shoulders, and Back",
-  "Chest Day (ActiveTrax)" // You may add new types here as needed
+  "Chest Day (ActiveTrax)",
+  "Leg Day (ActiveTrax)"
 ] as const;
 
 // Workouts table
@@ -57,7 +58,7 @@ export const workouts = pgTable("workouts", {
   abs: jsonb("abs").notNull().$type<z.infer<typeof absExerciseSchema>[]>(),
   cardio: jsonb("cardio").$type<z.infer<typeof cardioSchema>>(),
   completed: boolean("completed").default(false),
-  duration: integer("duration"), // workout duration in minutes
+  duration: integer("duration"), // Workout duration in minutes
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
