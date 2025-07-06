@@ -49,7 +49,8 @@ export const workoutTypes = [
   "Back & Biceps (ActiveTrax)",
   "Chest & Triceps (ActiveTrax)",
   "Chest & Shoulders (ActiveTrax)",
-  "Leg Day (ActiveTrax)"
+  "Leg Day (ActiveTrax)",
+  "Chest, Shoulders & Legs (ActiveTrax)"
 ] as const;
 
 // Workouts table

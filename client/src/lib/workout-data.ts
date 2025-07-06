@@ -592,6 +592,122 @@ export const workoutTemplates: Record<WorkoutType, {
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Crunch", reps: 30 }
     ]
+  },
+  "Chest, Shoulders & Legs (ActiveTrax)": {
+    exercises: [
+      {
+        code: "N/A",
+        machine: "Cable Crossover",
+        region: "Chest Pecs",
+        feel: "Medium",
+        sets: [
+          { weight: 60, reps: 15, rest: "1:00" },
+          { weight: 80, reps: 8, rest: "1:00" },
+          { weight: 90, reps: 6, rest: "1:00" }
+        ],
+        bestWeight: 90,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Shoulder Press",
+        region: "Shoulders",
+        feel: "Medium",
+        sets: [
+          { weight: 25, reps: 15, rest: "1:00" },
+          { weight: 30, reps: 15, rest: "1:00" },
+          { weight: 30, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 30,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "V-Bar Pushdown",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 60, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 70,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Leg Press",
+        region: "Quads / Hams",
+        feel: "Medium",
+        sets: [
+          { weight: 180, reps: 10, rest: "1:00" },
+          { weight: 200, reps: 10, rest: "1:00" },
+          { weight: 200, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 200,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Leg Extension",
+        region: "Quads",
+        feel: "Medium",
+        sets: [
+          { weight: 170, reps: 10, rest: "1:30" },
+          { weight: 170, reps: 10, rest: "1:30" },
+          { weight: 200, reps: 8, rest: "1:30" }
+        ],
+        bestWeight: 200,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Leg Curl",
+        region: "Hamstrings",
+        feel: "Medium",
+        sets: [
+          { weight: 155, reps: 15, rest: "1:30" },
+          { weight: 165, reps: 12, rest: "1:30" },
+          { weight: 165, reps: 8, rest: "1:30" }
+        ],
+        bestWeight: 165,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Glute Machine",
+        region: "Glutes",
+        feel: "Medium",
+        sets: [
+          { weight: 130, reps: 15, rest: "1:00" },
+          { weight: 130, reps: 15, rest: "1:00" },
+          { weight: 130, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 130,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Standing 1 Leg (1-DB) Calf Raise",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 45, reps: 15, rest: "1:00" },
+          { weight: 45, reps: 15, rest: "1:00" },
+          { weight: 45, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 45,
+        bestReps: 15
+      }
+    ],
+    abs: [
+      { name: "Ball Crunch", reps: 30 },
+      { name: "Decline Straight Leg Thrust", reps: 30 },
+      { name: "Decline Side Oblique Crunch", reps: 30 },
+      { name: "Straight Leg Lift with Thrust", reps: 30 },
+      { name: "Side Oblique Crunch with Heel Push", reps: 30 },
+      { name: "Decline Crunch", reps: 30 }
+    ]
   }
 };
 
