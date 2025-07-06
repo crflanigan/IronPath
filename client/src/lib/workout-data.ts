@@ -8,6 +8,7 @@ export const workoutTemplates: Record<WorkoutType, {
   "Chest Day (ActiveTrax)": {
     exercises: [
       {
+        code: "S24",
         machine: "Adjustable Cable Crossover",
         region: "Chest Pecs",
         feel: "Medium",
@@ -20,6 +21,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 15
       },
       {
+        code: "S5",
         machine: "Converging Chest Press",
         region: "Chest Pecs",
         feel: "Medium",
@@ -32,6 +34,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 10
       },
       {
+        code: "S4",
         machine: "Rear Delt / Pec Fly",
         region: "Outer Pecs",
         feel: "Medium",
@@ -44,6 +47,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 15
       },
       {
+        code: "S12",
         machine: "Lateral Raise",
         region: "Shoulders",
         feel: "Medium",
@@ -56,6 +60,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 10
       },
       {
+        code: "S33",
         machine: "90-Degree Utility Seat",
         region: "Shoulders",
         feel: "Light",
@@ -68,6 +73,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 15
       },
       {
+        code: "S24",
         machine: "Adj. Hi/Low Pulley",
         region: "Triceps",
         feel: "Medium",
@@ -80,6 +86,7 @@ export const workoutTemplates: Record<WorkoutType, {
         bestReps: 10
       },
       {
+        code: "S8",
         machine: "Seated Dip",
         region: "Outer Triceps",
         feel: "Medium",
