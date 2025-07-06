@@ -20,10 +20,13 @@ export function useWorkoutStorage() {
       ]);
 
       if (!workoutsData || workoutsData.length === 0) {
-        workoutsData = generateInitialWorkouts();
-        for (const w of workoutsData) {
-          await localWorkoutStorage.createWorkout(w);
+        const initial = generateInitialWorkouts();
+        const created: Workout[] = [];
+        for (const w of initial) {
+          const newWorkout = await localWorkoutStorage.createWorkout(w);
+          created.push(newWorkout);
         }
+        workoutsData = created;
       }
 
       setWorkouts(workoutsData);
@@ -62,12 +65,73 @@ export function useWorkoutStorage() {
     });
   };
 
+  const getWorkoutByDate = async (date: string) => {
+    return await localWorkoutStorage.getWorkoutByDate(date);
+  };
+
+  const createWorkout = async (workout: InsertWorkout) => {
+    const newWorkout = await localWorkoutStorage.createWorkout(workout);
+    setWorkouts((prev) => [...prev, newWorkout]);
+    return newWorkout;
+  };
+
+  const updateWorkout = async (
+    id: number,
+    updates: Partial<InsertWorkout>,
+  ) => {
+    const updated = await localWorkoutStorage.updateWorkout(id, updates);
+    if (updated) {
+      setWorkouts((prev) =>
+        prev.map((w) => (w.id === id ? updated : w)),
+      );
+    }
+    return updated;
+  };
+
+  const exportData = async () => {
+    const data = await localWorkoutStorage.exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ironpup-data-${new Date()
+      .toISOString()
+      .split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportCSV = async () => {
+    const { workouts } = await localWorkoutStorage.exportData();
+    const header = ["id", "date", "type", "completed", "duration"];
+    const rows = workouts.map((w) =>
+      [w.id, w.date, w.type, w.completed, w.duration ?? ""].join(","),
+    );
+    const csv = [header.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ironpup-data-${new Date()
+      .toISOString()
+      .split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return {
     workouts,
     preferences,
     loading,
     setWorkouts,
     setPreferences,
-    refresh: loadData
+    refresh: loadData,
+    getWorkoutByDate,
+    createWorkout,
+    updateWorkout,
+    exportData,
+    exportCSV
   };
 }
