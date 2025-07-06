@@ -20,10 +20,13 @@ export function useWorkoutStorage() {
       ]);
 
       if (!workoutsData || workoutsData.length === 0) {
-        workoutsData = generateInitialWorkouts();
-        for (const w of workoutsData) {
-          await localWorkoutStorage.createWorkout(w);
+        const initial = generateInitialWorkouts();
+        const created: Workout[] = [];
+        for (const w of initial) {
+          const newWorkout = await localWorkoutStorage.createWorkout(w);
+          created.push(newWorkout);
         }
+        workoutsData = created;
       }
 
       setWorkouts(workoutsData);
