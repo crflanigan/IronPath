@@ -371,6 +371,136 @@ export const workoutTemplates: Record<WorkoutType, {
       { name: "Side Oblique Knee Raise", reps: 30 },
       { name: "Ab Wheel", reps: 30 }
     ]
+  },
+
+  "Chest & Shoulders (ActiveTrax)": {
+    exercises: [
+      {
+        code: "N/A",
+        machine: "Seated Chest Press",
+        region: "Chest",
+        feel: "Medium",
+        sets: [
+          { weight: 75, reps: 10, rest: "1:00" },
+          { weight: 100, reps: 10, rest: "1:00" },
+          { weight: 100, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 100,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Push Up (on Knees)",
+        region: "Chest",
+        feel: "Light",
+        sets: [
+          { weight: 0, reps: 10, rest: "1:00" },
+          { weight: 0, reps: 10, rest: "1:00" },
+          { weight: 0, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 0,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Shoulder Press",
+        region: "Shoulders",
+        feel: "Medium",
+        sets: [
+          { weight: 100, reps: 10, rest: "1:00" },
+          { weight: 100, reps: 10, rest: "1:00" },
+          { weight: 100, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 100,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Cable Front Deltoid Raise",
+        region: "Shoulders",
+        feel: "Medium",
+        sets: [
+          { weight: 20, reps: 10, rest: "1:30" },
+          { weight: 30, reps: 10, rest: "1:30" },
+          { weight: 30, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 30,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Lateral Raise",
+        region: "Shoulders",
+        feel: "Medium",
+        sets: [
+          { weight: 70, reps: 10, rest: "1:30" },
+          { weight: 70, reps: 10, rest: "1:30" },
+          { weight: 70, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 70,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Standing Shrug",
+        region: "Traps",
+        feel: "Medium",
+        sets: [
+          { weight: 55, reps: 10, rest: "1:30" },
+          { weight: 65, reps: 10, rest: "1:30" },
+          { weight: 65, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 65,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Standing Barbell Shrug",
+        region: "Traps",
+        feel: "Medium",
+        sets: [
+          { weight: 135, reps: 10, rest: "1:00" },
+          { weight: 135, reps: 10, rest: "1:00" },
+          { weight: 135, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 135,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Straight Bar Pushdown",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 200, reps: 10, rest: "1:00" },
+          { weight: 200, reps: 10, rest: "1:00" },
+          { weight: 200, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 200,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "V-Bar Pushdown",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 60, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 70,
+        bestReps: 10
+      }
+    ],
+    abs: [
+      { name: "Crunch", reps: 30 },
+      { name: "Jack Knife", reps: 30 },
+      { name: "Side Oblique Knee Raise", reps: 30 },
+      { name: "Reverse Crunch", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Crunch", reps: 30 }
+    ]
   }
 };
 
