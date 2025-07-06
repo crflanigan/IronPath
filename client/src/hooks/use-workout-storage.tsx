@@ -38,6 +38,7 @@ export function useWorkoutStorage() {
     return await localWorkoutStorage.getWorkoutByDate(date);
   };
 
+
   const createWorkout = async (workout: InsertWorkout) => {
     const newWorkout = await localWorkoutStorage.createWorkout(workout);
     setWorkouts((prev) => [...prev, newWorkout]);
@@ -125,6 +126,7 @@ export function useWorkoutStorage() {
     }
     return success;
   };
+
 
   const resetAllData = async () => {
     await localWorkoutStorage.clearAllData();

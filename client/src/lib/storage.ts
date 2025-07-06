@@ -25,6 +25,7 @@ export class LocalWorkoutStorage {
     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
   }
 
+
   async getWorkout(id: number): Promise<Workout | undefined> {
     const workouts = this.getWorkouts();
     return workouts.find(w => w.id === id);

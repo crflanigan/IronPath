@@ -57,6 +57,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     setDateForCreation(null);
   };
 
+
   const handleSelectDate = (date: string | Date) => {
     setSelectedWorkout(null);
 

@@ -21,6 +21,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
+
   useEffect(() => {
     // Auto-save functionality
     if (autoSaveEnabled) {
@@ -115,7 +116,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         completed: true,
         duration: completedWorkout.duration
       });
-      
       toast({
         title: "Workout completed! 🎉",
         description: "Great job! Your workout has been saved.",
