@@ -47,6 +47,7 @@ export const workoutTypes = [
   "Chest, Shoulders, and Back",
   "Chest Day (ActiveTrax)",
   "Back & Biceps (ActiveTrax)",
+  "Chest & Triceps (ActiveTrax)",
   "Chest & Shoulders (ActiveTrax)",
   "Leg Day (ActiveTrax)"
 ] as const;

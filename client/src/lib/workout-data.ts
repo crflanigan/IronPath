@@ -373,6 +373,97 @@ export const workoutTemplates: Record<WorkoutType, {
     ]
   },
 
+  "Chest & Triceps (ActiveTrax)": {
+    exercises: [
+      {
+        code: "N/A",
+        machine: "Seated Chest Press",
+        region: "Chest",
+        feel: "Medium",
+        sets: [
+          { weight: 75, reps: 15, rest: "1:00" },
+          { weight: 100, reps: 15, rest: "1:00" },
+          { weight: 100, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 100,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Cable Crossover",
+        region: "Chest",
+        feel: "Medium",
+        sets: [
+          { weight: 60, reps: 15, rest: "1:00" },
+          { weight: 80, reps: 6, rest: "1:00" },
+          { weight: 80, reps: 6, rest: "1:00" }
+        ],
+        bestWeight: 80,
+        bestReps: 6
+      },
+      {
+        code: "N/A",
+        machine: "Kick Back",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 15, reps: 15, rest: "1:00" },
+          { weight: 15, reps: 15, rest: "1:00" },
+          { weight: 15, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 15,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Straight Bar Pushdown",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 140, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" },
+          { weight: 150, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 150,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Low-Pulley Kick Back",
+        region: "Triceps",
+        feel: "Medium",
+        sets: [
+          { weight: 50, reps: 10, rest: "1:30" },
+          { weight: 50, reps: 10, rest: "1:30" },
+          { weight: 50, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 50,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Lateral Raise",
+        region: "Shoulders",
+        feel: "Medium",
+        sets: [
+          { weight: 15, reps: 10, rest: "1:00" },
+          { weight: 15, reps: 10, rest: "1:00" },
+          { weight: 15, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 15,
+        bestReps: 10
+      }
+    ],
+    abs: [
+      { name: "Crunch with Legs In", reps: 30 },
+      { name: "Decline 90 Degree Reverse Crunch", reps: 30 },
+      { name: "90 Degree Side Oblique Crunch", reps: 30 },
+      { name: "Decline Reverse Crunch", reps: 30 },
+      { name: "Side Oblique Crunch with Arms Extended", reps: 30 },
+      { name: "Ball Crunch", reps: 30 }
+    ]
+  },
+
   "Chest & Shoulders (ActiveTrax)": {
     exercises: [
       {
