@@ -12,6 +12,7 @@ const exerciseSetSchema = z.object({
 
 // Exercise schema
 const exerciseSchema = z.object({
+  code: z.string().optional(), // <-- NEW: optional machine ID like "S16"
   machine: z.string(),
   region: z.string(),
   feel: z.enum(["Light", "Medium", "Hard"]),
@@ -43,7 +44,8 @@ export const workoutTypes = [
   "Back and Legs",
   "Chest, Tricep Focus",
   "Back, Biceps, and Legs",
-  "Chest, Shoulders, and Back"
+  "Chest, Shoulders, and Back",
+  "Chest Day (ActiveTrax)" // You may add new types here as needed
 ] as const;
 
 // Workouts table
