@@ -18,18 +18,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [workout, setWorkout] = useState<Workout>(initialWorkout);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-  const { updateWorkout, setActiveWorkoutId, clearActiveWorkoutId } = useWorkoutStorage();
+  const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
-  useEffect(() => {
-    setActiveWorkoutId(workout.id);
-    return () => {
-      // keep active id if workout not completed
-      if (workout.completed) {
-        clearActiveWorkoutId();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     // Auto-save functionality
@@ -125,8 +116,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         completed: true,
         duration: completedWorkout.duration
       });
-      clearActiveWorkoutId();
-      
       toast({
         title: "Workout completed! 🎉",
         description: "Great job! Your workout has been saved.",
