@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
+import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -183,7 +184,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
             {workout.type}
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {new Date(workout.date).toLocaleDateString('en-US', {
+            {parseISODate(workout.date).toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
               day: 'numeric'
