@@ -5,6 +5,7 @@ import { CalendarGrid } from '@/components/calendar-grid';
 import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
+import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { Workout } from '@shared/schema';
 
 interface CalendarPageProps {
@@ -15,7 +16,9 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
-  const { workouts, getWorkoutByDate, createWorkout, loading } = useWorkoutStorage();
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [dateForCreation, setDateForCreation] = useState<string | null>(null);
+  const { workouts, getWorkoutByDate, createWorkout, createWorkoutForDate, loading } = useWorkoutStorage();
 
   useEffect(() => {
     if (selectedDate) {
@@ -26,6 +29,19 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const loadWorkoutForDate = async (date: string) => {
     const workout = await getWorkoutByDate(date);
     setSelectedWorkout(workout || null);
+  };
+
+  const openTemplateSelector = (date: string) => {
+    setDateForCreation(date);
+    setTemplateModalOpen(true);
+  };
+
+  const handleTemplateSelect = async (templateName: string) => {
+    if (!dateForCreation) return;
+    await createWorkoutForDate(dateForCreation, templateName);
+    await loadWorkoutForDate(dateForCreation);
+    setTemplateModalOpen(false);
+    setDateForCreation(null);
   };
 
   const handleSelectDate = (date: string | Date) => {
@@ -233,7 +249,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   No workout scheduled for this date
                 </p>
-                <Button onClick={() => handleStartWorkout(selectedDate)}>
+                <Button onClick={() => openTemplateSelector(selectedDate)}>
                   Create Workout
                 </Button>
               </div>
@@ -251,6 +267,11 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
           Start Today's Workout
         </Button>
       </div>
+      <WorkoutTemplateSelectorModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
     </div>
   );
 }

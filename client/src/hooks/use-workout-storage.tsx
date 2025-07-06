@@ -75,6 +75,34 @@ export function useWorkoutStorage() {
     return newWorkout;
   };
 
+  const createWorkoutForDate = async (
+    date: string,
+    templateName: string,
+  ) => {
+    const template = workoutTemplates[
+      templateName as keyof typeof workoutTemplates
+    ];
+    if (!template) return undefined;
+
+    return await createWorkout({
+      date,
+      type: templateName,
+      completed: false,
+      cardio: {
+        type: "Treadmill",
+        duration: "",
+        distance: "",
+        completed: false,
+      },
+      abs: template.abs.map((a) => ({ ...a, completed: false })),
+      exercises: template.exercises.map((e) => ({
+        ...e,
+        completed: false,
+        sets: e.sets.map((set) => ({ ...set, completed: false })),
+      })),
+    });
+  };
+
   const updateWorkout = async (
     id: number,
     updates: Partial<InsertWorkout>,
@@ -130,6 +158,7 @@ export function useWorkoutStorage() {
     refresh: loadData,
     getWorkoutByDate,
     createWorkout,
+    createWorkoutForDate,
     updateWorkout,
     exportData,
     exportCSV
