@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 interface WorkoutTemplateSelectorModalProps {
@@ -19,6 +25,9 @@ export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }
       <DialogContent className="space-y-4">
         <DialogHeader>
           <DialogTitle>Select Workout Template</DialogTitle>
+          <DialogDescription>
+            Choose a template to pre-fill your workout details.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-2">
           <Button variant="outline" onClick={() => onSelectTemplate('Chest Day (ActiveTrax)')}>Chest Day (ActiveTrax)</Button>
