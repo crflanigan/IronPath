@@ -16,6 +16,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
   const {
@@ -24,7 +25,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     createWorkout,
     createWorkoutForDate,
     deleteWorkout,
-    loading
+    loading,
+    getActiveWorkoutId,
+    clearActiveWorkoutId,
+    getWorkoutById
   } = useWorkoutStorage();
 
   useEffect(() => {
@@ -56,6 +60,19 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     setTemplateModalOpen(false);
     setDateForCreation(null);
   };
+
+  useEffect(() => {
+    const id = getActiveWorkoutId();
+    if (id) {
+      getWorkoutById(id).then(workout => {
+        if (workout && !workout.completed) {
+          setActiveWorkout(workout);
+        } else {
+          clearActiveWorkoutId();
+        }
+      });
+    }
+  }, []);
 
   const handleSelectDate = (date: string | Date) => {
     setSelectedWorkout(null);
@@ -273,6 +290,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
       {/* Quick Actions */}
       <div className="space-y-3">
+        {activeWorkout && (
+          <Button
+            onClick={() => onNavigateToWorkout(activeWorkout)}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+          >
+            Resume Workout
+          </Button>
+        )}
         <Button
           onClick={handleStartTodayWorkout}
           className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"

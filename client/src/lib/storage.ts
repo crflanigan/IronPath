@@ -3,7 +3,8 @@ import { Workout, InsertWorkout, UserPreferences } from "@shared/schema";
 const STORAGE_KEYS = {
   WORKOUTS: 'ironpup_workouts',
   PREFERENCES: 'ironpup_preferences',
-  CURRENT_ID: 'ironpup_current_id'
+  CURRENT_ID: 'ironpup_current_id',
+  ACTIVE_WORKOUT: 'ironpup_active_workout'
 } as const;
 
 export class LocalWorkoutStorage {
@@ -23,6 +24,19 @@ export class LocalWorkoutStorage {
 
   private saveWorkouts(workouts: Workout[]): void {
     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+  }
+
+  getActiveWorkoutId(): number | null {
+    const stored = localStorage.getItem(STORAGE_KEYS.ACTIVE_WORKOUT);
+    return stored ? parseInt(stored, 10) : null;
+  }
+
+  setActiveWorkoutId(id: number): void {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_WORKOUT, id.toString());
+  }
+
+  clearActiveWorkoutId(): void {
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_WORKOUT);
   }
 
   async getWorkout(id: number): Promise<Workout | undefined> {

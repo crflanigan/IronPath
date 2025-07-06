@@ -38,6 +38,10 @@ export function useWorkoutStorage() {
     return await localWorkoutStorage.getWorkoutByDate(date);
   };
 
+  const getWorkoutById = async (id: number) => {
+    return await localWorkoutStorage.getWorkout(id);
+  };
+
   const createWorkout = async (workout: InsertWorkout) => {
     const newWorkout = await localWorkoutStorage.createWorkout(workout);
     setWorkouts((prev) => [...prev, newWorkout]);
@@ -126,6 +130,18 @@ export function useWorkoutStorage() {
     return success;
   };
 
+  const getActiveWorkoutId = () => {
+    return localWorkoutStorage.getActiveWorkoutId();
+  };
+
+  const setActiveWorkoutId = (id: number) => {
+    localWorkoutStorage.setActiveWorkoutId(id);
+  };
+
+  const clearActiveWorkoutId = () => {
+    localWorkoutStorage.clearActiveWorkoutId();
+  };
+
   const resetAllData = async () => {
     await localWorkoutStorage.clearAllData();
     await loadData();
@@ -144,6 +160,10 @@ export function useWorkoutStorage() {
     updateWorkout,
     deleteWorkout,
     resetAllData,
+    getActiveWorkoutId,
+    setActiveWorkoutId,
+    clearActiveWorkoutId,
+    getWorkoutById,
     exportData,
     exportCSV
   };
