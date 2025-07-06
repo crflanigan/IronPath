@@ -228,6 +228,149 @@ export const workoutTemplates: Record<WorkoutType, {
       { name: "Side Oblique Ab Wheel", reps: 30 },
       { name: "90 Degree Crunch", reps: 30 }
     ]
+  },
+
+  "Back & Biceps (ActiveTrax)": {
+    exercises: [
+      {
+        code: "N/A",
+        machine: "Wide Grip Pulldown (front)",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 135, reps: 10, rest: "1:00" },
+          { weight: 150, reps: 10, rest: "1:00" },
+          { weight: 160, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 160,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Close Grip Pulldown (front)",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 120, reps: 15, rest: "1:30" },
+          { weight: 140, reps: 15, rest: "1:30" },
+          { weight: 150, reps: 15, rest: "1:30" }
+        ],
+        bestWeight: 150,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Row",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 140, reps: 15, rest: "1:30" },
+          { weight: 200, reps: 10, rest: "1:30" },
+          { weight: 200, reps: 6, rest: "1:30" }
+        ],
+        bestWeight: 200,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Back Extension",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 200, reps: 20, rest: "1:00" },
+          { weight: 200, reps: 20, rest: "1:00" },
+          { weight: 200, reps: 20, rest: "1:00" }
+        ],
+        bestWeight: 200,
+        bestReps: 20
+      },
+      {
+        code: "N/A",
+        machine: "Bent Over Rear Deltoid",
+        region: "Shoulders",
+        feel: "Light",
+        sets: [
+          { weight: 15, reps: 10, rest: "1:00" },
+          { weight: 15, reps: 10, rest: "1:00" },
+          { weight: 15, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 15,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Low-Pulley Straight Bar Curl",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 70,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Low-Pulley 1-Arm Curl",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 40, reps: 10, rest: "1:00" },
+          { weight: 40, reps: 10, rest: "1:00" },
+          { weight: 50, reps: 6, rest: "1:00" }
+        ],
+        bestWeight: 50,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Seated Shrug",
+        region: "Traps",
+        feel: "Medium",
+        sets: [
+          { weight: 55, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 70,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Standing Wrist Curl with Extension",
+        region: "Forearms",
+        feel: "Light",
+        sets: [
+          { weight: 15, reps: 15, rest: "1:00" },
+          { weight: 15, reps: 15, rest: "1:00" },
+          { weight: 15, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 15,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Bar Curl",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 90, reps: 15, rest: "1:00" },
+          { weight: 90, reps: 15, rest: "1:00" },
+          { weight: 90, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 90,
+        bestReps: 15
+      }
+    ],
+    abs: [
+      { name: "Crunch with Heel Push", reps: 30 },
+      { name: "Straight Leg Thrust", reps: 30 },
+      { name: "Ball Side Oblique Crunch", reps: 30 },
+      { name: "Knee Raise", reps: 30 },
+      { name: "Side Oblique Knee Raise", reps: 30 },
+      { name: "Ab Wheel", reps: 30 }
+    ]
   }
 };
 
