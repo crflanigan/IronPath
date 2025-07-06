@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Workout, InsertWorkout, UserPreferences } from '@shared/schema';
 import { localWorkoutStorage } from '@/lib/storage';
-import { generateWorkoutSchedule, workoutTemplates } from '@/lib/workout-data';
+import { workoutTemplates } from '@/lib/workout-data';
 
 export function useWorkoutStorage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -14,22 +14,17 @@ export function useWorkoutStorage() {
 
   const loadData = async () => {
     try {
-      let [workoutsData, prefsData] = await Promise.all([
+      const [workoutsData, prefsData] = await Promise.all([
         localWorkoutStorage.getWorkoutsByDateRange('2020-01-01', '2030-12-31'),
         localWorkoutStorage.getUserPreferences()
       ]);
 
-      if (!workoutsData || workoutsData.length === 0) {
-        const initial = generateInitialWorkouts();
-        const created: Workout[] = [];
-        for (const w of initial) {
-          const newWorkout = await localWorkoutStorage.createWorkout(w);
-          created.push(newWorkout);
-        }
-        workoutsData = created;
-      }
+      // If there are no workouts stored, simply start with an empty list.
+      // The previous implementation would regenerate a schedule, leaving
+      // counters unchanged after a reset.
+      const resolvedWorkouts = workoutsData ?? [];
 
-      setWorkouts(workoutsData);
+      setWorkouts(resolvedWorkouts);
       setPreferences(prefsData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -38,32 +33,6 @@ export function useWorkoutStorage() {
     }
   };
 
-  const generateInitialWorkouts = (): InsertWorkout[] => {
-    const today = new Date();
-    const schedule = generateWorkoutSchedule(today.getFullYear(), today.getMonth() + 1);
-
-    return schedule.map(({ date, type }) => {
-      const template = workoutTemplates[type];
-
-      return {
-        date,
-        type,
-        completed: false,
-        cardio: {
-          type: 'Treadmill',
-          duration: '',
-          distance: '',
-          completed: false
-        },
-        abs: template.abs.map(a => ({ ...a, completed: false })),
-        exercises: template.exercises.map(e => ({
-          ...e,
-          completed: false,
-          sets: e.sets.map(set => ({ ...set, completed: false }))
-        }))
-      };
-    });
-  };
 
   const getWorkoutByDate = async (date: string) => {
     return await localWorkoutStorage.getWorkoutByDate(date);
