@@ -43,6 +43,7 @@ export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }
             Back & Legs (ActiveTrax)
           </Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Back & Biceps (ActiveTrax)')}>Back & Biceps (ActiveTrax)</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Triceps (ActiveTrax)')}>Chest & Triceps (ActiveTrax)</Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Chest & Shoulders (ActiveTrax)')}>Chest & Shoulders (ActiveTrax)</Button>
         </div>
       </DialogContent>
