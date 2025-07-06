@@ -373,6 +373,149 @@ export const workoutTemplates: Record<WorkoutType, {
     ]
   },
 
+  "Back, Biceps & Legs (ActiveTrax)": {
+    exercises: [
+      {
+        code: "N/A",
+        machine: "Wide Grip Pulldown (front)",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 110, reps: 15, rest: "1:00" },
+          { weight: 135, reps: 15, rest: "1:00" },
+          { weight: 135, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 135,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Row",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 120, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 140,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Herculean Dabble Curl",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 40, reps: 10, rest: "1:30" },
+          { weight: 40, reps: 10, rest: "1:30" },
+          { weight: 40, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 40,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Low-Pulley Straight Bar Curl",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 90, reps: 10, rest: "1:00" },
+          { weight: 90, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 90,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "1-Arm Curl with Twist",
+        region: "Biceps",
+        feel: "Medium",
+        sets: [
+          { weight: 70, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 70,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Back Extension",
+        region: "Back",
+        feel: "Medium",
+        sets: [
+          { weight: 200, reps: 20, rest: "1:00" },
+          { weight: 200, reps: 20, rest: "1:00" },
+          { weight: 200, reps: 20, rest: "1:00" }
+        ],
+        bestWeight: 200,
+        bestReps: 20
+      },
+      {
+        code: "N/A",
+        machine: "Seated Leg Extension",
+        region: "Quads",
+        feel: "Medium",
+        sets: [
+          { weight: 155, reps: 10, rest: "1:00" },
+          { weight: 160, reps: 10, rest: "1:00" },
+          { weight: 160, reps: 10, rest: "1:00" }
+        ],
+        bestWeight: 160,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "45 Degree Leg Press",
+        region: "Quads / Hams",
+        feel: "Medium",
+        sets: [
+          { weight: 380, reps: 15, rest: "1:30" },
+          { weight: 400, reps: 10, rest: "1:30" },
+          { weight: 400, reps: 10, rest: "1:30" }
+        ],
+        bestWeight: 400,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Glute Machine",
+        region: "Glutes",
+        feel: "Medium",
+        sets: [
+          { weight: 130, reps: 15, rest: "1:00" },
+          { weight: 130, reps: 15, rest: "1:00" },
+          { weight: 130, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 130,
+        bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Standing 1 Leg (1-DB) Calf Raise",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 45, reps: 15, rest: "1:00" },
+          { weight: 45, reps: 15, rest: "1:00" },
+          { weight: 45, reps: 15, rest: "1:00" }
+        ],
+        bestWeight: 45,
+        bestReps: 15
+      }
+    ],
+    abs: [
+      { name: "Crunch", reps: 30 },
+      { name: "Jack Knife", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Ab Wheel", reps: 30 },
+      { name: "Side Oblique Leg Raise", reps: 30 },
+      { name: "Crunch with Arms Extended", reps: 30 }
+    ]
+  },
+
   "Chest & Triceps (ActiveTrax)": {
     exercises: [
       {
