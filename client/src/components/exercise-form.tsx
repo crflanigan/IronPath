@@ -48,7 +48,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     const difference = currentWeight - bestWeight;
     
     if (difference > 0) return { change: `↑ +${difference} lbs`, color: 'text-blue-600' };
-    if (difference < 0) return { change: `↓ ${difference} lbs`, color: 'text-red-600' };
+    if (difference < 0) return { change: `↓ ${Math.abs(difference)} lbs`, color: 'text-red-600' };
     return { change: '', color: '' };
   };
 
