@@ -11,24 +11,7 @@ import { WorkoutPage } from '@/pages/workout';
 import { HistoryPage } from '@/pages/history';
 import { Workout } from '@shared/schema';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction
-} from '@/components/ui/alert-dialog';
-import { localWorkoutStorage } from '@/lib/storage';
+import { SettingsDialog } from '@/components/SettingsDialog';
 
 function Navigation() {
   const [location, setLocation] = useLocation();
@@ -89,44 +72,15 @@ function Header() {
                 <Moon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
               )}
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem>Reset App Data</DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Application</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete all workouts and preferences. Continue?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-red-600 text-white hover:bg-red-700"
-                        onClick={async () => {
-                          await localWorkoutStorage.clearAllData();
-                          window.location.reload();
-                        }}
-                      >
-                        Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <SettingsDialog>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              </Button>
+            </SettingsDialog>
           </div>
         </div>
       </div>
