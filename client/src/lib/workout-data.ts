@@ -13,9 +13,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Chest Pecs",
         feel: "Medium",
         sets: [
-          { weight: 60, reps: 15, rest: "1:00", completed: false },
-          { weight: 70, reps: 15, rest: "1:00", completed: false },
-          { weight: 90, reps: 15, rest: "1:00", completed: false }
+          { weight: 60, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 15, rest: "1:00" },
+          { weight: 90, reps: 15, rest: "1:00" }
         ],
         bestWeight: 90,
         bestReps: 15
@@ -26,9 +26,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Chest Pecs",
         feel: "Medium",
         sets: [
-          { weight: 100, reps: 15, rest: "1:00", completed: false },
-          { weight: 115, reps: 10, rest: "1:30", completed: false },
-          { weight: 115, reps: 10, rest: "1:00", completed: false }
+          { weight: 100, reps: 15, rest: "1:00" },
+          { weight: 115, reps: 10, rest: "1:30" },
+          { weight: 115, reps: 10, rest: "1:00" }
         ],
         bestWeight: 115,
         bestReps: 10
@@ -39,9 +39,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Outer Pecs",
         feel: "Medium",
         sets: [
-          { weight: 160, reps: 15, rest: "1:00", completed: false },
-          { weight: 160, reps: 15, rest: "1:00", completed: false },
-          { weight: 165, reps: 15, rest: "1:00", completed: false }
+          { weight: 160, reps: 15, rest: "1:00" },
+          { weight: 160, reps: 15, rest: "1:00" },
+          { weight: 165, reps: 15, rest: "1:00" }
         ],
         bestWeight: 165,
         bestReps: 15
@@ -52,9 +52,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Shoulders",
         feel: "Medium",
         sets: [
-          { weight: 60, reps: 15, rest: "1:00", completed: false },
-          { weight: 70, reps: 10, rest: "1:00", completed: false },
-          { weight: 70, reps: 10, rest: "1:00", completed: false }
+          { weight: 60, reps: 15, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" },
+          { weight: 70, reps: 10, rest: "1:00" }
         ],
         bestWeight: 70,
         bestReps: 10
@@ -65,9 +65,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Shoulders",
         feel: "Light",
         sets: [
-          { weight: 25, reps: 15, rest: "1:00", completed: false },
-          { weight: 25, reps: 15, rest: "1:00", completed: false },
-          { weight: 25, reps: 15, rest: "1:00", completed: false }
+          { weight: 25, reps: 15, rest: "1:00" },
+          { weight: 25, reps: 15, rest: "1:00" },
+          { weight: 25, reps: 15, rest: "1:00" }
         ],
         bestWeight: 25,
         bestReps: 15
@@ -78,9 +78,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Triceps",
         feel: "Medium",
         sets: [
-          { weight: 100, reps: 15, rest: "1:00", completed: false },
-          { weight: 120, reps: 10, rest: "1:30", completed: false },
-          { weight: 120, reps: 10, rest: "1:00", completed: false }
+          { weight: 100, reps: 15, rest: "1:00" },
+          { weight: 120, reps: 10, rest: "1:30" },
+          { weight: 120, reps: 10, rest: "1:00" }
         ],
         bestWeight: 120,
         bestReps: 10
@@ -91,9 +91,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Outer Triceps",
         feel: "Medium",
         sets: [
-          { weight: 125, reps: 15, rest: "1:00", completed: false },
-          { weight: 140, reps: 10, rest: "1:00", completed: false },
-          { weight: 140, reps: 10, rest: "1:00", completed: false }
+          { weight: 125, reps: 15, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" }
         ],
         bestWeight: 140,
         bestReps: 10
@@ -116,9 +116,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Legs (Warm Up)",
         feel: "N/A",
         sets: [
-          { weight: 180, reps: 10, rest: "1:00", completed: false },
-          { weight: 220, reps: 15, rest: "1:00", completed: false },
-          { weight: 230, reps: 15, rest: "1:00", completed: false }
+          { weight: 180, reps: 10, rest: "1:00" },
+          { weight: 220, reps: 15, rest: "1:00" },
+          { weight: 230, reps: 15, rest: "1:00" }
         ],
         bestWeight: 230,
         bestReps: 15
@@ -129,8 +129,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Quads / Hams",
         feel: "Heavy",
         sets: [
-          { weight: 400, reps: 10, rest: "1:30", completed: false },
-          { weight: 450, reps: 10, rest: "1:00", completed: false }
+          { weight: 400, reps: 10, rest: "1:30" },
+          { weight: 450, reps: 10, rest: "1:00" }
         ],
         bestWeight: 450,
         bestReps: 10
@@ -141,8 +141,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Legs",
         feel: "Medium",
         sets: [
-          { weight: 0, reps: 20, rest: "1:00", completed: false },
-          { weight: 0, reps: 20, rest: "1:00", completed: false }
+          { weight: 0, reps: 20, rest: "1:00" },
+          { weight: 0, reps: 20, rest: "1:00" }
         ],
         bestWeight: 0,
         bestReps: 20
@@ -153,8 +153,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Hamstrings",
         feel: "Medium",
         sets: [
-          { weight: 165, reps: 15, rest: "1:30", completed: false },
-          { weight: 175, reps: 10, rest: "1:00", completed: false }
+          { weight: 165, reps: 15, rest: "1:30" },
+          { weight: 175, reps: 10, rest: "1:00" }
         ],
         bestWeight: 175,
         bestReps: 10
@@ -165,9 +165,9 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Quads",
         feel: "Medium",
         sets: [
-          { weight: 160, reps: 15, rest: "1:00", completed: false },
-          { weight: 170, reps: 15, rest: "1:00", completed: false },
-          { weight: 185, reps: 15, rest: "1:00", completed: false }
+          { weight: 160, reps: 15, rest: "1:00" },
+          { weight: 170, reps: 15, rest: "1:00" },
+          { weight: 185, reps: 15, rest: "1:00" }
         ],
         bestWeight: 185,
         bestReps: 15
@@ -178,8 +178,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Inner Thighs",
         feel: "Medium",
         sets: [
-          { weight: 150, reps: 10, rest: "1:00", completed: false },
-          { weight: 150, reps: 10, rest: "1:00", completed: false }
+          { weight: 150, reps: 10, rest: "1:00" },
+          { weight: 150, reps: 10, rest: "1:00" }
         ],
         bestWeight: 150,
         bestReps: 10
@@ -190,8 +190,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Outer Thighs",
         feel: "Medium",
         sets: [
-          { weight: 155, reps: 10, rest: "1:00", completed: false },
-          { weight: 155, reps: 10, rest: "1:00", completed: false }
+          { weight: 155, reps: 10, rest: "1:00" },
+          { weight: 155, reps: 10, rest: "1:00" }
         ],
         bestWeight: 155,
         bestReps: 10
@@ -202,8 +202,8 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Glutes",
         feel: "Medium",
         sets: [
-          { weight: 135, reps: 10, rest: "1:00", completed: false },
-          { weight: 140, reps: 10, rest: "1:00", completed: false }
+          { weight: 135, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" }
         ],
         bestWeight: 140,
         bestReps: 10
@@ -214,7 +214,7 @@ export const workoutTemplates: Record<WorkoutType, {
         region: "Calves",
         feel: "Medium",
         sets: [
-          { weight: 45, reps: 20, rest: "1:00", completed: false }
+          { weight: 45, reps: 20, rest: "1:00" }
         ],
         bestWeight: 45,
         bestReps: 20
@@ -229,10 +229,7 @@ export const workoutTemplates: Record<WorkoutType, {
       { name: "90 Degree Crunch", reps: 30 }
     ]
   }
-
-  // you can continue adding more templates below
 };
-
 
 // Generate workout schedule for a given month
 export function generateWorkoutSchedule(year: number, month: number): { date: string; type: WorkoutType }[] {
