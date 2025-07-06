@@ -107,8 +107,132 @@ export const workoutTemplates: Record<WorkoutType, {
       { name: "Side Oblique Crunch with Arms Extended", reps: 30 }
     ]
   },
-  // ... keep your existing workouts below or above this block
+
+  "Back and Legs": {
+    exercises: [
+      {
+        code: "S36",
+        machine: "Seated Leg Press",
+        region: "Legs (Warm Up)",
+        feel: "N/A",
+        sets: [
+          { weight: 180, reps: 10, rest: "1:00", completed: false },
+          { weight: 220, reps: 15, rest: "1:00", completed: false },
+          { weight: 230, reps: 15, rest: "1:00", completed: false }
+        ],
+        bestWeight: 230,
+        bestReps: 15
+      },
+      {
+        code: "S22",
+        machine: "45 Degree Leg Press",
+        region: "Quads / Hams",
+        feel: "Heavy",
+        sets: [
+          { weight: 400, reps: 10, rest: "1:30", completed: false },
+          { weight: 450, reps: 10, rest: "1:00", completed: false }
+        ],
+        bestWeight: 450,
+        bestReps: 10
+      },
+      {
+        code: "N/A",
+        machine: "Body Squat",
+        region: "Legs",
+        feel: "Medium",
+        sets: [
+          { weight: 0, reps: 20, rest: "1:00", completed: false },
+          { weight: 0, reps: 20, rest: "1:00", completed: false }
+        ],
+        bestWeight: 0,
+        bestReps: 20
+      },
+      {
+        code: "S14",
+        machine: "Seated Leg Curl",
+        region: "Hamstrings",
+        feel: "Medium",
+        sets: [
+          { weight: 165, reps: 15, rest: "1:30", completed: false },
+          { weight: 175, reps: 10, rest: "1:00", completed: false }
+        ],
+        bestWeight: 175,
+        bestReps: 10
+      },
+      {
+        code: "S15",
+        machine: "Seated Leg Extension",
+        region: "Quads",
+        feel: "Medium",
+        sets: [
+          { weight: 160, reps: 15, rest: "1:00", completed: false },
+          { weight: 170, reps: 15, rest: "1:00", completed: false },
+          { weight: 185, reps: 15, rest: "1:00", completed: false }
+        ],
+        bestWeight: 185,
+        bestReps: 15
+      },
+      {
+        code: "S16",
+        machine: "Adductor",
+        region: "Inner Thighs",
+        feel: "Medium",
+        sets: [
+          { weight: 150, reps: 10, rest: "1:00", completed: false },
+          { weight: 150, reps: 10, rest: "1:00", completed: false }
+        ],
+        bestWeight: 150,
+        bestReps: 10
+      },
+      {
+        code: "S18",
+        machine: "Abductor",
+        region: "Outer Thighs",
+        feel: "Medium",
+        sets: [
+          { weight: 155, reps: 10, rest: "1:00", completed: false },
+          { weight: 155, reps: 10, rest: "1:00", completed: false }
+        ],
+        bestWeight: 155,
+        bestReps: 10
+      },
+      {
+        code: "S17",
+        machine: "Glute Machine",
+        region: "Glutes",
+        feel: "Medium",
+        sets: [
+          { weight: 135, reps: 10, rest: "1:00", completed: false },
+          { weight: 140, reps: 10, rest: "1:00", completed: false }
+        ],
+        bestWeight: 140,
+        bestReps: 10
+      },
+      {
+        code: "S3",
+        machine: "Standing Calf Raise (1-DB)",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 45, reps: 20, rest: "1:00", completed: false }
+        ],
+        bestWeight: 45,
+        bestReps: 20
+      }
+    ],
+    abs: [
+      { name: "Crunch with Heel Push", reps: 30 },
+      { name: "Knee Raise (Vertical Chair)", reps: 30 },
+      { name: "Decline Side Oblique Crunch (Floor)", reps: 30 },
+      { name: "Reverse Crunch", reps: 30 },
+      { name: "Side Oblique Ab Wheel", reps: 30 },
+      { name: "90 Degree Crunch", reps: 30 }
+    ]
+  }
+
+  // you can continue adding more templates below
 };
+
 
 // Generate workout schedule for a given month
 export function generateWorkoutSchedule(year: number, month: number): { date: string; type: WorkoutType }[] {
