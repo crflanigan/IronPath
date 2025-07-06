@@ -18,7 +18,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
-  const { workouts, getWorkoutByDate, createWorkout, createWorkoutForDate, loading } = useWorkoutStorage();
+  const {
+    workouts,
+    getWorkoutByDate,
+    createWorkout,
+    createWorkoutForDate,
+    deleteWorkout,
+    loading
+  } = useWorkoutStorage();
 
   useEffect(() => {
     if (selectedDate) {
@@ -29,6 +36,12 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const loadWorkoutForDate = async (date: string) => {
     const workout = await getWorkoutByDate(date);
     setSelectedWorkout(workout || null);
+  };
+
+  const handleDeleteSelectedWorkout = async () => {
+    if (!selectedWorkout) return;
+    await deleteWorkout(selectedWorkout.id);
+    setSelectedWorkout(null);
   };
 
   const openTemplateSelector = (date: string) => {
@@ -242,6 +255,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
                 workout={selectedWorkout}
                 onStart={() => onNavigateToWorkout(selectedWorkout)}
                 onView={() => onNavigateToWorkout(selectedWorkout)}
+                onDelete={handleDeleteSelectedWorkout}
               />
             ) : (
               <div className="text-center py-4">

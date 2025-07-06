@@ -149,6 +149,19 @@ export function useWorkoutStorage() {
     URL.revokeObjectURL(url);
   };
 
+  const deleteWorkout = async (id: number) => {
+    const success = await localWorkoutStorage.deleteWorkout(id);
+    if (success) {
+      setWorkouts(prev => prev.filter(w => w.id !== id));
+    }
+    return success;
+  };
+
+  const resetAllData = async () => {
+    await localWorkoutStorage.clearAllData();
+    await loadData();
+  };
+
   return {
     workouts,
     preferences,
@@ -160,6 +173,8 @@ export function useWorkoutStorage() {
     createWorkout,
     createWorkoutForDate,
     updateWorkout,
+    deleteWorkout,
+    resetAllData,
     exportData,
     exportCSV
   };
