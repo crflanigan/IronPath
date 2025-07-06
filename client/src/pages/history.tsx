@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout } from '@shared/schema';
 import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react';
+import { parseISODate } from '@/lib/utils';
 
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -59,7 +60,7 @@ export function HistoryPage() {
         break;
     }
 
-    return workouts.filter(workout => new Date(workout.date) >= startDate);
+    return workouts.filter(workout => parseISODate(workout.date) >= startDate);
   }, [workouts, selectedPeriod]);
 
   const stats = useMemo(() => {
@@ -70,13 +71,16 @@ export function HistoryPage() {
 
     const sortedWorkouts = [...workouts]
       .filter(w => w.completed)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort(
+        (a, b) =>
+          parseISODate(b.date).getTime() - parseISODate(a.date).getTime()
+      );
 
     let currentStreak = 0;
     const today = new Date();
 
     for (let i = 0; i < sortedWorkouts.length; i++) {
-      const workoutDate = new Date(sortedWorkouts[i].date);
+      const workoutDate = parseISODate(sortedWorkouts[i].date);
       const diffDays = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays === currentStreak) {
         currentStreak++;
@@ -105,7 +109,7 @@ export function HistoryPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return parseISODate(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

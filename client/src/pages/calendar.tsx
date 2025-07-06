@@ -5,6 +5,7 @@ import { CalendarGrid } from '@/components/calendar-grid';
 import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
+import { parseISODate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { Workout } from '@shared/schema';
 
@@ -112,7 +113,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       onNavigateToWorkout(existingWorkout);
     } else {
       // Create new workout for selected date
-      const schedule = generateWorkoutSchedule(new Date(date).getFullYear(), new Date(date).getMonth() + 1);
+      const schedule = generateWorkoutSchedule(
+        parseISODate(date).getFullYear(),
+        parseISODate(date).getMonth() + 1
+      );
       const scheduledWorkout = schedule.find(w => w.date === date);
       
       if (scheduledWorkout) {

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Workout } from '@shared/schema';
+import { parseISODate } from '@/lib/utils';
 import {
   Calendar,
   Clock,
@@ -34,7 +35,7 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
   const completionPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseISODate(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
