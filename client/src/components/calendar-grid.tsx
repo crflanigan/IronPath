@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Workout } from '@shared/schema';
 import { generateWorkoutSchedule } from '@/lib/workout-data';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -45,7 +45,7 @@ export function CalendarGrid({
     const day = prevMonthDays - i;
     calendarDays.push({
       day: day,
-      date: new Date(year, month - 1, day).toISOString().split('T')[0],
+      date: formatLocalDate(new Date(year, month - 1, day)),
       isCurrentMonth: false,
       isToday: false
     });
@@ -53,7 +53,7 @@ export function CalendarGrid({
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = formatLocalDate(date);
     const isToday = date.toDateString() === today.toDateString();
 
     calendarDays.push({
@@ -68,7 +68,7 @@ export function CalendarGrid({
   for (let day = 1; day <= remainingDays; day++) {
     calendarDays.push({
       day: day,
-      date: new Date(year, month + 1, day).toISOString().split('T')[0],
+      date: formatLocalDate(new Date(year, month + 1, day)),
       isCurrentMonth: false,
       isToday: false
     });
