@@ -9,6 +9,16 @@ import { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import confetti from 'canvas-confetti';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 
 interface WorkoutPageProps {
   workout: Workout;
@@ -19,6 +29,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [workout, setWorkout] = useState<Workout>(initialWorkout);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [celebrated, setCelebrated] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
@@ -166,6 +178,23 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   };
 
   const stats = getProgressStats();
+
+  useEffect(() => {
+    if (
+      !celebrated &&
+      !workout.completed &&
+      stats.totalItems > 0 &&
+      stats.completedItems === stats.totalItems
+    ) {
+      setCelebrated(true);
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+      setShowDialog(true);
+    }
+  }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
@@ -364,5 +393,20 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
     </div>
+    <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>🎉 Workout Complete!</AlertDialogTitle>
+          <AlertDialogDescription>
+            You crushed it today.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={() => setShowDialog(false)}>
+            Close
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
