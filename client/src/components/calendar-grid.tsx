@@ -127,7 +127,7 @@ export function CalendarGrid({
           const hasWorkout = workout || scheduledWorkout;
 
           const sharedClasses =
-            'aspect-square w-full flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
+            'aspect-square w-full h-auto p-0 flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
 
@@ -151,8 +151,6 @@ export function CalendarGrid({
                 : '';
 
           if (hasWorkout) {
-            const workoutType = workout?.type || scheduledWorkout?.type;
-
             return (
               <Button
                 key={index}
@@ -170,18 +168,6 @@ export function CalendarGrid({
                 onClick={() => onSelectDate(dayData.date)}
               >
                 <div className="text-base font-semibold leading-none">{dayData.day}</div>
-                <div
-                  className={cn(
-                    'text-xs font-medium truncate',
-                    isCompleted
-                      ? 'text-green-600'
-                      : dayData.isToday
-                        ? 'text-blue-100'
-                        : 'text-orange-600'
-                  )}
-                >
-                  {workoutType?.split(',')[0] || 'Workout'}
-                </div>
                 {status && <div className="text-xs">{status}</div>}
               </Button>
             );
