@@ -224,6 +224,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onDateChange={setCurrentDate}
         onSelectDate={handleSelectDate}
         workouts={workouts}
+        selectedDate={selectedDate}
       />
 
       {/* Workout Legend */}

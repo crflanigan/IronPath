@@ -3,19 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Workout } from '@shared/schema';
 import { generateWorkoutSchedule } from '@/lib/workout-data';
+import { cn } from '@/lib/utils';
 
 interface CalendarGridProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   onSelectDate: (date: string) => void;
   workouts: Workout[];
+  selectedDate?: string | null;
 }
 
-export function CalendarGrid({ 
-  currentDate, 
-  onDateChange, 
-  onSelectDate, 
-  workouts 
+export function CalendarGrid({
+  currentDate,
+  onDateChange,
+  onSelectDate,
+  workouts,
+  selectedDate
 }: CalendarGridProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -123,38 +126,63 @@ export function CalendarGrid({
           const scheduledWorkout = getScheduledWorkoutForDate(dayData.date);
           const hasWorkout = workout || scheduledWorkout;
 
-          const sharedClasses = "aspect-square w-full flex flex-col items-center justify-center text-sm rounded-lg";
+          const sharedClasses =
+            'aspect-square w-full flex flex-col items-center justify-center text-sm rounded-lg';
+          const isCompleted = workout?.completed || false;
+          const isSelected = selectedDate === dayData.date;
 
           if (!dayData.isCurrentMonth) {
             return (
-              <div key={index} className={`${sharedClasses} text-gray-400 dark:text-gray-600`}>
+              <div
+                key={index}
+                className={`${sharedClasses} text-gray-400 dark:text-gray-600`}
+              >
                 {dayData.day}
               </div>
             );
           }
 
+          const status = dayData.isToday
+            ? '📅'
+            : isCompleted
+              ? '✅'
+              : hasWorkout
+                ? '🕒'
+                : '';
+
           if (hasWorkout) {
             const workoutType = workout?.type || scheduledWorkout?.type;
-            const isCompleted = workout?.completed || false;
-            const status = isCompleted ? '✅' : (dayData.isToday ? '📅' : '🕒');
 
             return (
               <Button
                 key={index}
                 variant="ghost"
-                className={`${sharedClasses} bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow`}
+                className={cn(
+                  sharedClasses,
+                  'bg-white dark:bg-gray-800 border hover:shadow-md transition-shadow',
+                  isSelected
+                    ? 'border-primary ring-2 ring-primary'
+                    : 'border-gray-200 dark:border-gray-700',
+                  dayData.isToday && !isSelected
+                    ? 'bg-primary text-white hover:bg-primary/90'
+                    : ''
+                )}
                 onClick={() => onSelectDate(dayData.date)}
               >
-                <div className={dayData.isToday ? 'text-white' : 'text-gray-900 dark:text-white'}>
-                  {dayData.day}
-                </div>
-                <div className={`text-xs font-medium truncate ${
-                  isCompleted ? 'text-green-600' : 
-                  dayData.isToday ? 'text-blue-100' : 'text-orange-600'
-                }`}>
+                <div>{dayData.day}</div>
+                <div
+                  className={cn(
+                    'text-xs font-medium truncate',
+                    isCompleted
+                      ? 'text-green-600'
+                      : dayData.isToday
+                        ? 'text-blue-100'
+                        : 'text-orange-600'
+                  )}
+                >
                   {workoutType?.split(',')[0] || 'Workout'}
                 </div>
-                <div className="text-xs">{status}</div>
+                {status && <div className="text-xs">{status}</div>}
               </Button>
             );
           }
@@ -163,10 +191,17 @@ export function CalendarGrid({
             <Button
               key={index}
               variant="ghost"
-              className={`${sharedClasses} ${dayData.isToday ? 'bg-primary text-white hover:bg-primary/90' : ''}`}
+              className={cn(
+                sharedClasses,
+                dayData.isToday
+                  ? 'bg-primary text-white hover:bg-primary/90'
+                  : '',
+                isSelected && 'border-2 border-primary'
+              )}
               onClick={() => onSelectDate(dayData.date)}
             >
               {dayData.day}
+              {dayData.isToday && <div className="text-xs">📅</div>}
             </Button>
           );
         })}
