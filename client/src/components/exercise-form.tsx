@@ -38,7 +38,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
 
   const getSetStatus = (set: ExerciseSet, index: number) => {
     if (set.completed) return 'completed';
-    if (isActive && index === localExercise.sets.findIndex(s => !s.completed)) return 'current';
+    if (index === localExercise.sets.findIndex(s => !s.completed)) return 'current';
     return 'pending';
   };
 
@@ -111,7 +111,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   onChange={(e) => updateSet(index, 'weight', parseInt(e.target.value) || 0)}
                   className="w-16 text-sm"
                   placeholder="lbs"
-                  disabled={status === 'pending' && !isActive}
+                  disabled={false}
                 />
                 
                 <span className="text-xs text-gray-500 dark:text-gray-400">×</span>
@@ -122,7 +122,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   onChange={(e) => updateSet(index, 'reps', parseInt(e.target.value) || 0)}
                   className="w-14 text-sm"
                   placeholder="reps"
-                  disabled={status === 'pending' && !isActive}
+                  disabled={false}
                 />
                 
                 <Input
@@ -131,7 +131,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   onChange={(e) => updateSet(index, 'rest', e.target.value)}
                   className="w-16 text-sm"
                   placeholder="rest"
-                  disabled={status === 'pending' && !isActive}
+                  disabled={false}
                 />
                 
                 {status === 'current' && (
