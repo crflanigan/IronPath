@@ -864,14 +864,15 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
   const daysInMonth = new Date(year, month, 0).getDate();
   const workoutTypesList = Object.keys(workoutTemplates) as WorkoutType[];
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    if (day % 3 === 0 && day % 7 !== 0) continue;
+  const baseDay = Date.UTC(1970, 0, 1) / 86400000;
 
-    const date = new Date(year, month - 1, day).toISOString().split('T')[0];
-    const typeIndex = Math.floor((day - 1) / 2) % workoutTypesList.length;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObj = new Date(year, month - 1, day);
+    const dayIndex = Math.floor(Date.UTC(year, month - 1, day) / 86400000) - baseDay;
+    const typeIndex = dayIndex % workoutTypesList.length;
 
     schedule.push({
-      date,
+      date: dateObj.toISOString().split('T')[0],
       type: workoutTypesList[typeIndex]
     });
   }
@@ -882,8 +883,10 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
 // Get today's workout type
 export function getTodaysWorkoutType(): WorkoutType {
   const today = new Date();
-  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
   const workoutTypesList = Object.keys(workoutTemplates) as WorkoutType[];
 
-  return workoutTypesList[dayOfYear % workoutTypesList.length];
+  const baseDay = Date.UTC(1970, 0, 1) / 86400000;
+  const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000) - baseDay;
+
+  return workoutTypesList[dayIndex % workoutTypesList.length];
 }
