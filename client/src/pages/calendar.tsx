@@ -86,12 +86,16 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     } else {
       // Create new workout for today
       const workoutType = getTodaysWorkoutType();
-      const template = workoutTemplates[workoutType];
+      const template = workoutTemplates[workoutType]!;
       
       const newWorkout = await createWorkout({
         date: today,
         type: workoutType,
-        exercises: template.exercises.map(e => ({ ...e, completed: false })),
+        exercises: template.exercises.map(e => ({
+          ...e,
+          completed: false,
+          sets: e.sets.map(s => ({ ...s, completed: false }))
+        })),
         abs: template.abs.map(a => ({ ...a, completed: false })),
         cardio: {
           type: 'Treadmill',
@@ -120,12 +124,16 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       const scheduledWorkout = schedule.find(w => w.date === date);
       
       if (scheduledWorkout) {
-        const template = workoutTemplates[scheduledWorkout.type];
+        const template = workoutTemplates[scheduledWorkout.type]!;
         
         const newWorkout = await createWorkout({
           date: date,
           type: scheduledWorkout.type,
-          exercises: template.exercises.map(e => ({ ...e, completed: false })),
+          exercises: template.exercises.map(e => ({
+            ...e,
+            completed: false,
+            sets: e.sets.map(s => ({ ...s, completed: false })),
+          })),
           abs: template.abs.map(a => ({ ...a, completed: false })),
           cardio: {
             type: 'Treadmill',

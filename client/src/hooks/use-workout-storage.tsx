@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Workout, InsertWorkout, UserPreferences } from '@shared/schema';
+import { Workout, InsertWorkout, UserPreferences, Exercise } from '@shared/schema';
 import { localWorkoutStorage } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 
@@ -40,7 +40,27 @@ export function useWorkoutStorage() {
 
 
   const createWorkout = async (workout: InsertWorkout) => {
-    const newWorkout = await localWorkoutStorage.createWorkout(workout);
+    // pre-fill exercises with last used weight/reps if available
+    const exercisesWithHistory = await Promise.all(
+      (workout.exercises as Exercise[]).map(async (ex) => {
+        const e = ex as Exercise;
+        const key = e.code || e.machine;
+        const last = await localWorkoutStorage.getLastExerciseSets(key);
+        if (last) {
+          const sets = e.sets.map((set: Exercise['sets'][number], idx: number) => {
+            const hist = last[idx] || last[last.length - 1];
+            return { ...set, weight: hist.weight, reps: hist.reps };
+          });
+          return { ...e, sets } as Exercise;
+        }
+        return e;
+      })
+    );
+
+    const newWorkout = await localWorkoutStorage.createWorkout({
+      ...workout,
+      exercises: exercisesWithHistory,
+    });
     setWorkouts((prev) => [...prev, newWorkout]);
     return newWorkout;
   };

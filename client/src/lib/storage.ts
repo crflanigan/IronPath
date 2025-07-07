@@ -1,10 +1,16 @@
-import { Workout, InsertWorkout, UserPreferences } from "@shared/schema";
+import { Workout, InsertWorkout, UserPreferences, Exercise } from "@shared/schema";
 
 const STORAGE_KEYS = {
   WORKOUTS: 'ironpup_workouts',
   PREFERENCES: 'ironpup_preferences',
-  CURRENT_ID: 'ironpup_current_id'
+  CURRENT_ID: 'ironpup_current_id',
+  EXERCISE_HISTORY: 'ironpup_exercise_history'
 } as const;
+
+interface ExerciseHistoryEntry {
+  sets: { weight: number; reps: number }[];
+  date: string;
+}
 
 export class LocalWorkoutStorage {
   private getCurrentId(): number {
@@ -23,6 +29,32 @@ export class LocalWorkoutStorage {
 
   private saveWorkouts(workouts: Workout[]): void {
     localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+  }
+
+  private getExerciseHistory(): Record<string, ExerciseHistoryEntry> {
+    const stored = localStorage.getItem(STORAGE_KEYS.EXERCISE_HISTORY);
+    return stored ? JSON.parse(stored) : {};
+  }
+
+  private saveExerciseHistory(history: Record<string, ExerciseHistoryEntry>): void {
+    localStorage.setItem(STORAGE_KEYS.EXERCISE_HISTORY, JSON.stringify(history));
+  }
+
+  async getLastExerciseSets(key: string): Promise<{ weight: number; reps: number }[] | undefined> {
+    const history = this.getExerciseHistory();
+    return history[key]?.sets;
+  }
+
+  private updateExerciseHistory(exercises: Exercise[], date: string) {
+    const history = this.getExerciseHistory();
+    for (const e of exercises) {
+      const key = e.code || e.machine;
+      history[key] = {
+        sets: e.sets.map(s => ({ weight: s.weight, reps: s.reps })),
+        date,
+      };
+    }
+    this.saveExerciseHistory(history);
   }
 
 
@@ -48,12 +80,13 @@ export class LocalWorkoutStorage {
     const id = this.getCurrentId();
     const now = new Date();
     
-    const newWorkout: Workout = {
+    const newWorkout = {
       ...workout,
       id,
+      duration: workout.duration ?? null,
       createdAt: now,
-      updatedAt: now
-    };
+      updatedAt: now,
+    } as Workout;
     
     workouts.push(newWorkout);
     this.saveWorkouts(workouts);
@@ -68,15 +101,19 @@ export class LocalWorkoutStorage {
     
     if (index === -1) return undefined;
     
-    const updatedWorkout: Workout = {
+    const updatedWorkout = {
       ...workouts[index],
       ...updates,
-      updatedAt: new Date()
-    };
+      duration: updates.duration ?? workouts[index].duration ?? null,
+      updatedAt: new Date(),
+    } as Workout;
     
     workouts[index] = updatedWorkout;
     this.saveWorkouts(workouts);
-    
+    if (updates.exercises) {
+      this.updateExerciseHistory(updatedWorkout.exercises, updatedWorkout.date);
+    }
+
     return updatedWorkout;
   }
 
