@@ -127,7 +127,7 @@ export function CalendarGrid({
           const hasWorkout = workout || scheduledWorkout;
 
           const sharedClasses =
-            'aspect-square w-full flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
+            'h-24 w-full flex flex-col items-center justify-between p-1 text-sm leading-tight rounded-lg';
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
 
@@ -135,9 +135,11 @@ export function CalendarGrid({
             return (
               <div
                 key={index}
-                className={`${sharedClasses} text-gray-400 dark:text-gray-600`}
+                className={cn(sharedClasses, 'text-gray-400 dark:text-gray-600')}
               >
                 <span className="text-base font-semibold leading-none">{dayData.day}</span>
+                <span className="text-xs text-transparent select-none">-</span>
+                <span className="text-xs text-transparent select-none">-</span>
               </div>
             );
           }
@@ -182,7 +184,9 @@ export function CalendarGrid({
                 >
                   {workoutType?.split(',')[0] || 'Workout'}
                 </div>
-                {status && <div className="text-xs">{status}</div>}
+                <div className={cn('text-xs', !status && 'text-transparent select-none')}>
+                  {status || '-'}
+                </div>
               </Button>
             );
           }
@@ -201,7 +205,10 @@ export function CalendarGrid({
               onClick={() => onSelectDate(dayData.date)}
             >
               <span className="text-base font-semibold leading-none">{dayData.day}</span>
-              {dayData.isToday && <div className="text-xs">📅</div>}
+              <span className="text-xs text-transparent select-none">-</span>
+              <div className={cn('text-xs', !dayData.isToday && 'text-transparent select-none')}>
+                {dayData.isToday ? '📅' : '-'}
+              </div>
             </Button>
           );
         })}
