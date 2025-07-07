@@ -48,5 +48,7 @@ shared/      Drizzle schema and shared types
 
 The app includes a `manifest.json` with install icons (`icon-192x192.png`, `icon-512x512.png`) and registers a service worker (`sw.js`) to cache assets and enable offline usage.
 
+The service worker uses a network‑first caching strategy and automatically activates when a new version is deployed. A small registration script sends a `SKIP_WAITING` message to the waiting worker and reloads the page when the new worker takes control. This avoids stale caches after redeploys—users always receive the latest assets without needing to clear their browser storage.
+
 ---
 Released under the MIT License. Contributions are welcome!
