@@ -197,6 +197,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
   return (
+    <>
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-3">
@@ -408,5 +409,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    </>
   );
 }
