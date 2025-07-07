@@ -194,6 +194,18 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
   const stats = getWorkoutStats();
 
+  const selectedWorkoutType = selectedWorkout?.type ||
+    (selectedDate
+      ? (() => {
+          const dateObj = parseISODate(selectedDate);
+          const schedule = generateWorkoutSchedule(
+            dateObj.getFullYear(),
+            dateObj.getMonth() + 1
+          );
+          return schedule.find(w => w.date === selectedDate)?.type || null;
+        })()
+      : null);
+
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Stats Overview */}
@@ -226,6 +238,12 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         workouts={workouts}
         selectedDate={selectedDate}
       />
+
+      {selectedDate && (
+        <p className="text-center font-medium">
+          Selected Day's Workout: {selectedWorkoutType ?? 'None'}
+        </p>
+      )}
 
       {/* Workout Legend */}
       <Card>
