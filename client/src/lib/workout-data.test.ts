@@ -1,21 +1,24 @@
 import { describe, it, expect } from 'vitest'
-import { generateWorkoutSchedule } from './workout-data'
+import { generateWorkoutSchedule, workoutTemplates } from './workout-data'
 
 describe('generateWorkoutSchedule', () => {
-  it('creates expected schedule for February 2023', () => {
+  it('assigns a workout for every day in February 2023', () => {
     const year = 2023
     const month = 2
     const schedule = generateWorkoutSchedule(year, month)
 
     const daysInMonth = new Date(year, month, 0).getDate()
-    let expected = 0
-    for (let day = 1; day <= daysInMonth; day++) {
-      if (day % 3 === 0 && day % 7 !== 0) continue
-      expected++
-    }
-
-    expect(schedule.length).toBe(expected)
+    expect(schedule.length).toBe(daysInMonth)
     expect(schedule[0].date).toBe('2023-02-01')
     expect(schedule[schedule.length - 1].date).toBe('2023-02-28')
+
+    const types = Object.keys(workoutTemplates)
+    const baseDay = Date.UTC(1970, 0, 1) / 86400000
+
+    for (let i = 0; i < daysInMonth; i++) {
+      const expectedIndex =
+        Math.floor(Date.UTC(year, month - 1, i + 1) / 86400000) - baseDay
+      expect(schedule[i].type).toBe(types[expectedIndex % types.length])
+    }
   })
 })
