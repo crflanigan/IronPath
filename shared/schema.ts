@@ -45,13 +45,13 @@ export const workoutTypes = [
   "Chest, Tricep Focus",
   "Back, Biceps, and Legs",
   "Chest, Shoulders, and Back",
-  "Chest Day (ActiveTrax)",
-  "Back & Biceps (ActiveTrax)",
-  "Back, Biceps & Legs (ActiveTrax)",
-  "Chest & Triceps (ActiveTrax)",
-  "Chest & Shoulders (ActiveTrax)",
-  "Leg Day (ActiveTrax)",
-  "Chest, Shoulders & Legs (ActiveTrax)"
+  "Chest Day",
+  "Back & Biceps",
+  "Back, Biceps & Legs",
+  "Chest & Triceps",
+  "Chest & Shoulders",
+  "Leg Day",
+  "Chest, Shoulders & Legs"
 ] as const;
 
 // Workouts table

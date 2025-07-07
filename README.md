@@ -1,6 +1,6 @@
 # ActiveLife / "IronPup" Workout Tracker
 
-ActiveLife is an open source workout tracking PWA inspired by the old ActiveTrax app. It focuses on a simple mobile-first interface and works completely offline once installed. The project currently targets personal use but is structured to be extended with server APIs.
+ActiveLife is an open source workout tracking PWA. It focuses on a simple mobile-first interface and works completely offline once installed. The project currently targets personal use but is structured to be extended with server APIs.
 
 ## Features
 
