@@ -127,7 +127,7 @@ export function CalendarGrid({
           const hasWorkout = workout || scheduledWorkout;
 
           const sharedClasses =
-            'aspect-square w-full flex flex-col items-center justify-center text-sm rounded-lg';
+            'aspect-square w-full flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
 
@@ -137,7 +137,7 @@ export function CalendarGrid({
                 key={index}
                 className={`${sharedClasses} text-gray-400 dark:text-gray-600`}
               >
-                {dayData.day}
+                <span className="text-base font-semibold leading-none">{dayData.day}</span>
               </div>
             );
           }
@@ -169,7 +169,7 @@ export function CalendarGrid({
                 )}
                 onClick={() => onSelectDate(dayData.date)}
               >
-                <div>{dayData.day}</div>
+                <div className="text-base font-semibold leading-none">{dayData.day}</div>
                 <div
                   className={cn(
                     'text-xs font-medium truncate',
@@ -200,7 +200,7 @@ export function CalendarGrid({
               )}
               onClick={() => onSelectDate(dayData.date)}
             >
-              {dayData.day}
+              <span className="text-base font-semibold leading-none">{dayData.day}</span>
               {dayData.isToday && <div className="text-xs">📅</div>}
             </Button>
           );
