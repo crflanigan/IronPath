@@ -15,7 +15,7 @@ const exerciseSchema = z.object({
   code: z.string().optional(), // Machine code like "S16"
   machine: z.string(),
   region: z.string(),
-  feel: z.enum(["Light", "Medium", "Hard"]),
+  feel: z.enum(["Light", "Medium", "Hard", "Heavy", "N/A"]),
   sets: z.array(exerciseSetSchema),
   bestWeight: z.number().optional(),
   bestReps: z.number().optional(),

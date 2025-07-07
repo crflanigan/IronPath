@@ -126,7 +126,7 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
               size="sm"
               onClick={onStart}
               className="flex-1"
-              disabled={workout.completed}
+              disabled={workout.completed ?? false}
             >
               <PlayCircle className="h-4 w-4 mr-1" />
               {workout.completed ? 'Completed' : 'Start'}

@@ -354,11 +354,11 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           Save Workout
         </Button>
         
-        <Button
-          onClick={handleCompleteWorkout}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-          disabled={workout.completed}
-        >
+          <Button
+            onClick={handleCompleteWorkout}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            disabled={workout.completed ?? false}
+          >
           <CheckCircle className="h-4 w-4 mr-2" />
           {workout.completed ? 'Workout Completed' : 'Complete Workout'}
         </Button>

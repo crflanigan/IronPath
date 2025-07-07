@@ -1,10 +1,14 @@
-import { Exercise, AbsExercise, WorkoutType } from "@shared/schema";
+import { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
+
+type TemplateExercise = Omit<Exercise, 'completed' | 'sets'> & {
+  sets: Omit<ExerciseSet, 'completed'>[];
+};
 
 // Workout templates for different focus types
-export const workoutTemplates: Record<WorkoutType, {
-  exercises: Omit<Exercise, 'completed'>[];
+export const workoutTemplates: Partial<Record<WorkoutType, {
+  exercises: TemplateExercise[];
   abs: Omit<AbsExercise, 'completed'>[];
-}> = {
+}>> = {
   "Chest Day (ActiveTrax)": {
     exercises: [
       {

@@ -44,12 +44,13 @@ export class MemStorage implements IStorage {
   async createWorkout(insertWorkout: InsertWorkout): Promise<Workout> {
     const id = this.currentWorkoutId++;
     const now = new Date();
-    const workout: Workout = {
+    const workout = {
       ...insertWorkout,
       id,
+      duration: insertWorkout.duration ?? null,
       createdAt: now,
-      updatedAt: now
-    };
+      updatedAt: now,
+    } as Workout;
     this.workouts.set(id, workout);
     return workout;
   }
@@ -58,11 +59,12 @@ export class MemStorage implements IStorage {
     const workout = this.workouts.get(id);
     if (!workout) return undefined;
 
-    const updatedWorkout: Workout = {
+    const updatedWorkout = {
       ...workout,
       ...updates,
-      updatedAt: new Date()
-    };
+      duration: updates.duration ?? workout.duration ?? null,
+      updatedAt: new Date(),
+    } as Workout;
     this.workouts.set(id, updatedWorkout);
     return updatedWorkout;
   }
