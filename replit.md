@@ -2,7 +2,7 @@
 
 ## Overview
 
-IronPup is a modern Progressive Web App (PWA) designed to replicate and enhance the YMCA ActiveTrax workout experience. Built with React and TypeScript, it provides a mobile-first, offline-capable workout tracking solution with calendar-based scheduling, detailed exercise logging, and comprehensive progress tracking.
+IronPup is a modern Progressive Web App (PWA) designed to replicate and enhance the YMCA workout experience. Built with React and TypeScript, it provides a mobile-first, offline-capable workout tracking solution with calendar-based scheduling, detailed exercise logging, and comprehensive progress tracking.
 
 ## System Architecture
 

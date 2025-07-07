@@ -9,7 +9,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
   exercises: TemplateExercise[];
   abs: Omit<AbsExercise, 'completed'>[];
 }>> = {
-  "Chest Day (ActiveTrax)": {
+  "Chest Day": {
     exercises: [
       {
         code: "S24",
@@ -234,7 +234,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     ]
   },
 
-  "Back & Biceps (ActiveTrax)": {
+  "Back & Biceps": {
     exercises: [
       {
         code: "N/A",
@@ -377,7 +377,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     ]
   },
 
-  "Back, Biceps & Legs (ActiveTrax)": {
+  "Back, Biceps & Legs": {
     exercises: [
       {
         code: "N/A",
@@ -520,7 +520,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     ]
   },
 
-  "Chest & Triceps (ActiveTrax)": {
+  "Chest & Triceps": {
     exercises: [
       {
         code: "N/A",
@@ -611,7 +611,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     ]
   },
 
-  "Chest & Shoulders (ActiveTrax)": {
+  "Chest & Shoulders": {
     exercises: [
       {
         code: "N/A",
@@ -740,7 +740,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Crunch", reps: 30 }
     ]
   },
-  "Chest, Shoulders & Legs (ActiveTrax)": {
+  "Chest, Shoulders & Legs": {
     exercises: [
       {
         code: "N/A",

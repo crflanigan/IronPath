@@ -4,7 +4,7 @@
 
 🧱 PROJECT OVERVIEW
 
-This is a Progressive Web App (PWA) designed to replicate and improve the YMCA ActiveTrax workout experience. The goal is to create a mobile-friendly, offline-capable workout tracker that:
+This is a Progressive Web App (PWA) designed to replicate and improve the YMCA workout experience. The goal is to create a mobile-friendly, offline-capable workout tracker that:
 
 Rotates through predefined workout focuses (Chest, Back, Legs, etc.)
 

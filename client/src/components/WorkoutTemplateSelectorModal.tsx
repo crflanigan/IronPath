@@ -30,7 +30,7 @@ export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-2">
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest Day (ActiveTrax)')}>Chest Day (ActiveTrax)</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Chest Day')}>Chest Day</Button>
           {/*
             Template keys are defined in workout-data.ts using
             "Back and Legs". Passing the mismatched label caused
@@ -40,13 +40,13 @@ export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }
             variant="outline"
             onClick={() => onSelectTemplate('Back and Legs')}
           >
-            Back & Legs (ActiveTrax)
+            Back & Legs
           </Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Back & Biceps (ActiveTrax)')}>Back & Biceps (ActiveTrax)</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Back, Biceps & Legs (ActiveTrax)')}>Back, Biceps & Legs (ActiveTrax)</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Triceps (ActiveTrax)')}>Chest & Triceps (ActiveTrax)</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Shoulders (ActiveTrax)')}>Chest & Shoulders (ActiveTrax)</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest, Shoulders & Legs (ActiveTrax)')}>Chest, Shoulders & Legs (ActiveTrax)</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Back & Biceps')}>Back & Biceps</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Back, Biceps & Legs')}>Back, Biceps & Legs</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Triceps')}>Chest & Triceps</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Shoulders')}>Chest & Shoulders</Button>
+          <Button variant="outline" onClick={() => onSelectTemplate('Chest, Shoulders & Legs')}>Chest, Shoulders & Legs</Button>
         </div>
       </DialogContent>
     </Dialog>
