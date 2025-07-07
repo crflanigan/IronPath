@@ -5,7 +5,7 @@ import { CalendarGrid } from '@/components/calendar-grid';
 import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
-import { parseISODate } from '@/lib/utils';
+import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { Workout } from '@shared/schema';
 
@@ -67,18 +67,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     if (typeof date === "string") {
       normalized = date; // assume already in YYYY-MM-DD format
     } else {
-      // convert from JS Date to YYYY-MM-DD without timezone shift
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      normalized = `${year}-${month}-${day}`;
+      normalized = formatLocalDate(date);
     }
 
     setSelectedDate(normalized);
   };
 
   const handleStartTodayWorkout = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
     const existingWorkout = await getWorkoutByDate(today);
     
     if (existingWorkout) {
@@ -164,7 +160,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       
       const workout = workouts.find(w => w.date === dateString);
       if (workout && workout.completed) {

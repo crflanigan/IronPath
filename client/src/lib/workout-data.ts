@@ -1,4 +1,5 @@
 import { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
+import { formatLocalDate } from "@/lib/utils";
 
 type TemplateExercise = Omit<Exercise, 'completed' | 'sets'> & {
   sets: Omit<ExerciseSet, 'completed'>[];
@@ -889,7 +890,7 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
     const typeIndex = dayIndex % defaultWorkoutCycle.length;
 
     schedule.push({
-      date: dateObj.toISOString().split('T')[0],
+      date: formatLocalDate(dateObj),
       type: defaultWorkoutCycle[typeIndex]
     });
   }
