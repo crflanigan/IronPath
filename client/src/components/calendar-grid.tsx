@@ -127,7 +127,7 @@ export function CalendarGrid({
           const hasWorkout = workout || scheduledWorkout;
 
           const sharedClasses =
-            'aspect-square w-full flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
+            'aspect-square w-full h-auto p-0 flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
 
