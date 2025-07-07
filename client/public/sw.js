@@ -1,4 +1,5 @@
-const CACHE_NAME = 'ironpup-v1';
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = `ironpup-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -16,22 +17,21 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - network first with cache fallback
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
-      .catch(() => {
-        // If both cache and network fail, return offline page
-        if (event.request.destination === 'document') {
-          return caches.match('/');
-        }
-      })
+    caches.open(CACHE_NAME).then(cache =>
+      fetch(event.request)
+        .then(response => {
+          cache.put(event.request, response.clone());
+          return response;
+        })
+        .catch(() => cache.match(event.request).then(res => res || cache.match('/')))
+    )
   );
 });
 
@@ -49,6 +49,14 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  self.clients.claim();
+});
+
+// Allow the page to trigger immediate activation
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Background sync for offline data
