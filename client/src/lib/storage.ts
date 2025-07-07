@@ -8,7 +8,7 @@ const STORAGE_KEYS = {
 } as const;
 
 interface ExerciseHistoryEntry {
-  sets: { weight: number; reps: number }[];
+  sets: { weight: number; reps: number; rest?: string }[];
   date: string;
 }
 
@@ -40,17 +40,17 @@ export class LocalWorkoutStorage {
     localStorage.setItem(STORAGE_KEYS.EXERCISE_HISTORY, JSON.stringify(history));
   }
 
-  async getLastExerciseSets(key: string): Promise<{ weight: number; reps: number }[] | undefined> {
+  async getLastExerciseSets(machine: string): Promise<{ weight: number; reps: number; rest?: string }[] | undefined> {
     const history = this.getExerciseHistory();
-    return history[key]?.sets;
+    return history[machine]?.sets;
   }
 
   private updateExerciseHistory(exercises: Exercise[], date: string) {
     const history = this.getExerciseHistory();
     for (const e of exercises) {
-      const key = e.code || e.machine;
+      const key = e.machine; // use machine name to avoid duplicate codes
       history[key] = {
-        sets: e.sets.map(s => ({ weight: s.weight, reps: s.reps })),
+        sets: e.sets.map(s => ({ weight: s.weight, reps: s.reps, rest: s.rest })),
         date,
       };
     }
