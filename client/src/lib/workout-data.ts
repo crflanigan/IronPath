@@ -858,22 +858,39 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
   }
 };
 
+// Default 14-day workout cycle
+export const defaultWorkoutCycle: WorkoutType[] = [
+  "Chest & Triceps",
+  "Back & Biceps",
+  "Back and Legs",
+  "Chest & Shoulders",
+  "Back, Biceps & Legs",
+  "Chest Day",
+  "Back & Biceps",
+  "Chest, Shoulders & Legs",
+  "Back and Legs",
+  "Chest & Triceps",
+  "Back, Biceps & Legs",
+  "Chest & Shoulders",
+  "Back & Biceps",
+  "Chest, Shoulders & Legs"
+];
+
 // Generate workout schedule for a given month
 export function generateWorkoutSchedule(year: number, month: number): { date: string; type: WorkoutType }[] {
   const schedule: { date: string; type: WorkoutType }[] = [];
   const daysInMonth = new Date(year, month, 0).getDate();
-  const workoutTypesList = Object.keys(workoutTemplates) as WorkoutType[];
 
   const baseDay = Date.UTC(1970, 0, 1) / 86400000;
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateObj = new Date(year, month - 1, day);
     const dayIndex = Math.floor(Date.UTC(year, month - 1, day) / 86400000) - baseDay;
-    const typeIndex = dayIndex % workoutTypesList.length;
+    const typeIndex = dayIndex % defaultWorkoutCycle.length;
 
     schedule.push({
       date: dateObj.toISOString().split('T')[0],
-      type: workoutTypesList[typeIndex]
+      type: defaultWorkoutCycle[typeIndex]
     });
   }
 
@@ -883,10 +900,9 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
 // Get today's workout type
 export function getTodaysWorkoutType(): WorkoutType {
   const today = new Date();
-  const workoutTypesList = Object.keys(workoutTemplates) as WorkoutType[];
 
   const baseDay = Date.UTC(1970, 0, 1) / 86400000;
   const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000) - baseDay;
 
-  return workoutTypesList[dayIndex % workoutTypesList.length];
+  return defaultWorkoutCycle[dayIndex % defaultWorkoutCycle.length];
 }
