@@ -188,6 +188,19 @@ export class LocalWorkoutStorage {
     return true;
   }
 
+  async updateCustomTemplate(
+    id: number,
+    updates: Omit<CustomWorkoutTemplate, 'id'>,
+  ): Promise<CustomWorkoutTemplate | undefined> {
+    const templates = this.getCustomTemplatesInternal();
+    const index = templates.findIndex(t => t.id === id);
+    if (index === -1) return undefined;
+    const updated = { ...templates[index], ...updates };
+    templates[index] = updated;
+    this.saveCustomTemplates(templates);
+    return updated;
+  }
+
   async getUserPreferences(): Promise<UserPreferences> {
     const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
     const defaultPrefs: UserPreferences = {
