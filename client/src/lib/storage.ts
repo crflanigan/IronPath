@@ -167,6 +167,14 @@ export class LocalWorkoutStorage {
     return newTemplate;
   }
 
+  async deleteCustomTemplate(id: number): Promise<boolean> {
+    const templates = this.getCustomTemplatesInternal();
+    const filtered = templates.filter(t => t.id !== id);
+    if (filtered.length === templates.length) return false;
+    this.saveCustomTemplates(filtered);
+    return true;
+  }
+
   async getUserPreferences(): Promise<UserPreferences> {
     const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
     const defaultPrefs: UserPreferences = {

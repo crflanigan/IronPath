@@ -157,6 +157,14 @@ export function useWorkoutStorage() {
     return newTemplate;
   };
 
+  const deleteCustomTemplate = async (id: number) => {
+    const success = await localWorkoutStorage.deleteCustomTemplate(id);
+    if (success) {
+      setCustomTemplates(prev => prev.filter(t => t.id !== id));
+    }
+    return success;
+  };
+
 
   const resetAllData = async () => {
     await localWorkoutStorage.clearAllData();
@@ -178,6 +186,7 @@ export function useWorkoutStorage() {
     updateWorkout,
     deleteWorkout,
     addCustomTemplate,
+    deleteCustomTemplate,
     resetAllData,
     exportData,
     exportCSV

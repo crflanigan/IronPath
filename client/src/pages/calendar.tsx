@@ -28,6 +28,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     createWorkoutForDate,
     deleteWorkout,
     addCustomTemplate,
+    deleteCustomTemplate,
     customTemplates,
     loading
   } = useWorkoutStorage();
@@ -107,6 +108,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     await loadWorkoutForDate(dateForCreation);
     setCustomBuilderOpen(false);
     setDateForCreation(null);
+  };
+
+  const handleDeleteCustomTemplate = async (id: number) => {
+    await deleteCustomTemplate(id);
   };
 
 
@@ -366,11 +371,13 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onClose={() => setTemplateModalOpen(false)}
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
+        onDeleteTemplate={handleDeleteCustomTemplate}
       />
       <CustomWorkoutBuilderModal
         open={customBuilderOpen}
         onClose={() => setCustomBuilderOpen(false)}
         onCreate={handleCustomWorkoutCreate}
+        existingNames={customTemplates.map(t => t.name)}
       />
     </div>
   );
