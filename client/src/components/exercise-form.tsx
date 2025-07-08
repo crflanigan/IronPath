@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Exercise, ExerciseSet } from '@shared/schema';
 import { Check, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseFormProps {
   exercise: Exercise;
@@ -13,6 +14,10 @@ interface ExerciseFormProps {
 
 export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
+  const { toast } = useToast();
+
+  const isSetComplete = (set: ExerciseSet) =>
+    set.weight !== undefined && set.reps !== undefined && set.rest.trim() !== '';
 
   const updateSet = (
     setIndex: number,
@@ -31,10 +36,28 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   };
 
   const markSetComplete = (setIndex: number) => {
+    const set = localExercise.sets[setIndex];
+    if (!isSetComplete(set)) {
+      toast({
+        title: 'Set incomplete',
+        description: 'Enter weight, reps and rest first',
+        variant: 'destructive'
+      });
+      return;
+    }
     updateSet(setIndex, 'completed', true);
   };
 
   const toggleExerciseComplete = () => {
+    const allSetsComplete = localExercise.sets.every(isSetComplete);
+    if (!allSetsComplete) {
+      toast({
+        title: 'Exercise incomplete',
+        description: 'Fill all fields for each set first',
+        variant: 'destructive'
+      });
+      return;
+    }
     const updatedExercise = { ...localExercise, completed: !localExercise.completed };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
@@ -91,6 +114,9 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
           
           {localExercise.sets.map((set, index) => {
             const status = getSetStatus(set, index);
+            const weightError = set.weight === undefined;
+            const repsError = set.reps === undefined;
+            const restError = set.rest.trim() === '';
             
             return (
               <div
@@ -119,7 +145,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                       e.target.value === '' ? undefined : parseInt(e.target.value)
                     )
                   }
-                  className="w-16 text-sm"
+                  className={`w-16 text-sm ${weightError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="lbs"
                   disabled={false}
                 />
@@ -136,7 +162,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                       e.target.value === '' ? undefined : parseInt(e.target.value)
                     )
                   }
-                  className="w-14 text-sm"
+                  className={`w-14 text-sm ${repsError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="reps"
                   disabled={false}
                 />
@@ -145,7 +171,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   type="text"
                   value={set.rest}
                   onChange={(e) => updateSet(index, 'rest', e.target.value)}
-                  className="w-16 text-sm"
+                  className={`w-16 text-sm ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="rest"
                   disabled={false}
                 />

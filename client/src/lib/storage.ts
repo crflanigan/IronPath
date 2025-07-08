@@ -49,7 +49,14 @@ export class LocalWorkoutStorage {
     const history = this.getExerciseHistory();
     for (const e of exercises) {
       // only record history when all sets have numeric values
-      if (e.sets.some(s => s.weight === undefined || s.reps === undefined)) {
+      if (
+        e.sets.some(
+          s =>
+            s.weight === undefined ||
+            s.reps === undefined ||
+            s.rest.trim() === ''
+        )
+      ) {
         continue;
       }
       const key = e.machine; // use machine name to avoid duplicate codes

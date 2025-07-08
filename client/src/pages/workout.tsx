@@ -104,7 +104,12 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const allAbsComplete = workout.abs.every(a => a.completed);
     const cardioComplete = workout.cardio?.completed || false;
     const allFieldsFilled = workout.exercises.every(ex =>
-      ex.sets.every(s => s.weight !== undefined && s.reps !== undefined)
+      ex.sets.every(
+        s =>
+          s.weight !== undefined &&
+          s.reps !== undefined &&
+          s.rest.trim() !== ''
+      )
     );
 
     if (!allExercisesComplete || !allAbsComplete || !cardioComplete || !allFieldsFilled) {
