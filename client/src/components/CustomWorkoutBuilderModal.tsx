@@ -53,7 +53,7 @@ export function CustomWorkoutBuilderModal({
       if (template) {
         setName(template.name);
         setSelected(new Set(template.exercises.map(e => e.machine)));
-        setSelectedAbs(new Set(template.abs.map(a => a.name)));
+        setSelectedAbs(new Set((template.abs ?? []).map(a => a.name)));
         setIncludeInSchedule(template.includeInAutoSchedule ?? false);
       } else {
         setName('');

@@ -96,7 +96,12 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     include: boolean,
   ) => {
     if (!dateForCreation) return;
-    await addCustomTemplate({ name, exercises, includeInAutoSchedule: include });
+    await addCustomTemplate({
+      name,
+      exercises,
+      abs,
+      includeInAutoSchedule: include,
+    });
     await createWorkout({
       date: dateForCreation,
       type: name,
