@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Workout, InsertWorkout, UserPreferences, Exercise } from '@shared/schema';
-import { localWorkoutStorage } from '@/lib/storage';
+import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 import { formatLocalDate } from '@/lib/utils';
 
 export function useWorkoutStorage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,9 +16,10 @@ export function useWorkoutStorage() {
 
   const loadData = async () => {
     try {
-      const [workoutsData, prefsData] = await Promise.all([
+      const [workoutsData, prefsData, templatesData] = await Promise.all([
         localWorkoutStorage.getWorkoutsByDateRange('2020-01-01', '2030-12-31'),
-        localWorkoutStorage.getUserPreferences()
+        localWorkoutStorage.getUserPreferences(),
+        localWorkoutStorage.getCustomTemplates()
       ]);
 
       // If there are no workouts stored, simply start with an empty list.
@@ -27,6 +29,7 @@ export function useWorkoutStorage() {
 
       setWorkouts(resolvedWorkouts);
       setPreferences(prefsData);
+      setCustomTemplates(templatesData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -148,6 +151,12 @@ export function useWorkoutStorage() {
     return success;
   };
 
+  const addCustomTemplate = async (template: Omit<CustomWorkoutTemplate, 'id'>) => {
+    const newTemplate = await localWorkoutStorage.addCustomTemplate(template);
+    setCustomTemplates(prev => [...prev, newTemplate]);
+    return newTemplate;
+  };
+
 
   const resetAllData = async () => {
     await localWorkoutStorage.clearAllData();
@@ -157,15 +166,18 @@ export function useWorkoutStorage() {
   return {
     workouts,
     preferences,
+    customTemplates,
     loading,
     setWorkouts,
     setPreferences,
+    setCustomTemplates,
     refresh: loadData,
     getWorkoutByDate,
     createWorkout,
     createWorkoutForDate,
     updateWorkout,
     deleteWorkout,
+    addCustomTemplate,
     resetAllData,
     exportData,
     exportCSV

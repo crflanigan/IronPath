@@ -1,10 +1,17 @@
 import { Workout, InsertWorkout, UserPreferences, Exercise } from "@shared/schema";
 
+export interface CustomWorkoutTemplate {
+  id: number;
+  name: string;
+  exercises: Exercise[];
+}
+
 const STORAGE_KEYS = {
   WORKOUTS: 'ironpath_workouts',
   PREFERENCES: 'ironpath_preferences',
   CURRENT_ID: 'ironpath_current_id',
-  EXERCISE_HISTORY: 'ironpath_exercise_history'
+  EXERCISE_HISTORY: 'ironpath_exercise_history',
+  CUSTOM_TEMPLATES: 'ironpath_custom_templates'
 } as const;
 
 interface ExerciseHistoryEntry {
@@ -38,6 +45,15 @@ export class LocalWorkoutStorage {
 
   private saveExerciseHistory(history: Record<string, ExerciseHistoryEntry>): void {
     localStorage.setItem(STORAGE_KEYS.EXERCISE_HISTORY, JSON.stringify(history));
+  }
+
+  private getCustomTemplatesInternal(): CustomWorkoutTemplate[] {
+    const stored = localStorage.getItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
+    return stored ? JSON.parse(stored) : [];
+  }
+
+  private saveCustomTemplates(templates: CustomWorkoutTemplate[]): void {
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_TEMPLATES, JSON.stringify(templates));
   }
 
   async getLastExerciseSets(machine: string): Promise<{ weight: number; reps: number; rest?: string }[] | undefined> {
@@ -138,6 +154,19 @@ export class LocalWorkoutStorage {
     return true;
   }
 
+  async getCustomTemplates(): Promise<CustomWorkoutTemplate[]> {
+    return this.getCustomTemplatesInternal();
+  }
+
+  async addCustomTemplate(template: Omit<CustomWorkoutTemplate, 'id'>): Promise<CustomWorkoutTemplate> {
+    const templates = this.getCustomTemplatesInternal();
+    const id = templates.length > 0 ? Math.max(...templates.map(t => t.id)) + 1 : 1;
+    const newTemplate: CustomWorkoutTemplate = { id, ...template };
+    templates.push(newTemplate);
+    this.saveCustomTemplates(templates);
+    return newTemplate;
+  }
+
   async getUserPreferences(): Promise<UserPreferences> {
     const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
     const defaultPrefs: UserPreferences = {
@@ -163,17 +192,22 @@ export class LocalWorkoutStorage {
     return updated;
   }
 
-  async exportData(): Promise<{ workouts: Workout[]; preferences: UserPreferences }> {
+  async exportData(): Promise<{ workouts: Workout[]; preferences: UserPreferences; customTemplates: CustomWorkoutTemplate[] }> {
     return {
       workouts: this.getWorkouts(),
-      preferences: await this.getUserPreferences()
+      preferences: await this.getUserPreferences(),
+      customTemplates: this.getCustomTemplatesInternal()
     };
   }
 
-  async importData(data: { workouts: Workout[]; preferences: UserPreferences }): Promise<void> {
+  async importData(data: { workouts: Workout[]; preferences: UserPreferences; customTemplates?: CustomWorkoutTemplate[] }): Promise<void> {
     this.saveWorkouts(data.workouts);
     localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(data.preferences));
-    
+
+    if (data.customTemplates) {
+      this.saveCustomTemplates(data.customTemplates);
+    }
+
     // Update current ID to prevent conflicts
     const maxId = Math.max(...data.workouts.map(w => w.id), 0);
     this.setCurrentId(maxId + 1);
