@@ -142,10 +142,10 @@ export function CalendarGrid({
             );
           }
 
-          const status = dayData.isToday
-            ? '📅'
-            : isCompleted
-              ? '✅'
+          const status = isCompleted
+            ? '✅'
+            : dayData.isToday
+              ? '📅'
               : hasWorkout
                 ? '🕒'
                 : '';
