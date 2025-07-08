@@ -1,5 +1,5 @@
 const CACHE_VERSION = 'v1';
-const CACHE_NAME = `ironpup-${CACHE_VERSION}`;
+const CACHE_NAME = `ironpath-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
   '/manifest.json',
