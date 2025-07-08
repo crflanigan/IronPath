@@ -1,10 +1,10 @@
 import { Workout, InsertWorkout, UserPreferences, Exercise } from "@shared/schema";
 
 const STORAGE_KEYS = {
-  WORKOUTS: 'ironpup_workouts',
-  PREFERENCES: 'ironpup_preferences',
-  CURRENT_ID: 'ironpup_current_id',
-  EXERCISE_HISTORY: 'ironpup_exercise_history'
+  WORKOUTS: 'ironpath_workouts',
+  PREFERENCES: 'ironpath_preferences',
+  CURRENT_ID: 'ironpath_current_id',
+  EXERCISE_HISTORY: 'ironpath_exercise_history'
 } as const;
 
 interface ExerciseHistoryEntry {

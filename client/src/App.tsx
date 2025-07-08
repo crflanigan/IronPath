@@ -57,7 +57,7 @@ function Header() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Dumbbell className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">IronPup</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">IronPath</h1>
           </div>
           <div className="flex items-center space-x-2">
             <Button

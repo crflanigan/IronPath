@@ -1,8 +1,8 @@
-# IronPup - Progressive Web App Workout Tracker
+# IronPath - Progressive Web App Workout Tracker
 
 ## Overview
 
-IronPup is a modern Progressive Web App (PWA) designed to replicate and enhance the YMCA workout experience. Built with React and TypeScript, it provides a mobile-first, offline-capable workout tracking solution with calendar-based scheduling, detailed exercise logging, and comprehensive progress tracking.
+IronPath is a modern Progressive Web App (PWA) designed to replicate and enhance the YMCA workout experience. Built with React and TypeScript, it provides a mobile-first, offline-capable workout tracking solution with calendar-based scheduling, detailed exercise logging, and comprehensive progress tracking.
 
 ## System Architecture
 

@@ -1,6 +1,6 @@
 {
-  "name": "IronPup - Workout Tracker",
-  "short_name": "IronPup",
+  "name": "IronPath - Workout Tracker",
+  "short_name": "IronPath",
   "description": "A progressive web app for tracking workouts with offline capabilities, calendar-based scheduling, and detailed exercise logging.",
   "start_url": "/",
   "display": "standalone",

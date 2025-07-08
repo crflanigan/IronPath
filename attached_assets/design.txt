@@ -1,4 +1,4 @@
-🧠 PROJECT NAME: IronPup
+🧠 PROJECT NAME: IronPath
 🤝 Product Owner: Doctor Biz
 👨‍🔧 Project Manager & Engineer: ChatGPT aka FunkBite V12
 
@@ -128,7 +128,7 @@ Reset all local data
 
 Add manifest.json with:
 
-App name: IronPup
+App name: IronPath
 
 Theme color
 
