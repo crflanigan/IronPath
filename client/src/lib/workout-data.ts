@@ -1,5 +1,6 @@
 import { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
 import { formatLocalDate } from "@/lib/utils";
+import { localWorkoutStorage } from "@/lib/storage";
 
 type TemplateExercise = Omit<Exercise, 'completed' | 'sets'> & {
   sets: Omit<ExerciseSet, 'completed'>[];
@@ -860,7 +861,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
 };
 
 // Default 14-day workout cycle
-export const defaultWorkoutCycle: WorkoutType[] = [
+export const defaultWorkoutCycle: string[] = [
   "Chest & Triceps",
   "Back & Biceps",
   "Back and Legs",
@@ -877,9 +878,18 @@ export const defaultWorkoutCycle: WorkoutType[] = [
   "Chest, Shoulders & Legs"
 ];
 
+export function getWorkoutCycle(): string[] {
+  const customs = localWorkoutStorage
+    .getCustomTemplatesSync()
+    .filter(t => t.includeInAutoSchedule)
+    .map(t => t.name);
+  return [...defaultWorkoutCycle, ...customs];
+}
+
 // Generate workout schedule for a given month
-export function generateWorkoutSchedule(year: number, month: number): { date: string; type: WorkoutType }[] {
-  const schedule: { date: string; type: WorkoutType }[] = [];
+export function generateWorkoutSchedule(year: number, month: number): { date: string; type: string }[] {
+  const schedule: { date: string; type: string }[] = [];
+  const cycle = getWorkoutCycle();
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const baseDay = Date.UTC(1970, 0, 1) / 86400000;
@@ -887,11 +897,11 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
   for (let day = 1; day <= daysInMonth; day++) {
     const dateObj = new Date(year, month - 1, day);
     const dayIndex = Math.floor(Date.UTC(year, month - 1, day) / 86400000) - baseDay;
-    const typeIndex = dayIndex % defaultWorkoutCycle.length;
+    const typeIndex = dayIndex % cycle.length;
 
     schedule.push({
       date: formatLocalDate(dateObj),
-      type: defaultWorkoutCycle[typeIndex]
+      type: cycle[typeIndex]
     });
   }
 
@@ -899,11 +909,11 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
 }
 
 // Get today's workout type
-export function getTodaysWorkoutType(): WorkoutType {
+export function getTodaysWorkoutType(): string {
   const today = new Date();
 
   const baseDay = Date.UTC(1970, 0, 1) / 86400000;
   const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000) - baseDay;
-
-  return defaultWorkoutCycle[dayIndex % defaultWorkoutCycle.length];
+  const cycle = getWorkoutCycle();
+  return cycle[dayIndex % cycle.length];
 }

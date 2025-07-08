@@ -151,7 +151,9 @@ export function useWorkoutStorage() {
     return success;
   };
 
-  const addCustomTemplate = async (template: Omit<CustomWorkoutTemplate, 'id'>) => {
+  const addCustomTemplate = async (
+    template: Omit<CustomWorkoutTemplate, 'id'>,
+  ) => {
     const newTemplate = await localWorkoutStorage.addCustomTemplate(template);
     setCustomTemplates(prev => [...prev, newTemplate]);
     return newTemplate;

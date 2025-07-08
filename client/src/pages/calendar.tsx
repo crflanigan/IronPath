@@ -90,9 +90,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     name: string,
     exercises: Exercise[],
     abs: AbsExercise[],
+    include: boolean,
   ) => {
     if (!dateForCreation) return;
-    await addCustomTemplate({ name, exercises });
+    await addCustomTemplate({ name, exercises, includeInAutoSchedule: include });
     await createWorkout({
       date: dateForCreation,
       type: name,
@@ -132,33 +133,57 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const handleStartTodayWorkout = async () => {
     const today = formatLocalDate(new Date());
     const existingWorkout = await getWorkoutByDate(today);
-    
+
     if (existingWorkout) {
       onNavigateToWorkout(existingWorkout);
     } else {
       // Create new workout for today
       const workoutType = getTodaysWorkoutType();
-      const template = workoutTemplates[workoutType]!;
-      
-      const newWorkout = await createWorkout({
-        date: today,
-        type: workoutType,
-        exercises: template.exercises.map(e => ({
-          ...e,
-          completed: false,
-          sets: e.sets.map(s => ({ ...s, completed: false }))
-        })),
-        abs: template.abs.map(a => ({ ...a, completed: false })),
-        cardio: {
-          type: 'Treadmill',
-          duration: '',
-          distance: '',
+      const builtIn = workoutTemplates[workoutType as keyof typeof workoutTemplates];
+      let newWorkout: Workout | undefined;
+      if (builtIn) {
+        const template = builtIn;
+        newWorkout = await createWorkout({
+          date: today,
+          type: workoutType,
+          exercises: template.exercises.map(e => ({
+            ...e,
+            completed: false,
+            sets: e.sets.map(s => ({ ...s, completed: false }))
+          })),
+          abs: template.abs.map(a => ({ ...a, completed: false })),
+          cardio: {
+            type: 'Treadmill',
+            duration: '',
+            distance: '',
+            completed: false
+          },
           completed: false
-        },
-        completed: false
-      });
-      
-      onNavigateToWorkout(newWorkout);
+        });
+      } else {
+        const custom = customTemplates.find(t => t.name === workoutType);
+        if (!custom) return;
+        newWorkout = await createWorkout({
+          date: today,
+          type: workoutType,
+          exercises: custom.exercises.map(e => ({
+            ...e,
+            completed: false,
+            sets: e.sets.map(s => ({ ...s, completed: false }))
+          })),
+          abs: [],
+          cardio: {
+            type: 'Treadmill',
+            duration: '',
+            distance: '',
+            completed: false
+          },
+          completed: false
+        });
+      }
+      if (newWorkout) {
+        onNavigateToWorkout(newWorkout);
+      }
     }
   };
 
@@ -176,27 +201,51 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       const scheduledWorkout = schedule.find(w => w.date === date);
       
       if (scheduledWorkout) {
-        const template = workoutTemplates[scheduledWorkout.type]!;
-        
-        const newWorkout = await createWorkout({
-          date: date,
-          type: scheduledWorkout.type,
-          exercises: template.exercises.map(e => ({
-            ...e,
-            completed: false,
-            sets: e.sets.map(s => ({ ...s, completed: false })),
-          })),
-          abs: template.abs.map(a => ({ ...a, completed: false })),
-          cardio: {
-            type: 'Treadmill',
-            duration: '',
-            distance: '',
+        const builtIn = workoutTemplates[scheduledWorkout.type as keyof typeof workoutTemplates];
+        let newWorkout: Workout | undefined;
+        if (builtIn) {
+          newWorkout = await createWorkout({
+            date: date,
+            type: scheduledWorkout.type,
+            exercises: builtIn.exercises.map(e => ({
+              ...e,
+              completed: false,
+              sets: e.sets.map(s => ({ ...s, completed: false })),
+            })),
+            abs: builtIn.abs.map(a => ({ ...a, completed: false })),
+            cardio: {
+              type: 'Treadmill',
+              duration: '',
+              distance: '',
+              completed: false
+            },
             completed: false
-          },
-          completed: false
-        });
-        
-        onNavigateToWorkout(newWorkout);
+          });
+        } else {
+          const custom = customTemplates.find(t => t.name === scheduledWorkout.type);
+          if (!custom) return;
+          newWorkout = await createWorkout({
+            date: date,
+            type: scheduledWorkout.type,
+            exercises: custom.exercises.map(e => ({
+              ...e,
+              completed: false,
+              sets: e.sets.map(s => ({ ...s, completed: false })),
+            })),
+            abs: [],
+            cardio: {
+              type: 'Treadmill',
+              duration: '',
+              distance: '',
+              completed: false,
+            },
+            completed: false,
+          });
+        }
+
+        if (newWorkout) {
+          onNavigateToWorkout(newWorkout);
+        }
       }
     }
   };
