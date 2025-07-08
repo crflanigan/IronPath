@@ -6,7 +6,7 @@ import { z } from "zod";
 const exerciseSetSchema = z.object({
   weight: z.number().optional(),
   reps: z.number().optional(),
-  rest: z.string(), // e.g., "1:30"
+  rest: z.string().optional(), // e.g., "1:30"
   completed: z.boolean().default(false)
 });
 

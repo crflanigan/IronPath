@@ -70,7 +70,7 @@ export class LocalWorkoutStorage {
           s =>
             s.weight === undefined ||
             s.reps === undefined ||
-            s.rest.trim() === ''
+            (s.rest ?? '').trim() === ''
         )
       ) {
         continue;

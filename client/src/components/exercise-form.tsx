@@ -17,7 +17,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   const { toast } = useToast();
 
   const isSetComplete = (set: ExerciseSet) =>
-    set.weight !== undefined && set.reps !== undefined && set.rest.trim() !== '';
+    set.weight !== undefined && set.reps !== undefined;
 
   const updateSet = (
     setIndex: number,
@@ -40,10 +40,13 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     if (!isSetComplete(set)) {
       toast({
         title: 'Set incomplete',
-        description: 'Enter weight, reps and rest first',
+        description: 'Enter weight and reps first',
         variant: 'destructive'
       });
       return;
+    }
+    if ((set.rest ?? '').trim() === '') {
+      updateSet(setIndex, 'rest', '1:00');
     }
     updateSet(setIndex, 'completed', true);
   };
@@ -53,12 +56,20 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     if (!allSetsComplete) {
       toast({
         title: 'Exercise incomplete',
-        description: 'Fill all fields for each set first',
+        description: 'Fill weight and reps for each set first',
         variant: 'destructive'
       });
       return;
     }
-    const updatedExercise = { ...localExercise, completed: !localExercise.completed };
+    const updatedSets = localExercise.sets.map((s) => ({
+      ...s,
+      rest: (s.rest ?? '').trim() === '' ? '1:00' : s.rest,
+    }));
+    const updatedExercise = {
+      ...localExercise,
+      sets: updatedSets,
+      completed: !localExercise.completed,
+    };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
   };
@@ -116,7 +127,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
             const status = getSetStatus(set, index);
             const weightError = set.weight === undefined;
             const repsError = set.reps === undefined;
-            const restError = set.rest.trim() === '';
+            const restError = (set.rest ?? '').trim() === '' && set.completed;
             
             return (
               <div
@@ -169,7 +180,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="text"
-                  value={set.rest}
+                  value={set.rest ?? ''}
                   onChange={(e) => updateSet(index, 'rest', e.target.value)}
                   className={`w-16 text-sm ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="rest"
