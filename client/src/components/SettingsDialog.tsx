@@ -69,7 +69,9 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
         </div>
         <Separator />
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          IronPath v1.0.0
+          IronPath v1.0.2<br />
+          Created by Casey Flanigan<br />
+          This is an open source project which can be found here: https://github.com/crflanigan/IronPath
         </div>
       </DialogContent>
     </Dialog>
