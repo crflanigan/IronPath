@@ -6,14 +6,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { CustomWorkoutTemplate } from '@/lib/storage';
 
 interface WorkoutTemplateSelectorModalProps {
   open: boolean;
+  customTemplates: CustomWorkoutTemplate[];
   onClose: () => void;
   onSelectTemplate: (template: string) => void;
+  onCreateCustom: () => void;
 }
 
-export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }: WorkoutTemplateSelectorModalProps) {
+export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom }: WorkoutTemplateSelectorModalProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -47,6 +50,19 @@ export function WorkoutTemplateSelectorModal({ open, onClose, onSelectTemplate }
           <Button variant="outline" onClick={() => onSelectTemplate('Chest & Triceps')}>Chest & Triceps</Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Chest & Shoulders')}>Chest & Shoulders</Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Chest, Shoulders & Legs')}>Chest, Shoulders & Legs</Button>
+
+          {customTemplates.length > 0 && (
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Workouts</div>
+              {customTemplates.map(t => (
+                <Button key={t.id} variant="outline" onClick={() => onSelectTemplate(t.name)}>
+                  {t.name}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          <Button variant="secondary" onClick={onCreateCustom}>➕ Create custom workout</Button>
         </div>
       </DialogContent>
     </Dialog>
