@@ -1,54 +1,81 @@
-# ActiveLife / "IronPup" Workout Tracker
+💪 Workout Tracker App
 
-ActiveLife is an open source workout tracking PWA. It focuses on a simple mobile-first interface and works completely offline once installed. The project currently targets personal use but is structured to be extended with server APIs.
+A sleek, full-stack workout tracker app designed for lifters who want an intuitive calendar-based UI, personalized workout history, and frictionless progress tracking. Built with React, TypeScript, Tailwind, ShadCN, and Express — with a focus on smart scheduling, responsive UI, and persistent local and server-side data.
 
-## Features
+🧠 Features
 
-- **Calendar-based schedule** generated from workout templates
-- **Start and log workouts** with exercises, sets, abs and cardio blocks
-- **Auto‑save** progress while you work out
-- **Progress history** with statistics and export to CSV or JSON
-- **Local storage persistence** with optional reset from the Settings dialog
-- **Dark mode** support
-- **PWA installability** via `manifest.json`, icons and a service worker for offline caching
+🗖️ Interactive Workout CalendarView and manage workouts day-by-day, with colored status icons for pending, completed, and current-day sessions.
 
-## Tech Stack
+🏋️‍♂️ Custom Workout TemplatesAdd your own "Back & Legs", "Chest Day", and other templates for fast schedule generation.
 
-- **React** with **TypeScript**
-- **Tailwind CSS** and **shadcn/ui** components
-- **Express** server
-- **Drizzle ORM** with SQLite (schema in `shared/`)
+📈 Progress & Streak TrackingTracks progress visually and calculates daily completion streaks using locale-safe date handling.
 
-## Local Development
+🧠 Auto-Save with Local PersistenceYour progress is saved automatically, even offline.
 
-```bash
-npm install           # install dependencies
-npm run dev           # start Express + Vite in development
-npm run build         # build client and server bundles
-npm start             # run the production build
-```
+📤 Export to JSON or CSVExport your workout history with locale-safe filenames for easy backups or analysis.
 
-Additional scripts:
+✅ Flexible Set LoggingPre-populates fields with previous workout values, but allows editing in any order. Prevents null or empty inputs from being saved.
 
-- `npm run check` – type checking via `tsc`
-- `npm run test` – unit tests with Vitest
-- `npm run db:push` – push schema using Drizzle ORM
+🎉 Celebration MessagesGet a rotating set of 10 unique motivational messages upon workout completion.
 
-## Repository Structure
+🧰 Tech Stack
 
-```
-client/      frontend React app
-  public/    static assets (manifest, icons, service worker)
-  src/       pages, components and hooks
-server/      Express entry point and dev helpers
-shared/      Drizzle schema and shared types
-```
+Frontend: React + TypeScript + Vite + Tailwind CSS + ShadCN UI
 
-## PWA Notes
+Backend: Node.js + Express
 
-The app includes a `manifest.json` with install icons (`icon-192x192.png`, `icon-512x512.png`) and registers a service worker (`sw.js`) to cache assets and enable offline usage.
+State Management: Local state + custom hooks (useWorkoutStorage)
 
-The service worker uses a network‑first caching strategy and automatically activates when a new version is deployed. A small registration script sends a `SKIP_WAITING` message to the waiting worker and reloads the page when the new worker takes control. This avoids stale caches after redeploys—users always receive the latest assets without needing to clear their browser storage.
+Build & Bundling: Vite (client) and esbuild (server)
 
----
-Released under the MIT License. Contributions are welcome!
+Persistence: localStorage (client-side); ready for expansion to server-side DB
+
+Icons: Lucide
+
+🚀 Getting Started
+
+Prerequisites
+
+Node.js >= 18
+
+pnpm or npm
+
+Installation
+
+pnpm install
+
+Development
+
+pnpm dev
+
+Client and server both run with hot reloading.
+
+Build
+
+pnpm build
+
+📁 Project Structure
+
+src/
+├── components/      # Shared UI components
+├── hooks/           # Custom React hooks
+├── lib/             # Workout data generators and utilities
+├── pages/           # Calendar view, History view, etc.
+├── schema/          # Workout data models
+└── server/          # Express API routes
+
+🧪 Testing
+
+Tests coming soon (TBD).
+
+✨ Roadmap
+
+
+
+🤝 Contributing
+
+PRs are welcome. Please open an issue to discuss major feature changes first.
+
+📜 License
+
+MIT
