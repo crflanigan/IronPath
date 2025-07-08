@@ -20,6 +20,19 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 
+const successMessages = [
+  { title: '🎉 Workout Complete!', description: 'You crushed it today.' },
+  { title: '💪 Nice Work!', description: 'That session was all you.' },
+  { title: '🏆 Mission Accomplished', description: 'Another one in the books — keep it up!' },
+  { title: '🚀 You Did It!', description: 'Great job pushing through.' },
+  { title: '🔥 Workout Conquered', description: "You're on fire — keep the streak going!" },
+  { title: '🎯 Nailed It', description: 'Focused and finished strong.' },
+  { title: '💥 Boom!', description: 'You just leveled up your fitness.' },
+  { title: '🧠 Mind Over Matter', description: 'You showed discipline today.' },
+  { title: '🙌 Way to Go!', description: 'That kind of effort gets results.' },
+  { title: '🎶 Flex Mode: Activated', description: 'Your future self is already thanking you.' },
+] as const;
+
 interface WorkoutPageProps {
   workout: Workout;
   onNavigateBack: () => void;
@@ -31,6 +44,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [celebrated, setCelebrated] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
@@ -200,6 +214,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         spread: 70,
         origin: { y: 0.6 },
       });
+      const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+      setSuccessMessage(randomMessage);
       setShowDialog(true);
     }
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
@@ -405,9 +421,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>🎉 Workout Complete!</AlertDialogTitle>
+          <AlertDialogTitle>{successMessage.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            You crushed it today.
+            {successMessage.description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
