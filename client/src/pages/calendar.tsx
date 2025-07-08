@@ -9,6 +9,7 @@ import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
+import { CustomWorkoutTemplate } from '@/lib/storage';
 
 interface CalendarPageProps {
   onNavigateToWorkout: (workout: Workout) => void;
@@ -20,6 +21,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
+  const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
   const {
     workouts,
@@ -29,6 +31,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     deleteWorkout,
     addCustomTemplate,
     deleteCustomTemplate,
+    updateCustomTemplate,
     customTemplates,
     loading
   } = useWorkoutStorage();
@@ -93,7 +96,12 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     include: boolean,
   ) => {
     if (!dateForCreation) return;
-    await addCustomTemplate({ name, exercises, includeInAutoSchedule: include });
+    await addCustomTemplate({
+      name,
+      exercises,
+      abs,
+      includeInAutoSchedule: include,
+    });
     await createWorkout({
       date: dateForCreation,
       type: name,
@@ -109,6 +117,28 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     await loadWorkoutForDate(dateForCreation);
     setCustomBuilderOpen(false);
     setDateForCreation(null);
+  };
+
+  const handleCustomWorkoutUpdate = async (
+    id: number,
+    name: string,
+    exercises: Exercise[],
+    abs: AbsExercise[],
+    include: boolean,
+  ) => {
+    await updateCustomTemplate(id, {
+      name,
+      exercises,
+      abs,
+      includeInAutoSchedule: include,
+    });
+    setTemplateToEdit(null);
+  };
+
+  const handleEditCustomTemplate = (template: CustomWorkoutTemplate) => {
+    setTemplateModalOpen(false);
+    setTemplateToEdit(template);
+    setCustomBuilderOpen(true);
   };
 
   const handleDeleteCustomTemplate = async (id: number) => {
@@ -421,11 +451,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
         onDeleteTemplate={handleDeleteCustomTemplate}
+        onEditTemplate={handleEditCustomTemplate}
       />
       <CustomWorkoutBuilderModal
         open={customBuilderOpen}
-        onClose={() => setCustomBuilderOpen(false)}
+        onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); }}
         onCreate={handleCustomWorkoutCreate}
+        onUpdate={handleCustomWorkoutUpdate}
+        template={templateToEdit ?? undefined}
         existingNames={customTemplates.map(t => t.name)}
       />
     </div>

@@ -7,6 +7,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CustomWorkoutTemplate } from '@/lib/storage';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { Settings } from 'lucide-react';
 
 interface WorkoutTemplateSelectorModalProps {
   open: boolean;
@@ -15,9 +22,10 @@ interface WorkoutTemplateSelectorModalProps {
   onSelectTemplate: (template: string) => void;
   onCreateCustom: () => void;
   onDeleteTemplate: (id: number) => void;
+  onEditTemplate: (template: CustomWorkoutTemplate) => void;
 }
 
-export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onDeleteTemplate }: WorkoutTemplateSelectorModalProps) {
+export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -64,17 +72,27 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                   >
                     {t.name}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-red-600"
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this workout?')) {
-                        onDeleteTemplate(t.id);
-                      }
-                    }}
-                  >
-                    ✕
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEditTemplate(t)}>
+                        Edit workout
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (confirm('Delete this workout?')) {
+                            onDeleteTemplate(t.id);
+                          }
+                        }}
+                      >
+                        Delete workout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))}
             </div>

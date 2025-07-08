@@ -1,9 +1,10 @@
-import { Workout, InsertWorkout, UserPreferences, Exercise } from "@shared/schema";
+import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise } from "@shared/schema";
 
 export interface CustomWorkoutTemplate {
   id: number;
   name: string;
   exercises: Exercise[];
+  abs?: AbsExercise[];
   includeInAutoSchedule?: boolean;
 }
 
@@ -53,6 +54,7 @@ export class LocalWorkoutStorage {
     const templates = stored ? JSON.parse(stored) : [];
     return templates.map((t: CustomWorkoutTemplate) => ({
       includeInAutoSchedule: false,
+      abs: [],
       ...t,
     }));
   }
@@ -174,7 +176,12 @@ export class LocalWorkoutStorage {
   async addCustomTemplate(template: Omit<CustomWorkoutTemplate, 'id'>): Promise<CustomWorkoutTemplate> {
     const templates = this.getCustomTemplatesInternal();
     const id = templates.length > 0 ? Math.max(...templates.map(t => t.id)) + 1 : 1;
-    const newTemplate: CustomWorkoutTemplate = { id, includeInAutoSchedule: template.includeInAutoSchedule ?? false, ...template };
+    const newTemplate: CustomWorkoutTemplate = {
+      id,
+      includeInAutoSchedule: template.includeInAutoSchedule ?? false,
+      abs: template.abs ?? [],
+      ...template,
+    };
     templates.push(newTemplate);
     this.saveCustomTemplates(templates);
     return newTemplate;
@@ -186,6 +193,23 @@ export class LocalWorkoutStorage {
     if (filtered.length === templates.length) return false;
     this.saveCustomTemplates(filtered);
     return true;
+  }
+
+  async updateCustomTemplate(
+    id: number,
+    updates: Omit<CustomWorkoutTemplate, 'id'>,
+  ): Promise<CustomWorkoutTemplate | undefined> {
+    const templates = this.getCustomTemplatesInternal();
+    const index = templates.findIndex(t => t.id === id);
+    if (index === -1) return undefined;
+    const updated = {
+      ...templates[index],
+      ...updates,
+      abs: updates.abs ?? templates[index].abs ?? [],
+    };
+    templates[index] = updated;
+    this.saveCustomTemplates(templates);
+    return updated;
   }
 
   async getUserPreferences(): Promise<UserPreferences> {

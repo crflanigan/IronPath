@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Exercise, AbsExercise } from '@shared/schema';
+import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
 import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
@@ -23,14 +24,45 @@ interface CustomWorkoutBuilderModalProps {
     abs: AbsExercise[],
     includeInAutoSchedule: boolean,
   ) => void;
+  onUpdate?: (
+    id: number,
+    name: string,
+    exercises: Exercise[],
+    abs: AbsExercise[],
+    includeInAutoSchedule: boolean,
+  ) => void;
+  template?: CustomWorkoutTemplate | null;
   existingNames: string[];
 }
 
-export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNames }: CustomWorkoutBuilderModalProps) {
+export function CustomWorkoutBuilderModal({
+  open,
+  onClose,
+  onCreate,
+  onUpdate,
+  template,
+  existingNames,
+}: CustomWorkoutBuilderModalProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [includeInSchedule, setIncludeInSchedule] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      if (template) {
+        setName(template.name);
+        setSelected(new Set(template.exercises.map(e => e.machine)));
+        setSelectedAbs(new Set((template.abs ?? []).map(a => a.name)));
+        setIncludeInSchedule(template.includeInAutoSchedule ?? false);
+      } else {
+        setName('');
+        setSelected(new Set());
+        setSelectedAbs(new Set());
+        setIncludeInSchedule(false);
+      }
+    }
+  }, [open, template]);
 
   const toggle = (machine: string) => {
     setSelected(prev => {
@@ -56,9 +88,11 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
     });
   };
 
-  const isDuplicate = existingNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+  const isDuplicate = existingNames
+    .filter(n => !template || n.toLowerCase() !== template.name.toLowerCase())
+    .some(n => n.toLowerCase() === name.trim().toLowerCase());
 
-  const handleCreate = () => {
+  const handleSave = () => {
     if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
     const exercises: Exercise[] = Array.from(selected).map(m => {
       const info = exerciseLibrary.find(e => e.machine === m)!;
@@ -83,11 +117,12 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
         completed: false,
       } as AbsExercise;
     });
-    onCreate(name, exercises, abs, includeInSchedule);
-    setName('');
-    setSelected(new Set());
-    setSelectedAbs(new Set());
-    setIncludeInSchedule(false);
+    if (template && onUpdate) {
+      onUpdate(template.id, name, exercises, abs, includeInSchedule);
+    } else {
+      onCreate(name, exercises, abs, includeInSchedule);
+    }
+    onClose();
   };
 
   const warning12 = selected.size >= 12 && selected.size < 15;
@@ -109,7 +144,7 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4 overflow-y-auto max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Create Custom Workout</DialogTitle>
+          <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -158,7 +193,9 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
         {isDuplicate && (
           <p className="text-red-600 text-sm">Workout name must be unique</p>
         )}
-        <Button onClick={handleCreate} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>Save Workout</Button>
+        <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
+          {template ? 'Update Workout' : 'Save Workout'}
+        </Button>
       </DialogContent>
     </Dialog>
   );
