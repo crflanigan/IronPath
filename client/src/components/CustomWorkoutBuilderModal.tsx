@@ -18,9 +18,10 @@ interface CustomWorkoutBuilderModalProps {
   open: boolean;
   onClose: () => void;
   onCreate: (name: string, exercises: Exercise[], abs: AbsExercise[]) => void;
+  existingNames: string[];
 }
 
-export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWorkoutBuilderModalProps) {
+export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNames }: CustomWorkoutBuilderModalProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
@@ -49,8 +50,10 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWor
     });
   };
 
+  const isDuplicate = existingNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+
   const handleCreate = () => {
-    if (name.trim() === '' || selected.size === 0) return;
+    if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
     const exercises: Exercise[] = Array.from(selected).map(m => {
       const info = exerciseLibrary.find(e => e.machine === m)!;
       return {
@@ -138,7 +141,10 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWor
           <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn’t effective. Consider splitting it up.</p>
         )}
         <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
-        <Button onClick={handleCreate} disabled={name.trim() === '' || selected.size === 0}>Save Workout</Button>
+        {isDuplicate && (
+          <p className="text-red-600 text-sm">Workout name must be unique</p>
+        )}
+        <Button onClick={handleCreate} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>Save Workout</Button>
       </DialogContent>
     </Dialog>
   );

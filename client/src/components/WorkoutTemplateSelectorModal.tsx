@@ -14,9 +14,10 @@ interface WorkoutTemplateSelectorModalProps {
   onClose: () => void;
   onSelectTemplate: (template: string) => void;
   onCreateCustom: () => void;
+  onDeleteTemplate: (id: number) => void;
 }
 
-export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom }: WorkoutTemplateSelectorModalProps) {
+export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onDeleteTemplate }: WorkoutTemplateSelectorModalProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -55,9 +56,26 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
               <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Workouts</div>
               {customTemplates.map(t => (
-                <Button key={t.id} variant="outline" onClick={() => onSelectTemplate(t.name)}>
-                  {t.name}
-                </Button>
+                <div key={t.id} className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    className="flex-1 justify-start"
+                    onClick={() => onSelectTemplate(t.name)}
+                  >
+                    {t.name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-red-600"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this workout?')) {
+                        onDeleteTemplate(t.id);
+                      }
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </div>
               ))}
             </div>
           )}
