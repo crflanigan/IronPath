@@ -43,8 +43,12 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Respond with the error message but don't rethrow it to avoid
+    // crashing the server. Express will continue handling requests.
     res.status(status).json({ message });
-    throw err;
+
+    // Log the full stack for debugging purposes.
+    log(err.stack || String(err), "error");
   });
 
   // During development, run Vite's middleware for hot reloading.
