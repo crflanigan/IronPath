@@ -9,18 +9,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Exercise } from '@shared/schema';
+import { Exercise, AbsExercise } from '@shared/schema';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
+import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, exercises: Exercise[]) => void;
+  onCreate: (name: string, exercises: Exercise[], abs: AbsExercise[]) => void;
 }
 
 export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWorkoutBuilderModalProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
 
   const toggle = (machine: string) => {
@@ -30,6 +32,18 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWor
         next.delete(machine);
       } else if (next.size < 15) {
         next.add(machine);
+      }
+      return next;
+    });
+  };
+
+  const toggleAbs = (name: string) => {
+    setSelectedAbs(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
       }
       return next;
     });
@@ -51,9 +65,19 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWor
         ],
       } as Exercise;
     });
-    onCreate(name, exercises);
+    const abs: AbsExercise[] = Array.from(selectedAbs).map(n => {
+      const info = absLibrary.find(a => a.name === n)!;
+      return {
+        name: info.name,
+        reps: info.reps,
+        time: info.time,
+        completed: false,
+      } as AbsExercise;
+    });
+    onCreate(name, exercises, abs);
     setName('');
     setSelected(new Set());
+    setSelectedAbs(new Set());
   };
 
   const warning12 = selected.size >= 12 && selected.size < 15;
@@ -92,6 +116,20 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate }: CustomWor
               </div>
             </div>
           ))}
+        </div>
+        <div className="border rounded p-2">
+          <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
+          <div className="grid grid-cols-2 gap-2">
+            {absLibrary.map(abs => (
+              <label key={abs.name} className="flex items-center space-x-2 text-sm">
+                <Checkbox
+                  checked={selectedAbs.has(abs.name)}
+                  onCheckedChange={() => toggleAbs(abs.name)}
+                />
+                <span>{abs.name}</span>
+              </label>
+            ))}
+          </div>
         </div>
         {warning12 && (
           <p className="text-yellow-600 text-sm">⚠️ That’s a big session — are you training or moving in?</p>

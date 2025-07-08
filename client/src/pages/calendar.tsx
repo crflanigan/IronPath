@@ -8,7 +8,7 @@ import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from 
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
-import { Workout, Exercise } from '@shared/schema';
+import { Workout, Exercise, AbsExercise } from '@shared/schema';
 
 interface CalendarPageProps {
   onNavigateToWorkout: (workout: Workout) => void;
@@ -85,7 +85,11 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     setDateForCreation(null);
   };
 
-  const handleCustomWorkoutCreate = async (name: string, exercises: Exercise[]) => {
+  const handleCustomWorkoutCreate = async (
+    name: string,
+    exercises: Exercise[],
+    abs: AbsExercise[],
+  ) => {
     if (!dateForCreation) return;
     await addCustomTemplate({ name, exercises });
     await createWorkout({
@@ -93,7 +97,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       type: name,
       completed: false,
       cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
-      abs: [],
+      abs: abs.map(a => ({ ...a, completed: false })),
       exercises: exercises.map(e => ({
         ...e,
         completed: false,
