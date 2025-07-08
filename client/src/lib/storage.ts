@@ -48,9 +48,13 @@ export class LocalWorkoutStorage {
   private updateExerciseHistory(exercises: Exercise[], date: string) {
     const history = this.getExerciseHistory();
     for (const e of exercises) {
+      // only record history when all sets have numeric values
+      if (e.sets.some(s => s.weight === undefined || s.reps === undefined)) {
+        continue;
+      }
       const key = e.machine; // use machine name to avoid duplicate codes
       history[key] = {
-        sets: e.sets.map(s => ({ weight: s.weight, reps: s.reps, rest: s.rest })),
+        sets: e.sets.map(s => ({ weight: s.weight!, reps: s.reps!, rest: s.rest })),
         date,
       };
     }

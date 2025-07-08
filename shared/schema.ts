@@ -4,8 +4,8 @@ import { z } from "zod";
 
 // Exercise set schema
 const exerciseSetSchema = z.object({
-  weight: z.number(),
-  reps: z.number(),
+  weight: z.number().optional(),
+  reps: z.number().optional(),
   rest: z.string(), // e.g., "1:30"
   completed: z.boolean().default(false)
 });

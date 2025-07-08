@@ -14,7 +14,11 @@ interface ExerciseFormProps {
 export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
 
-  const updateSet = (setIndex: number, field: keyof ExerciseSet, value: string | number | boolean) => {
+  const updateSet = (
+    setIndex: number,
+    field: keyof ExerciseSet,
+    value: string | number | boolean | undefined
+  ) => {
     const updatedSets = [...localExercise.sets];
     updatedSets[setIndex] = {
       ...updatedSets[setIndex],
@@ -43,7 +47,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   };
 
   const getWeightChange = () => {
-    const currentWeight = Math.max(...localExercise.sets.map(s => s.weight));
+    const currentWeight = Math.max(...localExercise.sets.map(s => s.weight || 0));
     const bestWeight = localExercise.bestWeight || 0;
     const difference = currentWeight - bestWeight;
     
@@ -107,8 +111,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="number"
-                  value={set.weight}
-                  onChange={(e) => updateSet(index, 'weight', parseInt(e.target.value) || 0)}
+                  value={set.weight ?? ''}
+                  onChange={(e) =>
+                    updateSet(
+                      index,
+                      'weight',
+                      e.target.value === '' ? undefined : parseInt(e.target.value)
+                    )
+                  }
                   className="w-16 text-sm"
                   placeholder="lbs"
                   disabled={false}
@@ -118,8 +128,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="number"
-                  value={set.reps}
-                  onChange={(e) => updateSet(index, 'reps', parseInt(e.target.value) || 0)}
+                  value={set.reps ?? ''}
+                  onChange={(e) =>
+                    updateSet(
+                      index,
+                      'reps',
+                      e.target.value === '' ? undefined : parseInt(e.target.value)
+                    )
+                  }
                   className="w-14 text-sm"
                   placeholder="reps"
                   disabled={false}

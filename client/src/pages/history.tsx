@@ -22,7 +22,9 @@ export function HistoryPage() {
           exerciseProgress[exercise.machine] = [];
         }
 
-        const maxWeight = Math.max(...exercise.sets.map(s => s.weight));
+        const maxWeight = Math.max(
+          ...exercise.sets.map(s => s.weight ?? 0)
+        );
         exerciseProgress[exercise.machine].push(maxWeight);
       });
     });
