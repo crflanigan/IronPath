@@ -1,6 +1,6 @@
 # 💪 IronPath Workout Tracker
 
-A sleek, full-stack workout tracker app designed for lifters who want an intuitive calendar-based UI, personalized workout history, and frictionless progress tracking. Built with React, TypeScript, Tailwind, ShadCN, and Express — with a focus on smart scheduling, responsive UI, and persistent local and server-side data.
+A sleek, full-stack workout tracker app designed for lifters who want an intuitive calendar-based UI, personalized workout history, and frictionless progress tracking. Built with React, TypeScript, Tailwind, ShadCN, and Express — with a focus on smart scheduling, responsive UI, and persistent local and server-side data. 
 
 ## Features
 
