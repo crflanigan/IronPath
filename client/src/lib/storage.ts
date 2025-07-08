@@ -4,6 +4,7 @@ export interface CustomWorkoutTemplate {
   id: number;
   name: string;
   exercises: Exercise[];
+  includeInAutoSchedule?: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -49,11 +50,23 @@ export class LocalWorkoutStorage {
 
   private getCustomTemplatesInternal(): CustomWorkoutTemplate[] {
     const stored = localStorage.getItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
-    return stored ? JSON.parse(stored) : [];
+    const templates = stored ? JSON.parse(stored) : [];
+    return templates.map((t: CustomWorkoutTemplate) => ({
+      includeInAutoSchedule: false,
+      ...t,
+    }));
   }
 
   private saveCustomTemplates(templates: CustomWorkoutTemplate[]): void {
     localStorage.setItem(STORAGE_KEYS.CUSTOM_TEMPLATES, JSON.stringify(templates));
+  }
+
+  getCustomTemplatesSync(): CustomWorkoutTemplate[] {
+    try {
+      return this.getCustomTemplatesInternal();
+    } catch {
+      return [];
+    }
   }
 
   async getLastExerciseSets(machine: string): Promise<{ weight: number; reps: number; rest?: string }[] | undefined> {
@@ -161,7 +174,7 @@ export class LocalWorkoutStorage {
   async addCustomTemplate(template: Omit<CustomWorkoutTemplate, 'id'>): Promise<CustomWorkoutTemplate> {
     const templates = this.getCustomTemplatesInternal();
     const id = templates.length > 0 ? Math.max(...templates.map(t => t.id)) + 1 : 1;
-    const newTemplate: CustomWorkoutTemplate = { id, ...template };
+    const newTemplate: CustomWorkoutTemplate = { id, includeInAutoSchedule: template.includeInAutoSchedule ?? false, ...template };
     templates.push(newTemplate);
     this.saveCustomTemplates(templates);
     return newTemplate;

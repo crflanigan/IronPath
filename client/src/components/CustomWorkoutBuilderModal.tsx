@@ -17,7 +17,12 @@ import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, exercises: Exercise[], abs: AbsExercise[]) => void;
+  onCreate: (
+    name: string,
+    exercises: Exercise[],
+    abs: AbsExercise[],
+    includeInAutoSchedule: boolean,
+  ) => void;
   existingNames: string[];
 }
 
@@ -25,6 +30,7 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
+  const [includeInSchedule, setIncludeInSchedule] = useState(false);
 
   const toggle = (machine: string) => {
     setSelected(prev => {
@@ -77,10 +83,11 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
         completed: false,
       } as AbsExercise;
     });
-    onCreate(name, exercises, abs);
+    onCreate(name, exercises, abs, includeInSchedule);
     setName('');
     setSelected(new Set());
     setSelectedAbs(new Set());
+    setIncludeInSchedule(false);
   };
 
   const warning12 = selected.size >= 12 && selected.size < 15;
@@ -141,6 +148,13 @@ export function CustomWorkoutBuilderModal({ open, onClose, onCreate, existingNam
           <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn’t effective. Consider splitting it up.</p>
         )}
         <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
+        <label className="flex items-center space-x-2 text-sm">
+          <Checkbox
+            checked={includeInSchedule}
+            onCheckedChange={v => setIncludeInSchedule(!!v)}
+          />
+          <span>Include in auto-schedule</span>
+        </label>
         {isDuplicate && (
           <p className="text-red-600 text-sm">Workout name must be unique</p>
         )}
