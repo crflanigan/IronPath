@@ -119,10 +119,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const cardioComplete = workout.cardio?.completed || false;
     const allFieldsFilled = workout.exercises.every(ex =>
       ex.sets.every(
-        s =>
-          s.weight !== undefined &&
-          s.reps !== undefined &&
-          s.rest.trim() !== ''
+        s => s.weight !== undefined && s.reps !== undefined
       )
     );
 
@@ -135,10 +132,23 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       return;
     }
 
+    const completedExercises = workout.exercises.map((e) =>
+      e.completed
+        ? {
+            ...e,
+            sets: e.sets.map((s) => ({
+              ...s,
+              rest: (s.rest ?? '').trim() === '' ? '1:00' : s.rest,
+            })),
+          }
+        : e
+    );
+
     const completedWorkout = {
       ...workout,
+      exercises: completedExercises,
       completed: true,
-      duration: calculateWorkoutDuration()
+      duration: calculateWorkoutDuration(),
     };
     
     setWorkout(completedWorkout);
