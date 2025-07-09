@@ -13,7 +13,8 @@ const STORAGE_KEYS = {
   PREFERENCES: 'ironpath_preferences',
   CURRENT_ID: 'ironpath_current_id',
   EXERCISE_HISTORY: 'ironpath_exercise_history',
-  CUSTOM_TEMPLATES: 'ironpath_custom_templates'
+  CUSTOM_TEMPLATES: 'ironpath_custom_templates',
+  AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts'
 } as const;
 
 interface ExerciseHistoryEntry {
@@ -69,6 +70,22 @@ export class LocalWorkoutStorage {
     } catch {
       return [];
     }
+  }
+
+  getAutoScheduleWorkouts(): string[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  saveAutoScheduleWorkouts(names: string[]): void {
+    localStorage.setItem(
+      STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS,
+      JSON.stringify(names)
+    );
   }
 
   async getLastExerciseSets(machine: string): Promise<{ weight: number; reps: number; rest?: string }[] | undefined> {

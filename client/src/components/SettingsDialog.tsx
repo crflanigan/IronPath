@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { localWorkoutStorage } from '@/lib/storage';
+import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { toast } from '@/hooks/use-toast';
 
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const handleExport = async () => {
     const data = await localWorkoutStorage.exportData();
@@ -34,9 +36,10 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="space-y-4">
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
+        <DialogContent className="space-y-4">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Manage app data and preferences.</DialogDescription>
@@ -51,6 +54,9 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
               </Button>
             </label>
           </div>
+          <Button className="w-full" variant="secondary" onClick={() => setScheduleOpen(true)}>
+            Customize Auto-Schedule
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="w-full">Reset All Data</Button>
@@ -73,7 +79,9 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           Created by Casey Flanigan<br />
           This is an open source project which can be found here: https://github.com/crflanigan/IronPath
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      <AutoScheduleModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} />
+    </>
   );
 }

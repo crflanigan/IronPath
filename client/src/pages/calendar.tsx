@@ -8,6 +8,7 @@ import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from 
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
+import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 
@@ -21,6 +22,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
   const {
@@ -421,16 +423,24 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
                 onDelete={handleDeleteSelectedWorkout}
               />
             )}
-            <div className="text-center py-4">
-              {!selectedWorkout && (
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  No custom workout scheduled for this date
-                </p>
-              )}
-              <Button onClick={() => openTemplateSelector(selectedDate)}>
-                {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
-              </Button>
-            </div>
+              <div className="text-center py-4 space-y-2">
+                {!selectedWorkout && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    No custom workout scheduled for this date
+                  </p>
+                )}
+                <div className="flex justify-center space-x-2">
+                  <Button onClick={() => openTemplateSelector(selectedDate)}>
+                    {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setScheduleModalOpen(true)}
+                  >
+                    Customize Auto-Schedule
+                  </Button>
+                </div>
+              </div>
           </CardContent>
         </Card>
       )}
@@ -453,14 +463,19 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onDeleteTemplate={handleDeleteCustomTemplate}
         onEditTemplate={handleEditCustomTemplate}
       />
-      <CustomWorkoutBuilderModal
-        open={customBuilderOpen}
-        onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); }}
-        onCreate={handleCustomWorkoutCreate}
-        onUpdate={handleCustomWorkoutUpdate}
-        template={templateToEdit ?? undefined}
-        existingNames={customTemplates.map(t => t.name)}
-      />
-    </div>
-  );
-}
+        <CustomWorkoutBuilderModal
+          open={customBuilderOpen}
+          onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); }}
+          onCreate={handleCustomWorkoutCreate}
+          onUpdate={handleCustomWorkoutUpdate}
+          template={templateToEdit ?? undefined}
+          existingNames={customTemplates.map(t => t.name)}
+        />
+        <AutoScheduleModal
+          open={scheduleModalOpen}
+          onClose={() => setScheduleModalOpen(false)}
+          customTemplates={customTemplates}
+        />
+      </div>
+    );
+  }
