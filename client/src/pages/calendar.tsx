@@ -379,16 +379,16 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       <Card>
         <CardContent className="p-4">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Workout Status</h3>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex justify-center space-x-6">
+            <div className="flex items-center space-x-1">
               <span className="text-green-600">✅</span>
               <span className="text-sm text-gray-600 dark:text-gray-400">Completed</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               <span className="text-orange-600">🕒</span>
               <span className="text-sm text-gray-600 dark:text-gray-400">Pending</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               <span className="text-blue-600">📅</span>
               <span className="text-sm text-gray-600 dark:text-gray-400">Today</span>
             </div>
@@ -427,25 +427,23 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
               />
             )}
 
-            <div className="text-center space-y-2">
-              {!selectedWorkout && (
-                <p className="text-gray-600 dark:text-gray-400">
-                  No custom workout scheduled for this date
-                </p>
-              )}
-              <div className="flex justify-center space-x-2">
-                <Button className="flex-1" onClick={() => openTemplateSelector(selectedDate)}>
-                  {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
-                </Button>
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  onClick={() => setScheduleModalOpen(true)}
-                >
-                  Customize Auto-Schedule
-                </Button>
-              </div>
-            </div>
+            <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
+              Create Custom Workout
+            </Button>
+
+            {!selectedWorkout && (
+              <p className="text-center text-gray-600 dark:text-gray-400">
+                No custom workout scheduled for this date
+              </p>
+            )}
+
+            <Button
+              className="w-full"
+              variant="secondary"
+              onClick={() => setScheduleModalOpen(true)}
+            >
+              Customize Auto-Schedule
+            </Button>
           </CardContent>
         </Card>
       )}
