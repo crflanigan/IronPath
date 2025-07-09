@@ -29,8 +29,13 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
       ...updatedSets[setIndex],
       [field]: value
     };
-    
-    const updatedExercise = { ...localExercise, sets: updatedSets };
+
+    const exerciseCompleted = updatedSets.every(s => s.completed);
+    const updatedExercise = {
+      ...localExercise,
+      sets: updatedSets,
+      completed: exerciseCompleted
+    };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
   };
@@ -48,27 +53,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     if ((set.rest ?? '').trim() === '') {
       updateSet(setIndex, 'rest', '1:00');
     }
-    updateSet(setIndex, 'completed', true);
-  };
+    const updatedSets = [...localExercise.sets];
+    updatedSets[setIndex] = { ...updatedSets[setIndex], completed: true };
 
-  const toggleExerciseComplete = () => {
-    const allSetsComplete = localExercise.sets.every(isSetComplete);
-    if (!allSetsComplete) {
-      toast({
-        title: 'Exercise incomplete',
-        description: 'Fill weight and reps for each set first',
-        variant: 'destructive'
-      });
-      return;
-    }
-    const updatedSets = localExercise.sets.map((s) => ({
-      ...s,
-      rest: (s.rest ?? '').trim() === '' ? '1:00' : s.rest,
-    }));
+    const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
       ...localExercise,
       sets: updatedSets,
-      completed: !localExercise.completed,
+      completed: exerciseCompleted,
     };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
@@ -106,14 +98,6 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
           <div className="flex items-center space-x-2">
             {localExercise.completed && <Check className="h-5 w-5 text-green-500" />}
             {isActive && !localExercise.completed && <Clock className="h-5 w-5 text-blue-500" />}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleExerciseComplete}
-              className={localExercise.completed ? 'text-green-600' : 'text-gray-400'}
-            >
-              {localExercise.completed ? '✅' : '⏳'}
-            </Button>
           </div>
         </div>
 
