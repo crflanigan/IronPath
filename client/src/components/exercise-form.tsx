@@ -14,10 +14,20 @@ interface ExerciseFormProps {
 
 export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
+  const [restDigits, setRestDigits] = useState<string[]>(
+    exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
+  );
   const { toast } = useToast();
 
   const isSetComplete = (set: ExerciseSet) =>
     set.weight !== undefined && set.reps !== undefined;
+
+  const formatRest = (digits: string) => {
+    if (digits.length === 0) return '';
+    return digits.length <= 2
+      ? `0:${digits.padStart(2, '0')}`
+      : `${parseInt(digits.slice(0, -2))}:${digits.slice(-2)}`;
+  };
 
   const updateSet = (
     setIndex: number,
@@ -29,6 +39,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
       ...updatedSets[setIndex],
       [field]: value
     };
+
 
     const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
@@ -50,11 +61,15 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
       });
       return;
     }
-    if ((set.rest ?? '').trim() === '') {
-      updateSet(setIndex, 'rest', '1:00');
-    }
+
     const updatedSets = [...localExercise.sets];
-    updatedSets[setIndex] = { ...updatedSets[setIndex], completed: true };
+    const rest = (set.rest ?? '').trim() === '' ? '1:00' : set.rest!;
+    updatedSets[setIndex] = { ...updatedSets[setIndex], rest, completed: true };
+    setRestDigits((prev) => {
+      const copy = [...prev];
+      copy[setIndex] = rest.replace(/\D/g, '');
+      return copy;
+    });
 
     const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
@@ -132,14 +147,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="number"
+                  inputMode="decimal"
                   value={set.weight ?? ''}
-                  onChange={(e) =>
-                    updateSet(
-                      index,
-                      'weight',
-                      e.target.value === '' ? undefined : parseInt(e.target.value)
-                    )
-                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*$/.test(v)) {
+                      updateSet(index, 'weight', v === '' ? undefined : parseInt(v));
+                    }
+                  }}
                   className={`w-16 text-sm ${weightError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="lbs"
                   disabled={false}
@@ -149,14 +164,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="number"
+                  inputMode="decimal"
                   value={set.reps ?? ''}
-                  onChange={(e) =>
-                    updateSet(
-                      index,
-                      'reps',
-                      e.target.value === '' ? undefined : parseInt(e.target.value)
-                    )
-                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*$/.test(v)) {
+                      updateSet(index, 'reps', v === '' ? undefined : parseInt(v));
+                    }
+                  }}
                   className={`w-14 text-sm ${repsError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="reps"
                   disabled={false}
@@ -164,8 +179,31 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 
                 <Input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9:]*"
                   value={set.rest ?? ''}
-                  onChange={(e) => updateSet(index, 'rest', e.target.value)}
+                  onChange={(e) => {
+                    const inputEv = e.nativeEvent as InputEvent;
+                    let digits = restDigits[index] || '';
+
+                    if (inputEv.inputType?.startsWith('delete')) {
+                      digits = digits.slice(0, -1);
+                    } else if (inputEv.inputType === 'insertFromPaste') {
+                      digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                    } else {
+                      const char = inputEv.data ?? '';
+                      if (/^\d$/.test(char) && digits.length < 3) {
+                        digits += char;
+                      }
+                    }
+
+                    setRestDigits((prev) => {
+                      const copy = [...prev];
+                      copy[index] = digits;
+                      return copy;
+                    });
+                    updateSet(index, 'rest', formatRest(digits));
+                  }}
                   className={`w-16 text-sm ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="rest"
                   disabled={false}
