@@ -3,7 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Exercise, ExerciseSet } from '@shared/schema';
-import { Check, Clock } from 'lucide-react';
+import { Check, Clock, HelpCircle } from 'lucide-react';
+import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseFormProps {
@@ -17,6 +18,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   const [restDigits, setRestDigits] = useState<string[]>(
     exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
   );
+  const [showHelp, setShowHelp] = useState(false);
   const { toast } = useToast();
 
   const isSetComplete = (set: ExerciseSet) =>
@@ -101,6 +103,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                      isActive ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600';
 
   return (
+    <>
     <Card className={`border-l-4 ${borderColor}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
@@ -111,6 +114,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowHelp(true)}
+              className="text-gray-500 hover:text-primary"
+            >
+              <HelpCircle className="h-5 w-5" />
+              <span className="sr-only">Help</span>
+            </button>
             {localExercise.completed && <Check className="h-5 w-5 text-green-500" />}
             {isActive && !localExercise.completed && <Clock className="h-5 w-5 text-blue-500" />}
           </div>
@@ -238,5 +249,11 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
         </div>
       </CardContent>
     </Card>
+    <ExerciseImageDialog
+      exerciseName={localExercise.machine}
+      open={showHelp}
+      onOpenChange={setShowHelp}
+    />
+    </>
   );
 }
