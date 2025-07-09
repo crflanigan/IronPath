@@ -879,11 +879,23 @@ export const defaultWorkoutCycle: string[] = [
 ];
 
 export function getWorkoutCycle(): string[] {
-  const customs = localWorkoutStorage
-    .getCustomTemplatesSync()
-    .filter(t => t.includeInAutoSchedule)
+  const selected = localWorkoutStorage.getAutoScheduleWorkouts();
+  const customTemplates = localWorkoutStorage.getCustomTemplatesSync();
+
+  const presets =
+    selected.length === 0
+      ? defaultWorkoutCycle
+      : defaultWorkoutCycle.filter(name => selected.includes(name));
+
+  const customs = customTemplates
+    .filter(t =>
+      selected.length === 0
+        ? t.includeInAutoSchedule
+        : selected.includes(t.name)
+    )
     .map(t => t.name);
-  return [...defaultWorkoutCycle, ...customs];
+
+  return [...presets, ...customs];
 }
 
 // Generate workout schedule for a given month
