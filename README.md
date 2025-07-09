@@ -5,7 +5,7 @@ A sleek, full-stack workout tracker app designed for lifters who want an intuiti
 ## Features
 
 - 🗖️ **Interactive Workout Calendar** – View and manage workouts day-by-day, with colored status icons for pending, completed, and current-day sessions.
-- 🏋️‍♂️ **Custom Workout Templates** – Add your own "Back & Legs", "Chest Day", and other templates for fast schedule generation.
+- 🏋️‍♂️ **Custom Workout Templates** – Add your own "Legs", "Chest Day", and other templates for fast schedule generation.
 - 📈 **Progress & Streak Tracking** – Tracks progress visually and calculates daily completion streaks using locale-safe date handling.
 - 🧠 **Auto-Save with Local Persistence** – Your progress is saved automatically, even offline.
 - 📤 **Export to JSON or CSV** – Export your workout history with locale-safe filenames for easy backups or analysis.

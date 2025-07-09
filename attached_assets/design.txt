@@ -38,7 +38,7 @@ Doctor Biz cycles through multiple workout focus days. These are shown in calend
 
 Chest, Shoulder Focus
 
-Back and Legs
+Legs
 
 Chest, Tricep Focus
 

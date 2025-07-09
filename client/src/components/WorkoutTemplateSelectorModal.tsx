@@ -45,14 +45,14 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           <Button variant="outline" onClick={() => onSelectTemplate('Chest Day')}>Chest Day</Button>
           {/*
             Template keys are defined in workout-data.ts using
-            "Back and Legs". Passing the mismatched label caused
+            "Legs". Passing the mismatched label caused
             workout creation to silently fail.
           */}
           <Button
             variant="outline"
-            onClick={() => onSelectTemplate('Back and Legs')}
+            onClick={() => onSelectTemplate('Legs')}
           >
-            Back & Legs
+            Legs
           </Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Back & Biceps')}>Back & Biceps</Button>
           <Button variant="outline" onClick={() => onSelectTemplate('Back, Biceps & Legs')}>Back, Biceps & Legs</Button>

@@ -114,7 +114,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     ]
   },
 
-  "Back and Legs": {
+  "Legs": {
     exercises: [
       {
         code: "S36",
@@ -864,13 +864,13 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
 export const defaultWorkoutCycle: string[] = [
   "Chest & Triceps",
   "Back & Biceps",
-  "Back and Legs",
+  "Legs",
   "Chest & Shoulders",
   "Back, Biceps & Legs",
   "Chest Day",
   "Back & Biceps",
   "Chest, Shoulders & Legs",
-  "Back and Legs",
+  "Legs",
   "Chest & Triceps",
   "Back, Biceps & Legs",
   "Chest & Shoulders",
