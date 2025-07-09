@@ -427,15 +427,15 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
               />
             )}
 
-            <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
-              Create Custom Workout
-            </Button>
-
             {!selectedWorkout && (
               <p className="text-center text-gray-600 dark:text-gray-400">
                 No custom workout scheduled for this date
               </p>
             )}
+
+            <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
+              Create Custom Workout
+            </Button>
 
             <Button
               className="w-full"
