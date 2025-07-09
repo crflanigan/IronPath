@@ -14,10 +14,20 @@ interface ExerciseFormProps {
 
 export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
+  const [restDigits, setRestDigits] = useState<string[]>(
+    exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
+  );
   const { toast } = useToast();
 
   const isSetComplete = (set: ExerciseSet) =>
     set.weight !== undefined && set.reps !== undefined;
+
+  const formatRest = (digits: string) => {
+    if (digits.length === 0) return '';
+    return digits.length <= 2
+      ? `0:${digits.padStart(2, '0')}`
+      : `${parseInt(digits.slice(0, -2))}:${digits.slice(-2)}`;
+  };
 
   const updateSet = (
     setIndex: number,
@@ -29,6 +39,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
       ...updatedSets[setIndex],
       [field]: value
     };
+
+    if (field === 'rest') {
+      setRestDigits((prev) => {
+        const copy = [...prev];
+        copy[setIndex] = typeof value === 'string' ? value.replace(/\D/g, '') : '';
+        return copy;
+      });
+    }
 
     const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
@@ -52,8 +70,13 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     }
 
     const updatedSets = [...localExercise.sets];
-    const rest = (set.rest ?? '').trim() === '' ? '1:00' : set.rest;
+    const rest = (set.rest ?? '').trim() === '' ? '1:00' : set.rest!;
     updatedSets[setIndex] = { ...updatedSets[setIndex], rest, completed: true };
+    setRestDigits((prev) => {
+      const copy = [...prev];
+      copy[setIndex] = rest.replace(/\D/g, '');
+      return copy;
+    });
 
     const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
@@ -167,16 +190,14 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   pattern="[0-9:]*"
                   value={set.rest ?? ''}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
-                    if (digits.length === 0) {
-                      updateSet(index, 'rest', '');
-                      return;
-                    }
-                    const formatted =
-                      digits.length <= 2
-                        ? `0:${digits.padStart(2, '0')}`
-                        : `${parseInt(digits.slice(0, -2))}:${digits.slice(-2)}`;
-                    updateSet(index, 'rest', formatted);
+                    const digits = e.target.value.replace(/\D/g, '');
+                    if (digits.length > 3) return;
+                    setRestDigits((prev) => {
+                      const copy = [...prev];
+                      copy[index] = digits;
+                      return copy;
+                    });
+                    updateSet(index, 'rest', formatRest(digits));
                   }}
                   className={`w-16 text-sm ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="rest"
