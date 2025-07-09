@@ -41,7 +41,7 @@ const cardioSchema = z.object({
 // Workout types (add all valid workout templates here)
 export const workoutTypes = [
   "Chest, Shoulder Focus",
-  "Back and Legs",
+  "Legs",
   "Chest, Tricep Focus",
   "Back, Biceps, and Legs",
   "Chest, Shoulders, and Back",
