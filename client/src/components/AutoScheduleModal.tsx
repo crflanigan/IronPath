@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,21 @@ interface AutoScheduleModalProps {
 }
 
 export function AutoScheduleModal({ open, onClose, customTemplates }: AutoScheduleModalProps) {
-  const presetNames = Array.from(new Set(defaultWorkoutCycle));
-  const [templates, setTemplates] = useState<CustomWorkoutTemplate[]>(customTemplates ?? []);
+  const presetNames = useMemo(
+    () => Array.from(new Set(defaultWorkoutCycle)),
+    []
+  );
+  const [templates, setTemplates] = useState<CustomWorkoutTemplate[]>(
+    customTemplates ?? []
+  );
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [warning, setWarning] = useState(false);
+
+  useEffect(() => {
+    if (customTemplates) {
+      setTemplates(customTemplates);
+    }
+  }, [customTemplates]);
 
   useEffect(() => {
     if (open && !customTemplates) {
@@ -44,10 +56,25 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
     }
   }, [open, templates, presetNames]);
 
+  useEffect(() => {
+    if (open) {
+      setWarning(false);
+    }
+  }, [open]);
+
   const toggle = (name: string) => {
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name); else next.add(name);
+      if (next.has(name)) {
+        if (prev.size === 1) {
+          setWarning(true);
+          return prev;
+        }
+        next.delete(name);
+      } else {
+        next.add(name);
+        setWarning(false);
+      }
       return next;
     });
   };
@@ -98,6 +125,9 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
             </div>
           )}
         </div>
+        {warning && (
+          <p className="text-red-600 text-sm">At least one workout must be selected to continue.</p>
+        )}
         <Button onClick={handleSave} disabled={selected.size === 0} className="w-full">
           Save
         </Button>
