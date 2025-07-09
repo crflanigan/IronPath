@@ -18,7 +18,9 @@ interface CalendarPageProps {
 
 export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    () => formatLocalDate(new Date())
+  );
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
