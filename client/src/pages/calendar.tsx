@@ -18,7 +18,9 @@ interface CalendarPageProps {
 
 export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    () => formatLocalDate(new Date())
+  );
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
@@ -372,11 +374,6 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         selectedDate={selectedDate}
       />
 
-      {selectedDate && (
-        <p className="text-center font-medium">
-          Selected Day's Workout: {selectedWorkoutType ?? 'None'}
-        </p>
-      )}
 
       {/* Workout Legend */}
       <Card>
@@ -402,8 +399,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       {/* Selected Workout Details */}
       {selectedDate && (
         <Card>
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+          <CardContent className="p-4 space-y-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white">
               {(() => {
                 const [year, month, day] = selectedDate.split('-').map(Number);
                 const dateObj = new Date(year, month - 1, day); // Avoids timezone shift
@@ -414,7 +411,13 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
                 });
               })()}
             </h3>
-            
+            <p className="text-center font-medium">
+              Selected Day's Workout: {selectedWorkoutType ?? 'None'}
+            </p>
+            <Button onClick={handleStartTodayWorkout} className="w-full">
+              Start Today's Workout
+            </Button>
+
             {selectedWorkout && (
               <WorkoutCard
                 workout={selectedWorkout}
@@ -423,37 +426,29 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
                 onDelete={handleDeleteSelectedWorkout}
               />
             )}
-              <div className="text-center py-4 space-y-2">
-                {!selectedWorkout && (
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    No custom workout scheduled for this date
-                  </p>
-                )}
-                <div className="flex justify-center space-x-2">
-                  <Button onClick={() => openTemplateSelector(selectedDate)}>
-                    {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setScheduleModalOpen(true)}
-                  >
-                    Customize Auto-Schedule
-                  </Button>
-                </div>
+
+            <div className="text-center space-y-2">
+              {!selectedWorkout && (
+                <p className="text-gray-600 dark:text-gray-400">
+                  No custom workout scheduled for this date
+                </p>
+              )}
+              <div className="flex justify-center space-x-2">
+                <Button className="flex-1" onClick={() => openTemplateSelector(selectedDate)}>
+                  {selectedWorkout ? 'Create Custom Workout' : 'Create Workout'}
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="secondary"
+                  onClick={() => setScheduleModalOpen(true)}
+                >
+                  Customize Auto-Schedule
+                </Button>
               </div>
+            </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Quick Actions */}
-      <div className="space-y-3">
-        <Button
-          onClick={handleStartTodayWorkout}
-          className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-        >
-          Start Today's Workout
-        </Button>
-      </div>
       <WorkoutTemplateSelectorModal
         open={templateModalOpen}
         customTemplates={customTemplates}
