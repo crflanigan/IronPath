@@ -40,13 +40,6 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
       [field]: value
     };
 
-    if (field === 'rest') {
-      setRestDigits((prev) => {
-        const copy = [...prev];
-        copy[setIndex] = typeof value === 'string' ? value.replace(/\D/g, '') : '';
-        return copy;
-      });
-    }
 
     const exerciseCompleted = updatedSets.every(s => s.completed);
     const updatedExercise = {
@@ -190,8 +183,20 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   pattern="[0-9:]*"
                   value={set.rest ?? ''}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '');
-                    if (digits.length > 3) return;
+                    const inputEv = e.nativeEvent as InputEvent;
+                    let digits = restDigits[index] || '';
+
+                    if (inputEv.inputType?.startsWith('delete')) {
+                      digits = digits.slice(0, -1);
+                    } else if (inputEv.inputType === 'insertFromPaste') {
+                      digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                    } else {
+                      const char = inputEv.data ?? '';
+                      if (/^\d$/.test(char) && digits.length < 3) {
+                        digits += char;
+                      }
+                    }
+
                     setRestDigits((prev) => {
                       const copy = [...prev];
                       copy[index] = digits;
