@@ -136,6 +136,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         feel: "Heavy",
         sets: [
           { weight: 400, reps: 10, rest: "1:30" },
+          { weight: 450, reps: 10, rest: "1:00" },
           { weight: 450, reps: 10, rest: "1:00" }
         ],
         bestWeight: 450,
@@ -147,6 +148,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         region: "Legs",
         feel: "Medium",
         sets: [
+          { weight: 0, reps: 20, rest: "1:00" },
           { weight: 0, reps: 20, rest: "1:00" },
           { weight: 0, reps: 20, rest: "1:00" }
         ],
@@ -160,6 +162,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         feel: "Medium",
         sets: [
           { weight: 165, reps: 15, rest: "1:30" },
+          { weight: 175, reps: 10, rest: "1:00" },
           { weight: 175, reps: 10, rest: "1:00" }
         ],
         bestWeight: 175,
@@ -185,6 +188,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         feel: "Medium",
         sets: [
           { weight: 150, reps: 10, rest: "1:00" },
+          { weight: 150, reps: 10, rest: "1:00" },
           { weight: 150, reps: 10, rest: "1:00" }
         ],
         bestWeight: 150,
@@ -196,6 +200,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         region: "Outer Thighs",
         feel: "Medium",
         sets: [
+          { weight: 155, reps: 10, rest: "1:00" },
           { weight: 155, reps: 10, rest: "1:00" },
           { weight: 155, reps: 10, rest: "1:00" }
         ],
@@ -209,6 +214,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         feel: "Medium",
         sets: [
           { weight: 135, reps: 10, rest: "1:00" },
+          { weight: 140, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" }
         ],
         bestWeight: 140,
@@ -220,6 +226,8 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         region: "Calves",
         feel: "Medium",
         sets: [
+          { weight: 45, reps: 20, rest: "1:00" },
+          { weight: 45, reps: 20, rest: "1:00" },
           { weight: 45, reps: 20, rest: "1:00" }
         ],
         bestWeight: 45,
