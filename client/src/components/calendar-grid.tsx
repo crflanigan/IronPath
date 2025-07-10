@@ -1,9 +1,17 @@
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Workout } from '@shared/schema';
 import { generateWorkoutSchedule } from '@/lib/workout-data';
 import { cn, formatLocalDate } from '@/lib/utils';
+
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -24,57 +32,63 @@ export function CalendarGrid({
   const month = currentDate.getMonth();
   const today = new Date();
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
   
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-  const prevMonth = new Date(year, month - 1, 0);
-  const prevMonthDays = prevMonth.getDate();
+    const prevMonth = new Date(year, month - 1, 0);
+    const prevMonthDays = prevMonth.getDate();
 
-  const calendarDays = [];
+    const days: {
+      day: number;
+      date: string;
+      isCurrentMonth: boolean;
+      isToday: boolean;
+    }[] = [];
 
-  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-    const day = prevMonthDays - i;
-    calendarDays.push({
-      day: day,
-      date: formatLocalDate(new Date(year, month - 1, day)),
-      isCurrentMonth: false,
-      isToday: false
-    });
-  }
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthDays - i;
+      days.push({
+        day,
+        date: formatLocalDate(new Date(year, month - 1, day)),
+        isCurrentMonth: false,
+        isToday: false,
+      });
+    }
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dateString = formatLocalDate(date);
-    const isToday = date.toDateString() === today.toDateString();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateString = formatLocalDate(date);
+      const isToday = date.toDateString() === today.toDateString();
 
-    calendarDays.push({
-      day: day,
-      date: dateString,
-      isCurrentMonth: true,
-      isToday
-    });
-  }
+      days.push({
+        day,
+        date: dateString,
+        isCurrentMonth: true,
+        isToday,
+      });
+    }
 
-  const remainingDays = 42 - calendarDays.length;
-  for (let day = 1; day <= remainingDays; day++) {
-    calendarDays.push({
-      day: day,
-      date: formatLocalDate(new Date(year, month + 1, day)),
-      isCurrentMonth: false,
-      isToday: false
-    });
-  }
+    const remainingDays = 42 - days.length;
+    for (let day = 1; day <= remainingDays; day++) {
+      days.push({
+        day,
+        date: formatLocalDate(new Date(year, month + 1, day)),
+        isCurrentMonth: false,
+        isToday: false,
+      });
+    }
 
-  const workoutSchedule = generateWorkoutSchedule(year, month + 1);
+    return days;
+  }, [year, month, today]);
+
+  const workoutSchedule = useMemo(
+    () => generateWorkoutSchedule(year, month + 1),
+    [year, month],
+  );
 
   const getWorkoutForDate = (date: string) => {
     return workouts.find(w => w.date === date);
