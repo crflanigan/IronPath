@@ -11,7 +11,6 @@ export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
 
-  console.log("HistoryPage loaded", workouts);
 
   const calculateWeightProgress = (completedWorkouts: Workout[]) => {
     const exerciseProgress: { [key: string]: number[] } = {};
