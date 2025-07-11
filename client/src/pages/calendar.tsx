@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarGrid } from '@/components/calendar-grid';
@@ -329,17 +329,28 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
   const stats = getWorkoutStats();
 
-  const selectedWorkoutType = selectedWorkout?.type ||
-    (selectedDate
-      ? (() => {
-          const dateObj = parseISODate(selectedDate);
-          const schedule = generateWorkoutSchedule(
-            dateObj.getFullYear(),
-            dateObj.getMonth() + 1
-          );
-          return schedule.find(w => w.date === selectedDate)?.type || null;
-        })()
-      : null);
+  const selectedDateObj = useMemo(
+    () => (selectedDate ? parseISODate(selectedDate) : null),
+    [selectedDate]
+  );
+  const selectedYear = selectedDateObj?.getFullYear() ?? null;
+  const selectedMonth = selectedDateObj ? selectedDateObj.getMonth() + 1 : null;
+
+  const monthlySchedule = useMemo(() => {
+    if (selectedYear && selectedMonth) {
+      return generateWorkoutSchedule(selectedYear, selectedMonth);
+    }
+    return [];
+  }, [selectedYear, selectedMonth]);
+
+  const selectedWorkoutType = useMemo(() => {
+    if (selectedWorkout) return selectedWorkout.type;
+    if (selectedDate) {
+      const scheduled = monthlySchedule.find(w => w.date === selectedDate);
+      return scheduled?.type || null;
+    }
+    return null;
+  }, [selectedDate, selectedWorkout, monthlySchedule]);
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
