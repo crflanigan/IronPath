@@ -298,10 +298,131 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </CardContent>
       </Card>
 
-      {/* Main Exercises */}
+      {/* Warmup */}
+      {(workout.abs.length > 0 || workout.cardio) && (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Warmup</h3>
+
+          {/* Abs Section */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Abs Block</h3>
+              <div className="space-y-3">
+                {workout.abs.map((absExercise, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {absExercise.name}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      {absExercise.reps !== undefined ? (
+                        <>
+                          <Input
+                            type="number"
+                            value={absExercise.reps}
+                            onChange={(e) =>
+                              handleAbsUpdate(index, 'reps', parseInt(e.target.value) || 0)
+                            }
+                            className="w-16 text-sm"
+                            placeholder="reps"
+                          />
+                          <span className="text-xs text-gray-500 dark:text-gray-400">reps</span>
+                        </>
+                      ) : (
+                        <>
+                          <Input
+                            type="text"
+                            value={absExercise.time || ''}
+                            onChange={(e) => handleAbsUpdate(index, 'time', e.target.value)}
+                            className="w-16 text-sm"
+                            placeholder="time"
+                          />
+                          <span className="text-xs text-gray-500 dark:text-gray-400">time</span>
+                        </>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          handleAbsUpdate(index, 'completed', !absExercise.completed)
+                        }
+                        className={absExercise.completed ? 'text-green-600' : 'text-gray-400'}
+                      >
+                        {absExercise.completed ? '✅' : '◯'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cardio Section */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Cardio Block</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleCardioUpdate('completed', !workout.cardio?.completed)}
+                  className={workout.cardio?.completed ? 'text-green-600' : 'text-gray-400'}
+                >
+                  {workout.cardio?.completed ? '✅' : '◯'}
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</label>
+                  <Select
+                    value={workout.cardio?.type || 'Treadmill'}
+                    onValueChange={(value) => handleCardioUpdate('type', value as any)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Treadmill">Treadmill</SelectItem>
+                      <SelectItem value="Bike">Bike</SelectItem>
+                      <SelectItem value="Elliptical">Elliptical</SelectItem>
+                      <SelectItem value="Rowing">Rowing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
+                    <Input
+                      type="text"
+                      value={workout.cardio?.duration || ''}
+                      onChange={(e) => handleCardioUpdate('duration', e.target.value)}
+                      className="w-20 text-sm"
+                      placeholder="mm:ss"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Distance:</label>
+                    <Input
+                      type="text"
+                      value={workout.cardio?.distance || ''}
+                      onChange={(e) => handleCardioUpdate('distance', e.target.value)}
+                      className="w-20 text-sm"
+                      placeholder="miles"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Workout */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Main Exercises</h3>
-        
+        <h3 className="font-semibold text-gray-900 dark:text-white">Main Workout</h3>
+
         {workout.exercises.map((exercise, index) => (
           <ExerciseForm
             key={exercise.machine}
@@ -311,116 +432,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           />
         ))}
       </div>
-
-      {/* Abs Section */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Abs Block</h3>
-          <div className="space-y-3">
-            {workout.abs.map((absExercise, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {absExercise.name}
-                </span>
-                <div className="flex items-center space-x-2">
-                  {absExercise.reps !== undefined ? (
-                    <>
-                      <Input
-                        type="number"
-                        value={absExercise.reps}
-                        onChange={(e) => handleAbsUpdate(index, 'reps', parseInt(e.target.value) || 0)}
-                        className="w-16 text-sm"
-                        placeholder="reps"
-                      />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">reps</span>
-                    </>
-                  ) : (
-                    <>
-                      <Input
-                        type="text"
-                        value={absExercise.time || ''}
-                        onChange={(e) => handleAbsUpdate(index, 'time', e.target.value)}
-                        className="w-16 text-sm"
-                        placeholder="time"
-                      />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">time</span>
-                    </>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleAbsUpdate(index, 'completed', !absExercise.completed)}
-                    className={absExercise.completed ? 'text-green-600' : 'text-gray-400'}
-                  >
-                    {absExercise.completed ? '✅' : '◯'}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Cardio Section */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Cardio Block</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCardioUpdate('completed', !workout.cardio?.completed)}
-              className={workout.cardio?.completed ? 'text-green-600' : 'text-gray-400'}
-            >
-              {workout.cardio?.completed ? '✅' : '◯'}
-            </Button>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</label>
-              <Select
-                value={workout.cardio?.type || 'Treadmill'}
-                onValueChange={(value) => handleCardioUpdate('type', value as any)}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Treadmill">Treadmill</SelectItem>
-                  <SelectItem value="Bike">Bike</SelectItem>
-                  <SelectItem value="Elliptical">Elliptical</SelectItem>
-                  <SelectItem value="Rowing">Rowing</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
-                <Input
-                  type="text"
-                  value={workout.cardio?.duration || ''}
-                  onChange={(e) => handleCardioUpdate('duration', e.target.value)}
-                  className="w-20 text-sm"
-                  placeholder="mm:ss"
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Distance:</label>
-                <Input
-                  type="text"
-                  value={workout.cardio?.distance || ''}
-                  onChange={(e) => handleCardioUpdate('distance', e.target.value)}
-                  className="w-20 text-sm"
-                  placeholder="miles"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Action Buttons */}
       <div className="space-y-3" ref={completeRef}>
