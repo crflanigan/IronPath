@@ -48,6 +48,22 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
+  // Ensure the workout page starts at the top when opened
+  useEffect(() => {
+    const main = document.querySelector('main');
+    main?.scrollTo({ top: 0 });
+  }, []);
+
+  // After closing the celebration dialog, jump to the bottom of the page
+  useEffect(() => {
+    if (!showDialog && celebrated) {
+      const main = document.querySelector('main');
+      if (main) {
+        main.scrollTo({ top: main.scrollHeight });
+      }
+    }
+  }, [showDialog, celebrated]);
+
 
   useEffect(() => {
     // Auto-save functionality
