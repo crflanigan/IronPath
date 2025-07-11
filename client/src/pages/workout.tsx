@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
+  const topRef = useRef<HTMLDivElement>(null);
+  const completeRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     // Auto-save functionality
@@ -67,6 +70,10 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       setCurrentExerciseIndex(firstIncompleteIndex);
     }
   }, [workout.exercises]);
+
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [workout.id]);
 
   const handleSave = async () => {
     try {
@@ -111,6 +118,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const handleCardioUpdate = (field: keyof Cardio, value: string | boolean) => {
     const updatedCardio = { ...workout.cardio!, [field]: value };
     setWorkout(prev => ({ ...prev, cardio: updatedCardio }));
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowDialog(open);
+    if (!open) {
+      completeRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleCompleteWorkout = async () => {
@@ -232,7 +246,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
 
   return (
     <>
-    <div className="max-w-md mx-auto p-4 space-y-6">
+    <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
       {/* Header */}
       <div className="flex items-center space-x-3">
         <Button
@@ -409,7 +423,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       </Card>
 
       {/* Action Buttons */}
-      <div className="space-y-3">
+      <div className="space-y-3" ref={completeRef}>
         <Button
           onClick={handleSave}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
@@ -428,7 +442,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
     </div>
-    <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+    <AlertDialog open={showDialog} onOpenChange={handleDialogOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{successMessage.title}</AlertDialogTitle>
@@ -437,7 +451,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={() => setShowDialog(false)}>
+          <AlertDialogAction onClick={() => handleDialogOpenChange(false)}>
             Close
           </AlertDialogAction>
         </AlertDialogFooter>
