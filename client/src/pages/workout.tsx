@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,19 +48,27 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
-  // Ensure the workout page starts at the top when opened
-  useEffect(() => {
+  // Ensure the workout page starts at the very top when opened
+  useLayoutEffect(() => {
     const main = document.querySelector('main');
-    main?.scrollTo({ top: 0 });
+    if (main) {
+      main.scrollTo({ top: 0 });
+    } else {
+      window.scrollTo({ top: 0 });
+    }
   }, []);
 
   // After closing the celebration dialog, jump to the bottom of the page
   useEffect(() => {
     if (!showDialog && celebrated) {
-      const main = document.querySelector('main');
-      if (main) {
-        main.scrollTo({ top: main.scrollHeight });
-      }
+      setTimeout(() => {
+        const main = document.querySelector('main');
+        if (main) {
+          main.scrollTo({ top: main.scrollHeight });
+        } else {
+          window.scrollTo({ top: document.body.scrollHeight });
+        }
+      }, 0);
     }
   }, [showDialog, celebrated]);
 
