@@ -1,1 +1,1 @@
-Sitemap: https://unrivaled-starburst-cb01b1.netlify.app/sitemap.xml
+Sitemap: https://ironpath.app/sitemap.xml
