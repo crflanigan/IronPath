@@ -41,7 +41,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "S4",
-        machine: "Rear Delt / Pec Fly",
+        machine: "Pec Fly",
         region: "Outer Pecs",
         feel: "Medium",
         sets: [
