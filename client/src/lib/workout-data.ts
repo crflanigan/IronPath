@@ -67,7 +67,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "S33",
-        machine: "90-Degree Utility Seat",
+        machine: "Lateral Raise Machine",
         region: "Shoulders",
         feel: "Light",
         sets: [
@@ -80,7 +80,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "S24",
-        machine: "Adj. Hi/Low Pulley",
+        machine: "High-Pulley Kick Back",
         region: "Triceps",
         feel: "Medium",
         sets: [
