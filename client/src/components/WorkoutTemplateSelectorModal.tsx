@@ -98,7 +98,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             </div>
           )}
 
-          <Button variant="secondary" onClick={onCreateCustom}>➕ Create or Edit Custom Workout</Button>
+          <Button variant="secondary" onClick={onCreateCustom}>➕ Create Custom Workout</Button>
         </div>
       </DialogContent>
     </Dialog>
