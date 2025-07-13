@@ -3,8 +3,7 @@ const CACHE_NAME = `ironpath-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
+  '/icon-180x180.png?v=3',
   // Add other static assets here
 ];
 
@@ -99,8 +98,8 @@ self.addEventListener('push', event => {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
+      icon: '/icon-180x180.png?v=3',
+      badge: '/icon-180x180.png?v=3',
       actions: [
         {
           action: 'open',

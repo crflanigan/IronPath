@@ -10,14 +10,8 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
+      "src": "/icon-180x180.png?v=3",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "maskable any"
     }
@@ -33,8 +27,8 @@
       "url": "/workout",
       "icons": [
         {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icon-180x180.png?v=3",
+          "sizes": "180x180"
         }
       ]
     },
@@ -45,8 +39,8 @@
       "url": "/history",
       "icons": [
         {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icon-180x180.png?v=3",
+          "sizes": "180x180"
         }
       ]
     }
