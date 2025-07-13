@@ -17,8 +17,6 @@ const STORAGE_KEYS = {
   AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts'
 } as const;
 
-const LEGACY_CABLE_CROSSOVER = "Cable Crossover";
-const ADJUSTABLE_CABLE_CROSSOVER = "Adjustable Cable Crossover";
 
 interface ExerciseHistoryEntry {
   sets: { weight: number; reps: number; rest?: string }[];
@@ -39,14 +37,6 @@ export class LocalWorkoutStorage {
     const stored = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
     const parsed = stored ? JSON.parse(stored) : [];
     const workouts = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-    // migrate legacy Cable Crossover entries
-    workouts.forEach(w => {
-      w.exercises?.forEach((ex: Exercise) => {
-        if (ex.machine === LEGACY_CABLE_CROSSOVER) {
-          ex.machine = ADJUSTABLE_CABLE_CROSSOVER;
-        }
-      });
-    });
     return workouts;
   }
 
@@ -57,11 +47,6 @@ export class LocalWorkoutStorage {
   private getExerciseHistory(): Record<string, ExerciseHistoryEntry> {
     const stored = localStorage.getItem(STORAGE_KEYS.EXERCISE_HISTORY);
     const history = stored ? JSON.parse(stored) : {};
-    if (history[LEGACY_CABLE_CROSSOVER] && !history[ADJUSTABLE_CABLE_CROSSOVER]) {
-      history[ADJUSTABLE_CABLE_CROSSOVER] = history[LEGACY_CABLE_CROSSOVER];
-      delete history[LEGACY_CABLE_CROSSOVER];
-      this.saveExerciseHistory(history);
-    }
     return history;
   }
 
@@ -73,18 +58,11 @@ export class LocalWorkoutStorage {
     const stored = localStorage.getItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
     const parsed = stored ? JSON.parse(stored) : [];
     const templates = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-    return templates.map((t: CustomWorkoutTemplate) => {
-      t.exercises?.forEach((ex: Exercise) => {
-        if (ex.machine === LEGACY_CABLE_CROSSOVER) {
-          ex.machine = ADJUSTABLE_CABLE_CROSSOVER;
-        }
-      });
-      return {
-        includeInAutoSchedule: false,
-        abs: [],
-        ...t,
-      };
-    });
+    return templates.map((t: CustomWorkoutTemplate) => ({
+      includeInAutoSchedule: false,
+      abs: [],
+      ...t,
+    }));
   }
 
   private saveCustomTemplates(templates: CustomWorkoutTemplate[]): void {
