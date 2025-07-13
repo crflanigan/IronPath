@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import {
   DropdownMenu,
@@ -75,8 +76,23 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             </div>
           ))}
 
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              className="flex-1 justify-start"
+              onClick={onCreateCustom}
+            >
+              Create Custom Workout
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onCreateCustom}>
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Separator className="my-2" />
+
           {customTemplates.length > 0 && (
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+            <div className="pt-2 space-y-2">
               <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Workouts</div>
               {customTemplates.map(t => (
                 <div key={t.id} className="flex items-center space-x-1">
@@ -113,7 +129,6 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             </div>
           )}
 
-          <Button variant="secondary" onClick={onCreateCustom}>➕ Create Custom Workout</Button>
         </div>
       </DialogContent>
     </Dialog>
