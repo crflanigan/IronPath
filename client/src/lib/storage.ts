@@ -34,7 +34,8 @@ export class LocalWorkoutStorage {
 
   private getWorkouts(): Workout[] {
     const stored = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    return stored ? JSON.parse(stored) : [];
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
   }
 
   private saveWorkouts(workouts: Workout[]): void {
@@ -52,7 +53,8 @@ export class LocalWorkoutStorage {
 
   private getCustomTemplatesInternal(): CustomWorkoutTemplate[] {
     const stored = localStorage.getItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
-    const templates = stored ? JSON.parse(stored) : [];
+    const parsed = stored ? JSON.parse(stored) : [];
+    const templates = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
     return templates.map((t: CustomWorkoutTemplate) => ({
       includeInAutoSchedule: false,
       abs: [],
@@ -75,7 +77,8 @@ export class LocalWorkoutStorage {
   getAutoScheduleWorkouts(): string[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS);
-      return stored ? JSON.parse(stored) : [];
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
     } catch {
       return [];
     }

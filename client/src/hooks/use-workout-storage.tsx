@@ -4,13 +4,31 @@ import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 import { formatLocalDate } from '@/lib/utils';
 
+const STORAGE_VERSION = "1.0.0";
+const VERSION_KEY = "ironpath_version";
+
 export function useWorkoutStorage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const checkStorageVersion = () => {
+    try {
+      const currentVersion = localStorage.getItem(VERSION_KEY);
+      if (currentVersion !== STORAGE_VERSION) {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('ironpath')) localStorage.removeItem(key);
+        });
+        localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+      }
+    } catch (err) {
+      console.error('Failed to verify storage version', err);
+    }
+  };
+
   useEffect(() => {
+    checkStorageVersion();
     loadData();
   }, []);
 
@@ -25,7 +43,7 @@ export function useWorkoutStorage() {
       // If there are no workouts stored, simply start with an empty list.
       // The previous implementation would regenerate a schedule, leaving
       // counters unchanged after a reset.
-      const resolvedWorkouts = workoutsData ?? [];
+      const resolvedWorkouts = (workoutsData ?? []).filter(Boolean);
 
       setWorkouts(resolvedWorkouts);
       setPreferences(prefsData);
