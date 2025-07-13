@@ -10,45 +10,42 @@ Built with React, TypeScript, Tailwind CSS, ShadCN, and Express — with a focus
 
 ## ✨ Features
 
-### 🕛 Interactive Workout Calendar
+### 🛠️ Customization & Templates
+- 🏋️ **Custom Workout Templates**  
+  Create your own templates (e.g. "Leg Day", "Push/Pull"), with full control over exercises and rest.
 
-Manage your training using a visual calendar that marks pending, completed, and current-day workouts with clean status indicators.
+- 🧬 **Preset Cloning**  
+  Clone built-in templates and edit them to match your preferences.
 
-### 🏋️ Custom Workout Templates
+- 🗓️ **Smart Auto-Scheduling**  
+  Choose which workouts to auto-rotate into your calendar. Supports both presets and custom plans.
 
-Create your own workout templates (e.g. "Leg Day", "Push/Pull"), complete with exercises, rest times, and optional abs/core finishers.
+---
 
-### 🧬 Preset Cloning
+### 📈 Tracking & Feedback
+- 🌟 **Progress & Streak Tracking**  
+  Tracks daily workout completion and calculates streaks using locale-safe date handling.
 
-Use built-in templates as a base, then clone and customize them to fit your preferences.
+- 🎉 **Completion Celebrations**  
+  Receive one of 10 motivational messages with confetti when you finish a workout.
 
-### 🗓️ Smart Auto-Scheduling
+---
 
-Choose which workouts to rotate through your schedule, combining presets and customs. A 14-day rotation makes planning effortless.
+### 💾 Data & Storage
+- 🗂 **Auto-Save & Offline Storage**  
+  All progress is saved locally using `localStorage`, even without internet.
 
-### 🌟 Progress & Streak Tracking
+- 📤 **Export to JSON or CSV**  
+  Download your workout history for backup or analysis with locale-safe filenames.
 
-Tracks daily completion and calculates streaks with locale-safe date handling.
+- 🏋️ **Flexible Set Logging**  
+  Automatically pre-fills weights/rests from your last workout. Edit freely, with validation to prevent empty values.
 
-### 📂 Auto-Save & Offline Storage
+---
 
-Your workouts are saved automatically using localStorage, even offline.
-
-### 📄 Export to JSON or CSV
-
-Export your history for analysis or backup. Locale-safe filenames and formatting included.
-
-### 🏋️ Flexible Set Logging
-
-Pre-fills weight/rest from previous workouts, lets you edit freely, and validates for safe saves.
-
-### 🎉 Completion Celebrations
-
-Finishing a workout triggers one of 10 unique motivational messages and confetti.
-
-### 📼 Instructional Exercise Images
-
-Helps clarify unfamiliar machine names using context-relevant visual guides.
+### 🖼️ Visual Aids
+- 📼 **Instructional Exercise Images**  
+  Get helpful visuals for exercises — useful for machines you don’t recognize.
 
 ---
 
