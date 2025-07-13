@@ -14,6 +14,7 @@ import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
 import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
+import { useViewStack } from './view-stack-provider';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function CustomWorkoutBuilderModal({
   prefill,
   existingNames,
 }: CustomWorkoutBuilderModalProps) {
+  const { popView } = useViewStack();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
@@ -133,6 +135,7 @@ export function CustomWorkoutBuilderModal({
     } else {
       onCreate(name, exercises, abs, includeInSchedule);
     }
+    popView();
     onClose();
   };
 
@@ -147,6 +150,7 @@ export function CustomWorkoutBuilderModal({
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
+      popView();
       onClose();
     }
   };

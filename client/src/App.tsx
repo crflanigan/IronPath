@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider, useThemeContext } from '@/components/theme-provider';
+import { ViewStackProvider } from '@/components/view-stack-provider';
 import { Button } from '@/components/ui/button';
 import { CalendarPage } from '@/pages/calendar';
 import { WorkoutPage } from '@/pages/workout';
@@ -146,7 +147,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <AppContent />
+          <ViewStackProvider>
+            <AppContent />
+          </ViewStackProvider>
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>

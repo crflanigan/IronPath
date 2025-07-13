@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Settings } from 'lucide-react';
+import { useViewStack } from './view-stack-provider';
 
 interface WorkoutTemplateSelectorModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ interface WorkoutTemplateSelectorModalProps {
 }
 
 export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onClonePreset, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
+  const { pushView } = useViewStack();
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -68,7 +70,12 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onClonePreset(name)}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      onClonePreset(name);
+                      pushView('customWorkoutBuilder');
+                    }}
+                  >
                     Clone as custom
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -80,11 +87,21 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             <Button
               variant="outline"
               className="flex-1 justify-start"
-              onClick={onCreateCustom}
+              onClick={() => {
+                onCreateCustom();
+                pushView('customWorkoutBuilder');
+              }}
             >
               Create Custom Workout
             </Button>
-            <Button variant="ghost" size="icon" onClick={onCreateCustom}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onCreateCustom();
+                pushView('customWorkoutBuilder');
+              }}
+            >
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -110,7 +127,12 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEditTemplate(t)}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          onEditTemplate(t);
+                          pushView('customWorkoutBuilder');
+                        }}
+                      >
                         Edit workout
                       </DropdownMenuItem>
                       <DropdownMenuItem
