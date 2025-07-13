@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useViewStack } from '@/components/view-stack-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarGrid } from '@/components/calendar-grid';
@@ -21,9 +22,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(
     () => formatLocalDate(new Date())
   );
+  const { currentView, pushView, popView } = useViewStack();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
-  const [templateModalOpen, setTemplateModalOpen] = useState(false);
-  const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
@@ -60,18 +60,17 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
   const openTemplateSelector = (date: string) => {
     setDateForCreation(date);
-    setTemplateModalOpen(true);
+    pushView('templateSelector');
   };
 
   const handleCreateCustom = () => {
-    setTemplateModalOpen(false);
-    setCustomBuilderOpen(true);
+    setTemplateToEdit(null);
+    setPrefillTemplate(null);
   };
 
   const handleClonePreset = (presetName: string) => {
     const builtIn = workoutTemplates[presetName as keyof typeof workoutTemplates];
     if (!builtIn) return;
-    setTemplateModalOpen(false);
     setTemplateToEdit(null);
     setPrefillTemplate({
       name: `Custom - ${presetName}`,
@@ -82,7 +81,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       })),
       abs: builtIn.abs.map(a => ({ ...a, completed: false })),
     });
-    setCustomBuilderOpen(true);
+    // view transition handled in modal
   };
 
   const handleTemplateSelect = async (templateName: string) => {
@@ -107,7 +106,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       });
     }
     await loadWorkoutForDate(dateForCreation);
-    setTemplateModalOpen(false);
+    popView();
     setDateForCreation(null);
   };
 
@@ -137,7 +136,6 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       }))
     });
     await loadWorkoutForDate(dateForCreation);
-    setCustomBuilderOpen(false);
     setPrefillTemplate(null);
     setDateForCreation(null);
   };
@@ -159,9 +157,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   };
 
   const handleEditCustomTemplate = (template: CustomWorkoutTemplate) => {
-    setTemplateModalOpen(false);
     setTemplateToEdit(template);
-    setCustomBuilderOpen(true);
   };
 
   const handleDeleteCustomTemplate = async (id: number) => {
@@ -467,9 +463,9 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         </Card>
       )}
       <WorkoutTemplateSelectorModal
-        open={templateModalOpen}
+        open={currentView === 'templateSelector'}
         customTemplates={customTemplates}
-        onClose={() => setTemplateModalOpen(false)}
+        onClose={() => popView()}
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
         onClonePreset={handleClonePreset}
@@ -477,8 +473,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onEditTemplate={handleEditCustomTemplate}
       />
         <CustomWorkoutBuilderModal
-          open={customBuilderOpen}
-          onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); setPrefillTemplate(null); }}
+          open={currentView === 'customWorkoutBuilder'}
+          onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
           onCreate={handleCustomWorkoutCreate}
           onUpdate={handleCustomWorkoutUpdate}
           template={templateToEdit ?? undefined}
