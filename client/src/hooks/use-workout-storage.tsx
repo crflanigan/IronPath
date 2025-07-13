@@ -62,6 +62,13 @@ export function useWorkoutStorage() {
 
 
   const createWorkout = async (workout: InsertWorkout) => {
+    // If a workout already exists on this date, remove it first to avoid duplicates
+    const existing = await localWorkoutStorage.getWorkoutByDate(workout.date);
+    if (existing) {
+      await localWorkoutStorage.deleteWorkout(existing.id);
+      setWorkouts(prev => prev.filter(w => w.id !== existing.id));
+    }
+
     // pre-fill exercises with last used weight, reps, and rest if available
     const exercisesWithHistory = await Promise.all(
       (workout.exercises as Exercise[]).map(async (ex) => {
