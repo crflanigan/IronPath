@@ -1,32 +1,82 @@
 # 💪 IronPath Workout Tracker
 
-A sleek, full-stack workout tracker app designed for lifters who want an intuitive calendar-based UI, personalized workout history, and frictionless progress tracking. Built with React, TypeScript, Tailwind, ShadCN, and Express — with a focus on smart scheduling, responsive UI, and persistent local and server-side data. 
+A sleek, full-stack workout tracker app for lifters who want an intuitive calendar-based UI, personalized workout history, and frictionless progress tracking.
 
-## Features
+Now live at [**https://ironpath.app**](https://ironpath.app) ✨
 
-- 🗖️ **Interactive Workout Calendar** – View and manage workouts day-by-day, with colored status icons for pending, completed, and current-day sessions.
-- 🏋️‍♂️ **Custom Workout Templates** – Add your own "Legs", "Chest Day", and other templates for fast schedule generation.
-- 📈 **Progress & Streak Tracking** – Tracks progress visually and calculates daily completion streaks using locale-safe date handling.
-- 🧠 **Auto-Save with Local Persistence** – Your progress is saved automatically, even offline.
-- 📤 **Export to JSON or CSV** – Export your workout history with locale-safe filenames for easy backups or analysis.
-- ✅ **Flexible Set Logging** – Pre-populates fields with previous workout values, but allows editing in any order. Prevents null or empty inputs from being saved.
-- 🎉 **Celebration Messages** – Get a rotating set of 10 unique motivational messages upon workout completion.
+Built with React, TypeScript, Tailwind CSS, ShadCN, and Express — with a focus on smart scheduling, responsive UI, and local-first data.
 
-## Tech Stack
+---
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS + ShadCN UI
-- **Backend**: Node.js + Express
-- **State Management**: Local state + custom hooks (`useWorkoutStorage`)
-- **Build & Bundling**: Vite (client) and esbuild (server)
-- **Persistence**: `localStorage` (client-side); ready for expansion to server-side DB
-- **Icons**: Lucide
+## ✨ Features
 
-## Getting Started
+### 🕛 Interactive Workout Calendar
+
+Manage your training using a visual calendar that marks pending, completed, and current-day workouts with clean status indicators.
+
+### 🏋️ Custom Workout Templates
+
+Create your own workout templates (e.g. "Leg Day", "Push/Pull"), complete with exercises, rest times, and optional abs/core finishers.
+
+### 🧬 Preset Cloning
+
+Use built-in templates as a base, then clone and customize them to fit your preferences.
+
+### 🗓️ Smart Auto-Scheduling
+
+Choose which workouts to rotate through your schedule, combining presets and customs. A 14-day rotation makes planning effortless.
+
+### 🌟 Progress & Streak Tracking
+
+Tracks daily completion and calculates streaks with locale-safe date handling.
+
+### 📂 Auto-Save & Offline Storage
+
+Your workouts are saved automatically using localStorage, even offline.
+
+### 📄 Export to JSON or CSV
+
+Export your history for analysis or backup. Locale-safe filenames and formatting included.
+
+### 🏋️ Flexible Set Logging
+
+Pre-fills weight/rest from previous workouts, lets you edit freely, and validates for safe saves.
+
+### 🎉 Completion Celebrations
+
+Finishing a workout triggers one of 10 unique motivational messages and confetti.
+
+### 📼 Instructional Exercise Images
+
+Helps clarify unfamiliar machine names using context-relevant visual guides.
+
+---
+
+## 💡 Tech Stack
+
+* **Frontend:** React + TypeScript + Vite + Tailwind CSS + ShadCN UI
+* **Backend:** Node.js + Express
+* **State Management:** Local state + custom hooks (`useWorkoutStorage`)
+* **Persistence:** localStorage (client-side); future-ready for DB
+* **Build:** Vite (client) + esbuild (server)
+* **Icons:** Lucide + Heroicons (via ShadCN)
+* **Documentation:** [Full Project Overview](docs/full-project-overview.md)
+
+**Frontend:** React + TypeScript + Vite + Tailwind CSS + ShadCN UI
+**Backend:** Node.js + Express
+**State Management:** Local state + custom hooks (`useWorkoutStorage`)
+**Persistence:** localStorage (client-side); future-ready for DB
+**Build:** Vite (client) + esbuild (server)
+**Icons:** Lucide + Heroicons (via ShadCN)
+
+---
+
+## 📅 Getting Started
 
 ### Prerequisites
 
-- Node.js >= 18
-- pnpm or npm
+* Node.js >= 18
+* pnpm or npm
 
 ### Installation
 
@@ -40,7 +90,7 @@ pnpm install
 pnpm dev
 ```
 
-Client and server both run with hot reloading.
+Runs client and server with hot reload.
 
 ### Build
 
@@ -48,7 +98,9 @@ Client and server both run with hot reloading.
 pnpm build
 ```
 
-## Project Structure
+---
+
+## 📂 Project Structure
 
 ```
 src/
@@ -60,18 +112,45 @@ src/
 └── server/          # Express API routes
 ```
 
-## Testing
+---
 
-Tests coming soon (TBD).
+## 🔧 Testing
 
-## Roadmap
+Basic tests are planned (TBD).
 
-TBD.
+---
 
-## Contributing
+## 🔄 Roadmap
 
-PRs are welcome. Please open an issue to discuss major feature changes first.
+* Improved data import
+* Stats breakdown by exercise/muscle group
+* Cross-device sync (coming with DB backend)
+* App Store & Play Store builds
+* Better mobile UX polish
 
-## License
+---
+
+## 💼 Contributing
+
+PRs welcome. Please open an issue before large changes.
+
+---
+
+## 🔒 License
 
 MIT
+
+---
+
+## 🚀 About
+
+IronPath is a personal project to replace the poorly maintained ActiveTrax app.
+Built for lifters who want clarity, flexibility, and smart defaults.
+
+---
+
+## 🔗 Resources
+
+* [Live App](https://ironpath.app)
+* [Releases](https://github.com/crflanigan/IronPath/releases)
+* [Project Documentation](docs/full-project-overview.md)
