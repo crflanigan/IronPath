@@ -434,7 +434,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             )}
 
             <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
-              Create Custom Workout
+              Create or Edit Custom Workout
             </Button>
 
             <Button
