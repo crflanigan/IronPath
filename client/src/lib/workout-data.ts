@@ -547,7 +547,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "N/A",
-        machine: "Cable Crossover",
+        machine: "Adjustable Cable Crossover",
         region: "Chest",
         feel: "Medium",
         sets: [
@@ -754,7 +754,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     exercises: [
       {
         code: "N/A",
-        machine: "Cable Crossover",
+        machine: "Adjustable Cable Crossover",
         region: "Chest Pecs",
         feel: "Medium",
         sets: [

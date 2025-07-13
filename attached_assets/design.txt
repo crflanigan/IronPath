@@ -153,7 +153,7 @@ Each workout is stored like this:
   "type": "Chest, Shoulder Focus",
   "exercises": [
     {
-      "machine": "Cable Crossover",
+      "machine": "Adjustable Cable Crossover",
       "region": "Chest Pecs",
       "sets": [
         {"weight": 50, "reps": 15, "rest": "1:00"},
