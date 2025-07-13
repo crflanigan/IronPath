@@ -26,6 +26,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const [customBuilderOpen, setCustomBuilderOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
+  const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
   const {
     workouts,
@@ -64,6 +65,23 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
   const handleCreateCustom = () => {
     setTemplateModalOpen(false);
+    setCustomBuilderOpen(true);
+  };
+
+  const handleClonePreset = (presetName: string) => {
+    const builtIn = workoutTemplates[presetName as keyof typeof workoutTemplates];
+    if (!builtIn) return;
+    setTemplateModalOpen(false);
+    setTemplateToEdit(null);
+    setPrefillTemplate({
+      name: `Custom - ${presetName}`,
+      exercises: builtIn.exercises.map(ex => ({
+        ...ex,
+        completed: false,
+        sets: ex.sets.map(s => ({ ...s, completed: false })),
+      })),
+      abs: builtIn.abs.map(a => ({ ...a, completed: false })),
+    });
     setCustomBuilderOpen(true);
   };
 
@@ -120,6 +138,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     });
     await loadWorkoutForDate(dateForCreation);
     setCustomBuilderOpen(false);
+    setPrefillTemplate(null);
     setDateForCreation(null);
   };
 
@@ -453,15 +472,17 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onClose={() => setTemplateModalOpen(false)}
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
+        onClonePreset={handleClonePreset}
         onDeleteTemplate={handleDeleteCustomTemplate}
         onEditTemplate={handleEditCustomTemplate}
       />
         <CustomWorkoutBuilderModal
           open={customBuilderOpen}
-          onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); }}
+          onClose={() => { setCustomBuilderOpen(false); setTemplateToEdit(null); setPrefillTemplate(null); }}
           onCreate={handleCustomWorkoutCreate}
           onUpdate={handleCustomWorkoutUpdate}
           template={templateToEdit ?? undefined}
+          prefill={prefillTemplate ?? undefined}
           existingNames={customTemplates.map(t => t.name)}
         />
         <AutoScheduleModal

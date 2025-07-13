@@ -32,6 +32,11 @@ interface CustomWorkoutBuilderModalProps {
     includeInAutoSchedule: boolean,
   ) => void;
   template?: CustomWorkoutTemplate | null;
+  prefill?: {
+    name: string;
+    exercises: Exercise[];
+    abs: AbsExercise[];
+  } | null;
   existingNames: string[];
 }
 
@@ -41,6 +46,7 @@ export function CustomWorkoutBuilderModal({
   onCreate,
   onUpdate,
   template,
+  prefill,
   existingNames,
 }: CustomWorkoutBuilderModalProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -55,6 +61,11 @@ export function CustomWorkoutBuilderModal({
         setSelected(new Set(template.exercises.map(e => e.machine)));
         setSelectedAbs(new Set((template.abs ?? []).map(a => a.name)));
         setIncludeInSchedule(template.includeInAutoSchedule ?? false);
+      } else if (prefill) {
+        setName(prefill.name);
+        setSelected(new Set(prefill.exercises.map(e => e.machine)));
+        setSelectedAbs(new Set((prefill.abs ?? []).map(a => a.name)));
+        setIncludeInSchedule(false);
       } else {
         setName('');
         setSelected(new Set());
@@ -62,7 +73,7 @@ export function CustomWorkoutBuilderModal({
         setIncludeInSchedule(false);
       }
     }
-  }, [open, template]);
+  }, [open, template, prefill]);
 
   const toggle = (machine: string) => {
     setSelected(prev => {

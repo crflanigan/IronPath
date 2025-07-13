@@ -21,11 +21,12 @@ interface WorkoutTemplateSelectorModalProps {
   onClose: () => void;
   onSelectTemplate: (template: string) => void;
   onCreateCustom: () => void;
+  onClonePreset: (preset: string) => void;
   onDeleteTemplate: (id: number) => void;
   onEditTemplate: (template: CustomWorkoutTemplate) => void;
 }
 
-export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
+export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onClonePreset, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -42,23 +43,37 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-2">
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest Day')}>Chest Day</Button>
-          {/*
-            Template keys are defined in workout-data.ts using
-            "Legs". Passing the mismatched label caused
-            workout creation to silently fail.
-          */}
-          <Button
-            variant="outline"
-            onClick={() => onSelectTemplate('Legs')}
-          >
-            Legs
-          </Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Back & Biceps')}>Back & Biceps</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Back, Biceps & Legs')}>Back, Biceps & Legs</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Triceps')}>Chest & Triceps</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest & Shoulders')}>Chest & Shoulders</Button>
-          <Button variant="outline" onClick={() => onSelectTemplate('Chest, Shoulders & Legs')}>Chest, Shoulders & Legs</Button>
+          {[
+            'Chest Day',
+            'Legs',
+            'Back & Biceps',
+            'Back, Biceps & Legs',
+            'Chest & Triceps',
+            'Chest & Shoulders',
+            'Chest, Shoulders & Legs',
+          ].map(name => (
+            <div key={name} className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                className="flex-1 justify-start"
+                onClick={() => onSelectTemplate(name)}
+              >
+                {name}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onClonePreset(name)}>
+                    Clone as custom
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))}
 
           {customTemplates.length > 0 && (
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
