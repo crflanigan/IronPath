@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,9 @@ export function ExerciseImageDialog({
   onOpenChange
 }: ExerciseImageDialogProps) {
   const [error, setError] = useState(false);
+  useEffect(() => {
+    setError(false);
+  }, [exerciseName]);
   const slug = exerciseName
     .toLowerCase()
     .replace(/\(.*?\)/g, '')

@@ -13,8 +13,10 @@ import { Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
-import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
+import { absLibrary } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
+import { ExerciseImageDialog } from './ExerciseImageDialog';
+import { cn } from '@/lib/utils';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -55,6 +57,8 @@ export function CustomWorkoutBuilderModal({
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [includeInSchedule, setIncludeInSchedule] = useState(false);
+  const [previewExercise, setPreviewExercise] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -139,6 +143,11 @@ export function CustomWorkoutBuilderModal({
     onClose();
   };
 
+  const handlePreview = (name: string) => {
+    setPreviewExercise(name);
+    setShowPreview(true);
+  };
+
   const warning12 = selected.size >= 12 && selected.size < 15;
   const warning15 = selected.size === 15;
 
@@ -156,39 +165,75 @@ export function CustomWorkoutBuilderModal({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4 overflow-y-auto max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
+          <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
-              <div className="grid grid-cols-2 gap-2">
-                {exercises.map(ex => (
-                  <label key={ex.machine} className="flex items-center space-x-2 text-sm">
-                    <Checkbox checked={selected.has(ex.machine)} onCheckedChange={() => toggle(ex.machine)} />
-                    <span>{ex.machine}</span>
-                  </label>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                {exercises.map(ex => {
+                  const isLong = ex.machine.length > 30;
+                  return (
+                    <div
+                      key={ex.machine}
+                      className={cn(isLong && 'sm:col-span-2')}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Checkbox
+                            checked={selected.has(ex.machine)}
+                            onCheckedChange={() => toggle(ex.machine)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handlePreview(ex.machine)}
+                            className="truncate text-sm text-left hover:text-primary"
+                            title={ex.machine}
+                          >
+                            {ex.machine}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
         <div className="border rounded p-2">
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
-          <div className="grid grid-cols-2 gap-2">
-            {absLibrary.map(abs => (
-              <label key={abs.name} className="flex items-center space-x-2 text-sm">
-                <Checkbox
-                  checked={selectedAbs.has(abs.name)}
-                  onCheckedChange={() => toggleAbs(abs.name)}
-                />
-                <span>{abs.name}</span>
-              </label>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            {absLibrary.map(abs => {
+              const isLong = abs.name.length > 30;
+              return (
+                <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Checkbox
+                        checked={selectedAbs.has(abs.name)}
+                        onCheckedChange={() => toggleAbs(abs.name)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handlePreview(abs.name)}
+                        className="truncate text-sm text-left hover:text-primary"
+                        title={abs.name}
+                      >
+                        {abs.name}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
         {warning12 && (
@@ -213,5 +258,11 @@ export function CustomWorkoutBuilderModal({
         </Button>
       </DialogContent>
     </Dialog>
+    <ExerciseImageDialog
+      exerciseName={previewExercise || ''}
+      open={showPreview}
+      onOpenChange={setShowPreview}
+    />
+    </>
   );
 }
