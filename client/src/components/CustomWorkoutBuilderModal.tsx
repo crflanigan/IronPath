@@ -13,10 +13,11 @@ import { Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
-import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
+import { absLibrary } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { HelpCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -176,58 +177,69 @@ export function CustomWorkoutBuilderModal({
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
-                {exercises.map(ex => (
-                  <div
-                    key={ex.machine}
-                    className="flex items-center gap-2 text-sm min-w-0"
-                  >
-                    <Checkbox
-                      checked={selected.has(ex.machine)}
-                      onCheckedChange={() => toggle(ex.machine)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handlePreview(ex.machine)}
-                      className="flex items-center gap-1 hover:text-primary"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                {exercises.map(ex => {
+                  const isLong = ex.machine.length > 30;
+                  return (
+                    <div
+                      key={ex.machine}
+                      className={cn(isLong && 'sm:col-span-2')}
                     >
-                      <span className="truncate" title={ex.machine}>
-                        {ex.machine}
-                      </span>
-                      <HelpCircle className="h-4 w-4 shrink-0" />
-                      <span className="sr-only">Preview</span>
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Checkbox
+                            checked={selected.has(ex.machine)}
+                            onCheckedChange={() => toggle(ex.machine)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handlePreview(ex.machine)}
+                            className="flex items-center gap-1 hover:text-primary"
+                          >
+                            <span className="truncate text-sm" title={ex.machine}>
+                              {ex.machine}
+                            </span>
+                            <HelpCircle className="h-4 w-4 shrink-0" />
+                            <span className="sr-only">Preview</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
         <div className="border rounded p-2">
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
-            {absLibrary.map(abs => (
-              <div
-                key={abs.name}
-                className="flex items-center gap-2 text-sm min-w-0"
-              >
-                <Checkbox
-                  checked={selectedAbs.has(abs.name)}
-                  onCheckedChange={() => toggleAbs(abs.name)}
-                />
-                <button
-                  type="button"
-                  onClick={() => handlePreview(abs.name)}
-                  className="flex items-center gap-1 hover:text-primary"
-                >
-                  <span className="truncate" title={abs.name}>
-                    {abs.name}
-                  </span>
-                  <HelpCircle className="h-4 w-4 shrink-0" />
-                  <span className="sr-only">Preview</span>
-                </button>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            {absLibrary.map(abs => {
+              const isLong = abs.name.length > 30;
+              return (
+                <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Checkbox
+                        checked={selectedAbs.has(abs.name)}
+                        onCheckedChange={() => toggleAbs(abs.name)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handlePreview(abs.name)}
+                        className="flex items-center gap-1 hover:text-primary"
+                      >
+                        <span className="truncate text-sm" title={abs.name}>
+                          {abs.name}
+                        </span>
+                        <HelpCircle className="h-4 w-4 shrink-0" />
+                        <span className="sr-only">Preview</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
         {warning12 && (
