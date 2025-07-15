@@ -16,7 +16,6 @@ import { ExerciseOption } from '@/lib/exercise-library';
 import { absLibrary } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
-import { HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CustomWorkoutBuilderModalProps {
@@ -172,6 +171,7 @@ export function CustomWorkoutBuilderModal({
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
+          <p className="text-sm text-muted-foreground text-center">Tap any exercise name to preview it.</p>
         </DialogHeader>
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
@@ -194,13 +194,10 @@ export function CustomWorkoutBuilderModal({
                           <button
                             type="button"
                             onClick={() => handlePreview(ex.machine)}
-                            className="flex items-center gap-1 hover:text-primary"
+                            className="truncate text-sm text-left hover:text-primary"
+                            title={ex.machine}
                           >
-                            <span className="truncate text-sm" title={ex.machine}>
-                              {ex.machine}
-                            </span>
-                            <HelpCircle className="h-4 w-4 shrink-0" />
-                            <span className="sr-only">Preview</span>
+                            {ex.machine}
                           </button>
                         </div>
                       </div>
@@ -227,13 +224,10 @@ export function CustomWorkoutBuilderModal({
                       <button
                         type="button"
                         onClick={() => handlePreview(abs.name)}
-                        className="flex items-center gap-1 hover:text-primary"
+                        className="truncate text-sm text-left hover:text-primary"
+                        title={abs.name}
                       >
-                        <span className="truncate text-sm" title={abs.name}>
-                          {abs.name}
-                        </span>
-                        <HelpCircle className="h-4 w-4 shrink-0" />
-                        <span className="sr-only">Preview</span>
+                        {abs.name}
                       </button>
                     </div>
                   </div>
