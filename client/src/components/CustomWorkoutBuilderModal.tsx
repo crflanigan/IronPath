@@ -178,7 +178,7 @@ export function CustomWorkoutBuilderModal({
               <div className="font-medium mb-2">{region}</div>
               <div className="grid grid-cols-2 gap-2">
                 {exercises.map(ex => (
-                  <div key={ex.machine} className="flex items-center space-x-2 text-sm">
+                  <div key={ex.machine} className="flex items-center gap-2 text-sm">
                     <Checkbox
                       checked={selected.has(ex.machine)}
                       onCheckedChange={() => toggle(ex.machine)}
@@ -186,10 +186,11 @@ export function CustomWorkoutBuilderModal({
                     <button
                       type="button"
                       onClick={() => handlePreview(ex.machine)}
-                      className="flex items-center space-x-1 hover:text-primary"
+                      className="flex items-center gap-1 hover:text-primary"
                     >
                       <span>{ex.machine}</span>
-                      <HelpCircle className="h-4 w-4" />
+                      <HelpCircle className="h-4 w-4 shrink-0" />
+                      <span className="sr-only">Preview</span>
                     </button>
                   </div>
                 ))}
@@ -201,7 +202,7 @@ export function CustomWorkoutBuilderModal({
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
           <div className="grid grid-cols-2 gap-2">
             {absLibrary.map(abs => (
-              <div key={abs.name} className="flex items-center space-x-2 text-sm">
+              <div key={abs.name} className="flex items-center gap-2 text-sm">
                 <Checkbox
                   checked={selectedAbs.has(abs.name)}
                   onCheckedChange={() => toggleAbs(abs.name)}
@@ -209,10 +210,11 @@ export function CustomWorkoutBuilderModal({
                 <button
                   type="button"
                   onClick={() => handlePreview(abs.name)}
-                  className="flex items-center space-x-1 hover:text-primary"
+                  className="flex items-center gap-1 hover:text-primary"
                 >
                   <span>{abs.name}</span>
-                  <HelpCircle className="h-4 w-4" />
+                  <HelpCircle className="h-4 w-4 shrink-0" />
+                  <span className="sr-only">Preview</span>
                 </button>
               </div>
             ))}
