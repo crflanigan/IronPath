@@ -121,9 +121,7 @@ Basic tests are planned (TBD).
 
 * Improved data import
 * Stats breakdown by exercise/muscle group
-* Cross-device sync (coming with DB backend)
 * App Store & Play Store builds
-* Better mobile UX polish
 
 ---
 
@@ -141,8 +139,8 @@ MIT
 
 ## 🚀 About
 
-IronPath is a personal project to replace the poorly maintained ActiveTrax app.
-Built for lifters who want clarity, flexibility, and smart defaults.
+IronPath is a personal project built for lifters who value clarity, flexibility, and intelligent defaults. 
+Inspired by the best parts of ActiveTrax, reimagined for modern training.
 
 ---
 
