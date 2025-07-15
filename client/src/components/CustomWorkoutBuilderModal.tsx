@@ -176,9 +176,12 @@ export function CustomWorkoutBuilderModal({
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
                 {exercises.map(ex => (
-                  <div key={ex.machine} className="flex items-center gap-2 text-sm">
+                  <div
+                    key={ex.machine}
+                    className="flex items-center gap-2 text-sm min-w-0"
+                  >
                     <Checkbox
                       checked={selected.has(ex.machine)}
                       onCheckedChange={() => toggle(ex.machine)}
@@ -188,7 +191,9 @@ export function CustomWorkoutBuilderModal({
                       onClick={() => handlePreview(ex.machine)}
                       className="flex items-center gap-1 hover:text-primary"
                     >
-                      <span>{ex.machine}</span>
+                      <span className="truncate" title={ex.machine}>
+                        {ex.machine}
+                      </span>
                       <HelpCircle className="h-4 w-4 shrink-0" />
                       <span className="sr-only">Preview</span>
                     </button>
@@ -200,9 +205,12 @@ export function CustomWorkoutBuilderModal({
         </div>
         <div className="border rounded p-2">
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
             {absLibrary.map(abs => (
-              <div key={abs.name} className="flex items-center gap-2 text-sm">
+              <div
+                key={abs.name}
+                className="flex items-center gap-2 text-sm min-w-0"
+              >
                 <Checkbox
                   checked={selectedAbs.has(abs.name)}
                   onCheckedChange={() => toggleAbs(abs.name)}
@@ -212,7 +220,9 @@ export function CustomWorkoutBuilderModal({
                   onClick={() => handlePreview(abs.name)}
                   className="flex items-center gap-1 hover:text-primary"
                 >
-                  <span>{abs.name}</span>
+                  <span className="truncate" title={abs.name}>
+                    {abs.name}
+                  </span>
                   <HelpCircle className="h-4 w-4 shrink-0" />
                   <span className="sr-only">Preview</span>
                 </button>
