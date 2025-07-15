@@ -15,6 +15,8 @@ import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
 import { absLibrary, AbsExerciseOption } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
+import { ExerciseImageDialog } from './ExerciseImageDialog';
+import { HelpCircle } from 'lucide-react';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -55,6 +57,8 @@ export function CustomWorkoutBuilderModal({
   const [selectedAbs, setSelectedAbs] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [includeInSchedule, setIncludeInSchedule] = useState(false);
+  const [previewExercise, setPreviewExercise] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -139,6 +143,11 @@ export function CustomWorkoutBuilderModal({
     onClose();
   };
 
+  const handlePreview = (name: string) => {
+    setPreviewExercise(name);
+    setShowPreview(true);
+  };
+
   const warning12 = selected.size >= 12 && selected.size < 15;
   const warning15 = selected.size === 15;
 
@@ -156,6 +165,7 @@ export function CustomWorkoutBuilderModal({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4 overflow-y-auto max-h-[80vh]">
         <DialogHeader>
@@ -168,10 +178,20 @@ export function CustomWorkoutBuilderModal({
               <div className="font-medium mb-2">{region}</div>
               <div className="grid grid-cols-2 gap-2">
                 {exercises.map(ex => (
-                  <label key={ex.machine} className="flex items-center space-x-2 text-sm">
-                    <Checkbox checked={selected.has(ex.machine)} onCheckedChange={() => toggle(ex.machine)} />
-                    <span>{ex.machine}</span>
-                  </label>
+                  <div key={ex.machine} className="flex items-center space-x-2 text-sm">
+                    <Checkbox
+                      checked={selected.has(ex.machine)}
+                      onCheckedChange={() => toggle(ex.machine)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePreview(ex.machine)}
+                      className="flex items-center space-x-1 hover:text-primary"
+                    >
+                      <span>{ex.machine}</span>
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -181,13 +201,20 @@ export function CustomWorkoutBuilderModal({
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
           <div className="grid grid-cols-2 gap-2">
             {absLibrary.map(abs => (
-              <label key={abs.name} className="flex items-center space-x-2 text-sm">
+              <div key={abs.name} className="flex items-center space-x-2 text-sm">
                 <Checkbox
                   checked={selectedAbs.has(abs.name)}
                   onCheckedChange={() => toggleAbs(abs.name)}
                 />
-                <span>{abs.name}</span>
-              </label>
+                <button
+                  type="button"
+                  onClick={() => handlePreview(abs.name)}
+                  className="flex items-center space-x-1 hover:text-primary"
+                >
+                  <span>{abs.name}</span>
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -213,5 +240,11 @@ export function CustomWorkoutBuilderModal({
         </Button>
       </DialogContent>
     </Dialog>
+    <ExerciseImageDialog
+      exerciseName={previewExercise || ''}
+      open={showPreview}
+      onOpenChange={setShowPreview}
+    />
+    </>
   );
 }
