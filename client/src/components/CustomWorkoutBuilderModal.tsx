@@ -171,7 +171,7 @@ export function CustomWorkoutBuilderModal({
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
-          <p className="text-sm text-muted-foreground text-center">Tap any exercise name to preview it.</p>
+          <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
