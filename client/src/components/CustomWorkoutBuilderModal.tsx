@@ -204,33 +204,38 @@ export function CustomWorkoutBuilderModal({
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
-        <div className="relative pt-6">
-          <div className="absolute right-0 -top-4 flex items-center gap-2 pr-1">
+        <div className="relative pt-8">
+          <div className="absolute right-0 -top-6 pr-1 flex items-start">
             <button
               type="button"
               onClick={cycleFilter}
-              className="inline-flex h-10 w-10 items-center justify-center rounded border text-lg"
+              className="flex h-12 w-12 flex-col items-center justify-center rounded border text-xs cursor-pointer hover:opacity-90 active:scale-95 transition"
             >
-              {equipmentFilter === 'machine'
-                ? '⚙️'
-                : equipmentFilter === 'freeweight'
-                ? '🏋️‍♂️'
-                : '⚖️'}
-            </button>
-            <span className="text-xs">
-              {equipmentFilter === 'machine'
-                ? 'Machine'
-                : equipmentFilter === 'freeweight'
-                ? 'Free-Weights'
-                : 'Both'}
-            </span>
-            <button
-              type="button"
-              onClick={showFilterInfo}
-              className="p-1 text-muted-foreground hover:text-primary"
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span className="sr-only">Help</span>
+              <span className="text-lg">
+                {equipmentFilter === 'machine'
+                  ? '⚙️'
+                  : equipmentFilter === 'freeweight'
+                  ? '🏋️‍♂️'
+                  : '⚖️'}
+              </span>
+              <span className="flex items-center gap-1">
+                {equipmentFilter === 'machine'
+                  ? 'Machines'
+                  : equipmentFilter === 'freeweight'
+                  ? 'Free-Weights'
+                  : 'Both'}
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    showFilterInfo();
+                  }}
+                  className="p-0.5 text-muted-foreground hover:text-primary"
+                >
+                  <HelpCircle className="h-3 w-3" />
+                  <span className="sr-only">Help</span>
+                </button>
+              </span>
             </button>
           </div>
           <div className="space-y-4">
