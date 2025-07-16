@@ -167,11 +167,9 @@ export function CustomWorkoutBuilderModal({
   };
 
   const cycleFilter = () => {
-    setEquipmentFilter(prev => {
-      const next = prev === 'both' ? 'machine' : prev === 'machine' ? 'freeweight' : 'both';
-      showFilterInfo();
-      return next;
-    });
+    setEquipmentFilter(prev =>
+      prev === 'both' ? 'machine' : prev === 'machine' ? 'freeweight' : 'both',
+    );
   };
 
   const warning12 = selected.size >= 12 && selected.size < 15;
@@ -206,37 +204,36 @@ export function CustomWorkoutBuilderModal({
         </DialogHeader>
         <div className="relative pt-8">
           <div className="absolute right-0 -top-6 pr-1 flex items-start">
-            <button
-              type="button"
-              onClick={cycleFilter}
-              className="flex h-12 w-12 flex-col items-center justify-center rounded border text-xs cursor-pointer hover:opacity-90 active:scale-95 transition"
-            >
-              <span className="text-lg">
-                {equipmentFilter === 'machine'
-                  ? '⚙️'
-                  : equipmentFilter === 'freeweight'
-                  ? '🏋️‍♂️'
-                  : '⚖️'}
-              </span>
-              <span className="flex items-center gap-1">
-                {equipmentFilter === 'machine'
-                  ? 'Machines'
-                  : equipmentFilter === 'freeweight'
-                  ? 'Free-Weights'
-                  : 'Both'}
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    showFilterInfo();
-                  }}
-                  className="p-0.5 text-muted-foreground hover:text-primary"
-                >
-                  <HelpCircle className="h-3 w-3" />
-                  <span className="sr-only">Help</span>
-                </button>
-              </span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={cycleFilter}
+                className="flex h-12 w-12 flex-col items-center justify-center rounded border text-xs cursor-pointer hover:opacity-90 active:scale-95 transition"
+              >
+                <span className="text-lg">
+                  {equipmentFilter === 'machine'
+                    ? '⚙️'
+                    : equipmentFilter === 'freeweight'
+                    ? '🏋️‍♂️'
+                    : '⚖️'}
+                </span>
+                <span>
+                  {equipmentFilter === 'machine'
+                    ? 'Machines'
+                    : equipmentFilter === 'freeweight'
+                    ? 'Free-Weights'
+                    : 'Both'}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={showFilterInfo}
+                className="absolute -top-1 -right-1 p-0.5 text-muted-foreground hover:text-primary"
+              >
+                <HelpCircle className="h-3 w-3" />
+                <span className="sr-only">Help</span>
+              </button>
+            </div>
           </div>
           <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
