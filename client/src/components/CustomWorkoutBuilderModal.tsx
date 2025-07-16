@@ -9,6 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpCircle } from 'lucide-react';
 import { Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
@@ -59,6 +61,7 @@ export function CustomWorkoutBuilderModal({
   const [includeInSchedule, setIncludeInSchedule] = useState(false);
   const [previewExercise, setPreviewExercise] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [equipmentFilter, setEquipmentFilter] = useState<'machine' | 'freeweight' | 'both'>('both');
 
   useEffect(() => {
     if (open) {
@@ -148,11 +151,24 @@ export function CustomWorkoutBuilderModal({
     setShowPreview(true);
   };
 
+  const cycleFilter = () => {
+    setEquipmentFilter(prev => {
+      if (prev === 'both') return 'machine';
+      if (prev === 'machine') return 'freeweight';
+      return 'both';
+    });
+  };
+
   const warning12 = selected.size >= 12 && selected.size < 15;
   const warning15 = selected.size === 15;
 
   const grouped: Record<string, ExerciseOption[]> = {};
-  exerciseLibrary.forEach(e => {
+  const filteredLibrary = exerciseLibrary.filter(e => {
+    if (equipmentFilter === 'machine') return e.equipment === 'machine';
+    if (equipmentFilter === 'freeweight') return e.equipment === 'freeweight';
+    return true;
+  });
+  filteredLibrary.forEach(e => {
     if (!grouped[e.region]) grouped[e.region] = [];
     grouped[e.region].push(e);
   });
@@ -167,7 +183,36 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="space-y-4 overflow-y-auto max-h-[80vh]">
+      <DialogContent className="relative space-y-4 overflow-y-auto max-h-[80vh]">
+        <div className="absolute top-4 right-12 flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="p-1 text-muted-foreground hover:text-primary">
+                <HelpCircle className="h-4 w-4" />
+                <span className="sr-only">Help</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              Tap to filter exercises by equipment type — machines, free weights, or both.
+            </TooltipContent>
+          </Tooltip>
+          <button
+            type="button"
+            onClick={cycleFilter}
+            className="flex h-11 w-11 flex-col items-center justify-center rounded border text-xs"
+          >
+            <span className="text-lg">
+              {equipmentFilter === 'machine' ? '🏋️' : equipmentFilter === 'freeweight' ? '🟢' : '⚖️'}
+            </span>
+            <span>
+              {equipmentFilter === 'machine'
+                ? 'Machine'
+                : equipmentFilter === 'freeweight'
+                ? 'Freeweights'
+                : 'Both'}
+            </span>
+          </button>
+        </div>
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
