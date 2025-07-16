@@ -162,7 +162,7 @@ export function CustomWorkoutBuilderModal({
   const showFilterInfo = () => {
     toast({
       description:
-        'Filtering exercises by equipment type — machines, free weights, or both.',
+        'This button toggles exercises by equipment type. Machines, free-weights, or both.',
     });
   };
 
@@ -205,7 +205,25 @@ export function CustomWorkoutBuilderModal({
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         <div className="relative pt-6">
-          <div className="absolute right-0 top-0 flex items-center gap-2">
+          <div className="absolute right-0 -top-4 flex items-center gap-2 pr-1">
+            <button
+              type="button"
+              onClick={cycleFilter}
+              className="inline-flex h-10 w-10 items-center justify-center rounded border text-lg"
+            >
+              {equipmentFilter === 'machine'
+                ? '⚙️'
+                : equipmentFilter === 'freeweight'
+                ? '🏋️‍♂️'
+                : '⚖️'}
+            </button>
+            <span className="text-xs">
+              {equipmentFilter === 'machine'
+                ? 'Machine'
+                : equipmentFilter === 'freeweight'
+                ? 'Free-Weights'
+                : 'Both'}
+            </span>
             <button
               type="button"
               onClick={showFilterInfo}
@@ -213,22 +231,6 @@ export function CustomWorkoutBuilderModal({
             >
               <HelpCircle className="h-4 w-4" />
               <span className="sr-only">Help</span>
-            </button>
-            <button
-              type="button"
-              onClick={cycleFilter}
-              className="flex h-11 w-11 flex-col items-center justify-center rounded border text-xs"
-            >
-              <span className="text-lg">
-                {equipmentFilter === 'machine' ? '🏋️' : equipmentFilter === 'freeweight' ? '🟢' : '⚖️'}
-              </span>
-              <span>
-                {equipmentFilter === 'machine'
-                  ? 'Machine'
-                  : equipmentFilter === 'freeweight'
-                  ? 'Freeweights'
-                  : 'Both'}
-              </span>
             </button>
           </div>
           <div className="space-y-4">
