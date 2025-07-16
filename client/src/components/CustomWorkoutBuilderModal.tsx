@@ -214,38 +214,36 @@ export function CustomWorkoutBuilderModal({
             </p>
           </DialogHeader>
           <div className="relative pt-8">
-            <div className="absolute right-0 -top-8 pr-1">
-              <div className="relative w-fit -mb-2">
-                <button
-                  type="button"
-                  onClick={cycleFilter}
-                  className="flex flex-col items-center justify-center text-xs cursor-pointer hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none"
-                >
-                  <span className="text-2xl select-none">
-                    {equipmentFilter === "machine"
-                      ? "⚙️"
-                      : equipmentFilter === "freeweight"
-                        ? "🏋️‍♂️"
-                        : "⚖️"}
-                  </span>
-                  <span className="mt-1 text-center select-none">
-                    {equipmentFilter === "machine"
-                      ? "Machines"
-                      : equipmentFilter === "freeweight"
-                        ? "Free-Weights"
-                        : "Both"}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={showFilterInfo}
-                  className="absolute -top-1 -right-2 p-1 text-muted-foreground hover:text-primary cursor-pointer"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  <span className="sr-only">Help</span>
-                </button>
+            <button
+              type="button"
+              onClick={cycleFilter}
+              className="absolute right-0 -top-8 pr-1 text-xs text-center hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none p-0 m-0"
+            >
+              <div className="flex flex-col items-center leading-tight space-y-0.5">
+                <span className="text-2xl select-none">
+                  {equipmentFilter === "machine"
+                    ? "⚙️"
+                    : equipmentFilter === "freeweight"
+                      ? "🏋️‍♂️"
+                      : "⚖️"}
+                </span>
+                <span className="text-xs text-center select-none -mt-1">
+                  {equipmentFilter === "machine"
+                    ? "Machines"
+                    : equipmentFilter === "freeweight"
+                      ? "Free-Weights"
+                      : "Both"}
+                </span>
               </div>
-            </div>
+            </button>
+            <button
+              type="button"
+              onClick={showFilterInfo}
+              className="absolute -top-1 -right-2 p-1 text-muted-foreground hover:text-primary cursor-pointer"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="sr-only">Help</span>
+            </button>
             <div className="space-y-4">
               {Object.entries(grouped).map(([region, exercises]) => (
                 <div key={region} className="border rounded p-2">
