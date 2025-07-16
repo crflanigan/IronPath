@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
@@ -62,6 +62,8 @@ export function CustomWorkoutBuilderModal({
   const [previewExercise, setPreviewExercise] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [equipmentFilter, setEquipmentFilter] = useState<'machine' | 'freeweight' | 'both'>('both');
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -83,6 +85,12 @@ export function CustomWorkoutBuilderModal({
       }
     }
   }, [open, template, prefill]);
+
+  useEffect(() => {
+    if (open) {
+      contentRef.current?.scrollTo({ top: 0 });
+    }
+  }, [open]);
 
   const toggle = (machine: string) => {
     setSelected(prev => {
@@ -151,11 +159,18 @@ export function CustomWorkoutBuilderModal({
     setShowPreview(true);
   };
 
+  const showFilterInfo = () => {
+    toast({
+      description:
+        'Filtering exercises by equipment type — machines, free weights, or both.',
+    });
+  };
+
   const cycleFilter = () => {
     setEquipmentFilter(prev => {
-      if (prev === 'both') return 'machine';
-      if (prev === 'machine') return 'freeweight';
-      return 'both';
+      const next = prev === 'both' ? 'machine' : prev === 'machine' ? 'freeweight' : 'both';
+      showFilterInfo();
+      return next;
     });
   };
 
@@ -183,42 +198,40 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="relative space-y-4 overflow-y-auto max-h-[80vh]">
-        <div className="absolute top-4 right-12 flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" className="p-1 text-muted-foreground hover:text-primary">
-                <HelpCircle className="h-4 w-4" />
-                <span className="sr-only">Help</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              Tap to filter exercises by equipment type — machines, free weights, or both.
-            </TooltipContent>
-          </Tooltip>
-          <button
-            type="button"
-            onClick={cycleFilter}
-            className="flex h-11 w-11 flex-col items-center justify-center rounded border text-xs"
-          >
-            <span className="text-lg">
-              {equipmentFilter === 'machine' ? '🏋️' : equipmentFilter === 'freeweight' ? '🟢' : '⚖️'}
-            </span>
-            <span>
-              {equipmentFilter === 'machine'
-                ? 'Machine'
-                : equipmentFilter === 'freeweight'
-                ? 'Freeweights'
-                : 'Both'}
-            </span>
-          </button>
-        </div>
+      <DialogContent ref={contentRef} className="space-y-4 overflow-y-auto max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="relative pt-6">
+          <div className="absolute right-0 top-0 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={showFilterInfo}
+              className="p-1 text-muted-foreground hover:text-primary"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="sr-only">Help</span>
+            </button>
+            <button
+              type="button"
+              onClick={cycleFilter}
+              className="flex h-11 w-11 flex-col items-center justify-center rounded border text-xs"
+            >
+              <span className="text-lg">
+                {equipmentFilter === 'machine' ? '🏋️' : equipmentFilter === 'freeweight' ? '🟢' : '⚖️'}
+              </span>
+              <span>
+                {equipmentFilter === 'machine'
+                  ? 'Machine'
+                  : equipmentFilter === 'freeweight'
+                  ? 'Freeweights'
+                  : 'Both'}
+              </span>
+            </button>
+          </div>
+          <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
@@ -252,6 +265,7 @@ export function CustomWorkoutBuilderModal({
               </div>
             </div>
           ))}
+          </div>
         </div>
         <div className="border rounded p-2">
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
