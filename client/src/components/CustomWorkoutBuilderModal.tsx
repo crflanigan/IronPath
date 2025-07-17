@@ -68,7 +68,7 @@ export function CustomWorkoutBuilderModal({
   };
 
   const filterLabel: Record<'freeweight' | 'machine' | 'both', { icon: string; label: string }> = {
-    freeweight: { icon: '🏋️‍♂️', label: 'Free-Weights' },
+    freeweight: { icon: '🏋️‍♂️', label: 'Weights' },
     machine: { icon: '⚙️', label: 'Machines' },
     both: { icon: '⚖️', label: 'Both' },
   };
