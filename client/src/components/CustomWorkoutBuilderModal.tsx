@@ -59,6 +59,19 @@ export function CustomWorkoutBuilderModal({
   const [includeInSchedule, setIncludeInSchedule] = useState(false);
   const [previewExercise, setPreviewExercise] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [equipmentFilter, setEquipmentFilter] = useState<'freeweight' | 'machine' | 'both'>('both');
+
+  const cycleFilter = () => {
+    setEquipmentFilter(prev =>
+      prev === 'freeweight' ? 'machine' : prev === 'machine' ? 'both' : 'freeweight'
+    );
+  };
+
+  const filterLabel: Record<'freeweight' | 'machine' | 'both', { icon: string; label: string }> = {
+    freeweight: { icon: '🏋️‍♂️', label: 'Free-Weights' },
+    machine: { icon: '⚙️', label: 'Machines' },
+    both: { icon: '⚖️', label: 'Both' },
+  };
 
   useEffect(() => {
     if (open) {
@@ -116,6 +129,7 @@ export function CustomWorkoutBuilderModal({
       return {
         machine: info.machine,
         region: info.region,
+        equipment: info.equipment,
         feel: 'Medium',
         completed: false,
         sets: [
@@ -151,8 +165,14 @@ export function CustomWorkoutBuilderModal({
   const warning12 = selected.size >= 12 && selected.size < 15;
   const warning15 = selected.size === 15;
 
+  const filteredExercises = exerciseLibrary.filter(e => {
+    if (equipmentFilter === 'both') return true;
+    if (equipmentFilter === 'machine') return e.equipment !== 'freeweight';
+    return e.equipment !== 'machine';
+  });
+
   const grouped: Record<string, ExerciseOption[]> = {};
-  exerciseLibrary.forEach(e => {
+  filteredExercises.forEach(e => {
     if (!grouped[e.region]) grouped[e.region] = [];
     grouped[e.region].push(e);
   });
@@ -167,12 +187,20 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="space-y-4 overflow-y-auto max-h-[80vh]">
+      <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
+        <button
+          type="button"
+          onClick={cycleFilter}
+          className="absolute right-4 top-10 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
+        >
+          <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
+          <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
+        </button>
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
