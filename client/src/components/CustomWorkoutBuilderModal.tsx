@@ -195,7 +195,7 @@ export function CustomWorkoutBuilderModal({
           </DialogHeader>
 
           {/* Equipment Filter Toggle Button */}
-          <div className="absolute right-4 top-4 sm:top-6">
+          <div className="absolute right-4 top-0 translate-y-[calc(var(--radix-dialog-header-height)+1rem)] sm:top-0 sm:translate-y-[calc(var(--radix-dialog-header-height)+1.5rem)]">
             <button
               type="button"
               onClick={cycleFilter}
