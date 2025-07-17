@@ -190,11 +190,11 @@ export function CustomWorkoutBuilderModal({
       <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
-          <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
+          <DialogDescription className="text-left">Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         
-        <div className="flex justify-end -mb-2">
+        <div className="flex justify-end -mt-2 mb-2">
           <button
             type="button"
             onClick={cycleFilter}
