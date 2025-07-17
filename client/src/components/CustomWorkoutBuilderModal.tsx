@@ -187,7 +187,7 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="relative space-y-4 overflow-y-auto max-h-[80vh]">
+      <DialogContent className="relative space-y-4 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
@@ -196,7 +196,7 @@ export function CustomWorkoutBuilderModal({
         <button
           type="button"
           onClick={cycleFilter}
-          className="absolute right-2 top-24 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
+          className="absolute right-4 top-20 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
         >
           <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
           <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
