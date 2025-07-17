@@ -217,7 +217,7 @@ export function CustomWorkoutBuilderModal({
             <button
               type="button"
               onClick={cycleFilter}
-              className="absolute right-16 -top-6 flex flex-col items-center text-xs hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none p-0 m-0"
+              className="absolute right-12 -top-5 flex flex-col items-center text-xs hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none p-0 m-0"
             >
               <span className="text-2xl select-none leading-none">
                 {equipmentFilter === "machine"
