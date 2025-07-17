@@ -195,13 +195,13 @@ export function CustomWorkoutBuilderModal({
           <button
             type="button"
             onClick={cycleFilter}
-            className="absolute right-0 top-full -translate-y-2 translate-y-4 flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
+            className="absolute right-0 top-full -translate-y-full flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
           >
             <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
             <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
           </button>
         </DialogHeader>
-        <div className="space-y-4 mt-8">
+        <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
