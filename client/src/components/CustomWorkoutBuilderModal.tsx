@@ -196,7 +196,7 @@ export function CustomWorkoutBuilderModal({
         <button
           type="button"
           onClick={cycleFilter}
-          className="absolute right-4 top-20 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
+          className="absolute right-4 top-20 sm:top-28 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
         >
           <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
           <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
