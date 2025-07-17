@@ -187,14 +187,14 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
         <DialogHeader className="space-y-1">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
-          <DialogDescription className="text-left">Select up to 15 exercises and give your workout a name.</DialogDescription>
+          <DialogDescription className="text-left">Select up to 15 exercises and name your workout.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         
-        <div className="flex justify-end -mt-1">
+        <div className="flex justify-end -mt-3">
           <button
             type="button"
             onClick={cycleFilter}
@@ -217,7 +217,7 @@ export function CustomWorkoutBuilderModal({
                       key={ex.machine}
                       className={cn(isLong && 'sm:col-span-2')}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                      <div className="flex items-center gap-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <Checkbox
                             checked={selected.has(ex.machine)}
@@ -247,7 +247,7 @@ export function CustomWorkoutBuilderModal({
               const isLong = abs.name.length > 30;
               return (
                 <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                  <div className="flex items-center gap-1">
                     <div className="flex items-center gap-2 min-w-0">
                       <Checkbox
                         checked={selectedAbs.has(abs.name)}
