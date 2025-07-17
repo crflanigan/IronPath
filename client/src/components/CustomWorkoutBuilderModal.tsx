@@ -194,7 +194,7 @@ export function CustomWorkoutBuilderModal({
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
         
-        <div className="flex justify-end py-2">
+        <div className="flex justify-end py-1">
           <button
             type="button"
             onClick={cycleFilter}
