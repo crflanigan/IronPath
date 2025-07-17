@@ -217,24 +217,22 @@ export function CustomWorkoutBuilderModal({
             <button
               type="button"
               onClick={cycleFilter}
-              className="absolute right-0 -top-8 pr-1 text-xs text-center hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none p-0 m-0"
+              className="absolute right-0 -top-6 translate-x-1/2 flex flex-col items-center text-xs hover:opacity-90 active:scale-95 transition bg-transparent border-none appearance-none p-0 m-0"
             >
-              <div className="flex flex-col items-center leading-tight space-y-0.5">
-                <span className="text-2xl select-none">
-                  {equipmentFilter === "machine"
-                    ? "⚙️"
-                    : equipmentFilter === "freeweight"
-                      ? "🏋️‍♂️"
-                      : "⚖️"}
-                </span>
-                <span className="text-xs text-center select-none -mt-1">
-                  {equipmentFilter === "machine"
-                    ? "Machines"
-                    : equipmentFilter === "freeweight"
-                      ? "Free-Weights"
-                      : "Both"}
-                </span>
-              </div>
+              <span className="text-2xl select-none leading-none">
+                {equipmentFilter === "machine"
+                  ? "⚙️"
+                  : equipmentFilter === "freeweight"
+                    ? "🏋️‍♂️"
+                    : "⚖️"}
+              </span>
+              <span className="text-xs text-center select-none mt-0.5">
+                {equipmentFilter === "machine"
+                  ? "Machines"
+                  : equipmentFilter === "freeweight"
+                    ? "Free-Weights"
+                    : "Both"}
+              </span>
             </button>
             <button
               type="button"
