@@ -188,19 +188,23 @@ export function CustomWorkoutBuilderModal({
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
-        <DialogHeader className="relative">
+        <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
+        </DialogHeader>
+        
+        <div className="flex justify-end -mb-2">
           <button
             type="button"
             onClick={cycleFilter}
-            className="absolute right-0 top-full -translate-y-full flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
+            className="flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
           >
             <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
             <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
           </button>
-        </DialogHeader>
+        </div>
+        
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
