@@ -187,7 +187,7 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="relative space-y-4 overflow-y-auto max-h-[90vh]">
+      <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
