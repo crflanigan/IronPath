@@ -217,7 +217,7 @@ export function CustomWorkoutBuilderModal({
                       key={ex.machine}
                       className={cn(isLong && 'sm:col-span-2')}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                      <div className="flex items-center gap-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <Checkbox
                             checked={selected.has(ex.machine)}
@@ -247,7 +247,7 @@ export function CustomWorkoutBuilderModal({
               const isLong = abs.name.length > 30;
               return (
                 <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                  <div className="flex items-center gap-1">
                     <div className="flex items-center gap-2 min-w-0">
                       <Checkbox
                         checked={selectedAbs.has(abs.name)}
