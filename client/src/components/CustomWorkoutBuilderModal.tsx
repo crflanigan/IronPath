@@ -186,21 +186,25 @@ export function CustomWorkoutBuilderModal({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-2">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
-          <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
+          <DialogDescription className="text-left">Select up to 15 exercises and give your workout a name.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
         </DialogHeader>
-        <button
-          type="button"
-          onClick={cycleFilter}
-          className="absolute right-4 top-10 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
-        >
-          <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
-          <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
-        </button>
+        
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={cycleFilter}
+            className="flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
+          >
+            <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
+            <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
+          </button>
+        </div>
+        
         <div className="space-y-4">
           {Object.entries(grouped).map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
@@ -264,26 +268,29 @@ export function CustomWorkoutBuilderModal({
             })}
           </div>
         </div>
-        {warning12 && (
-          <p className="text-yellow-600 text-sm">⚠️ That’s a big session — are you training or moving in?</p>
-        )}
-        {warning15 && (
-          <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn’t effective. Consider splitting it up.</p>
-        )}
-        <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
-        <label className="flex items-center space-x-2 text-sm">
-          <Checkbox
-            checked={includeInSchedule}
-            onCheckedChange={v => setIncludeInSchedule(!!v)}
-          />
-          <span>Include in auto-schedule</span>
-        </label>
-        {isDuplicate && (
-          <p className="text-red-600 text-sm">Workout name must be unique</p>
-        )}
-        <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
-          {template ? 'Update Workout' : 'Save Workout'}
-        </Button>
+        
+        <div className="space-y-4">
+          {warning12 && (
+            <p className="text-yellow-600 text-sm">⚠️ That's a big session — are you training or moving in?</p>
+          )}
+          {warning15 && (
+            <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn't effective. Consider splitting it up.</p>
+          )}
+          <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
+          <label className="flex items-center space-x-2 text-sm">
+            <Checkbox
+              checked={includeInSchedule}
+              onCheckedChange={v => setIncludeInSchedule(!!v)}
+            />
+            <span>Include in auto-schedule</span>
+          </label>
+          {isDuplicate && (
+            <p className="text-red-600 text-sm">Workout name must be unique</p>
+          )}
+          <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
+            {template ? 'Update Workout' : 'Save Workout'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
     <ExerciseImageDialog
