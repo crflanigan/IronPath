@@ -83,7 +83,7 @@ export function CustomWorkoutBuilderModal({
       } else if (prefill) {
         setName(prefill.name);
         setSelected(new Set(prefill.exercises.map(e => e.machine)));
-        setSelectedAbs(new Set((prefill.abs ?? []).map(a => a.name)));
+        setSelectedAbs(new Set(prefill.abs.map(a => a.name)));
         setIncludeInSchedule(false);
       } else {
         setName('');
@@ -137,7 +137,7 @@ export function CustomWorkoutBuilderModal({
           { weight: undefined, reps: undefined, rest: '', completed: false },
           { weight: undefined, reps: undefined, rest: '', completed: false },
         ],
-      } as Exercise;
+      };
     });
     const abs: AbsExercise[] = Array.from(selectedAbs).map(n => {
       const info = absLibrary.find(a => a.name === n)!;
@@ -146,7 +146,7 @@ export function CustomWorkoutBuilderModal({
         reps: info.reps,
         time: info.time,
         completed: false,
-      } as AbsExercise;
+      };
     });
     if (template && onUpdate) {
       onUpdate(template.id, name, exercises, abs, includeInSchedule);
@@ -186,111 +186,122 @@ export function CustomWorkoutBuilderModal({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="space-y-4 overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
-          <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
-          <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
-        </DialogHeader>
-        <button
-          type="button"
-          onClick={cycleFilter}
-          className="absolute right-4 top-20 sm:top-28 flex flex-col items-center w-20 text-sm select-none cursor-pointer"
-        >
-          <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
-          <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
-        </button>
-        <div className="space-y-4">
-          {Object.entries(grouped).map(([region, exercises]) => (
-            <div key={region} className="border rounded p-2">
-              <div className="font-medium mb-2">{region}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                {exercises.map(ex => {
-                  const isLong = ex.machine.length > 30;
-                  return (
-                    <div
-                      key={ex.machine}
-                      className={cn(isLong && 'sm:col-span-2')}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Checkbox
-                            checked={selected.has(ex.machine)}
-                            onCheckedChange={() => toggle(ex.machine)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handlePreview(ex.machine)}
-                            className="truncate text-sm text-left hover:text-primary"
-                            title={ex.machine}
-                          >
-                            {ex.machine}
-                          </button>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="relative space-y-4 overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
+            <DialogDescription>Select up to 15 exercises and give your workout a name.</DialogDescription>
+            <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
+          </DialogHeader>
+
+          {/* Equipment Filter Toggle Button */}
+          <div className="absolute right-4 top-4 sm:top-6">
+            <button
+              type="button"
+              onClick={cycleFilter}
+              className="flex flex-col items-center w-20 text-sm select-none cursor-pointer"
+            >
+              <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
+              <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(grouped).map(([region, exercises]) => (
+              <div key={region} className="border rounded p-2">
+                <div className="font-medium mb-2">{region}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                  {exercises.map(ex => {
+                    const isLong = ex.machine.length > 30;
+                    return (
+                      <div
+                        key={ex.machine}
+                        className={cn(isLong && 'sm:col-span-2')}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Checkbox
+                              checked={selected.has(ex.machine)}
+                              onCheckedChange={() => toggle(ex.machine)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handlePreview(ex.machine)}
+                              className="truncate text-sm text-left hover:text-primary"
+                              title={ex.machine}
+                            >
+                              {ex.machine}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <div className="border rounded p-2">
-          <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-            {absLibrary.map(abs => {
-              const isLong = abs.name.length > 30;
-              return (
-                <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Checkbox
-                        checked={selectedAbs.has(abs.name)}
-                        onCheckedChange={() => toggleAbs(abs.name)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handlePreview(abs.name)}
-                        className="truncate text-sm text-left hover:text-primary"
-                        title={abs.name}
-                      >
-                        {abs.name}
-                      </button>
+            ))}
+          </div>
+
+          <div className="border rounded p-2">
+            <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+              {absLibrary.map(abs => {
+                const isLong = abs.name.length > 30;
+                return (
+                  <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Checkbox
+                          checked={selectedAbs.has(abs.name)}
+                          onCheckedChange={() => toggleAbs(abs.name)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handlePreview(abs.name)}
+                          className="truncate text-sm text-left hover:text-primary"
+                          title={abs.name}
+                        >
+                          {abs.name}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-        {warning12 && (
-          <p className="text-yellow-600 text-sm">⚠️ That’s a big session — are you training or moving in?</p>
-        )}
-        {warning15 && (
-          <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn’t effective. Consider splitting it up.</p>
-        )}
-        <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
-        <label className="flex items-center space-x-2 text-sm">
-          <Checkbox
-            checked={includeInSchedule}
-            onCheckedChange={v => setIncludeInSchedule(!!v)}
-          />
-          <span>Include in auto-schedule</span>
-        </label>
-        {isDuplicate && (
-          <p className="text-red-600 text-sm">Workout name must be unique</p>
-        )}
-        <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
-          {template ? 'Update Workout' : 'Save Workout'}
-        </Button>
-      </DialogContent>
-    </Dialog>
-    <ExerciseImageDialog
-      exerciseName={previewExercise || ''}
-      open={showPreview}
-      onOpenChange={setShowPreview}
-    />
+
+          {warning12 && (
+            <p className="text-yellow-600 text-sm">⚠️ That’s a big session — are you training or moving in?</p>
+          )}
+          {warning15 && (
+            <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn’t effective. Consider splitting it up.</p>
+          )}
+
+          <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
+          <label className="flex items-center space-x-2 text-sm">
+            <Checkbox
+              checked={includeInSchedule}
+              onCheckedChange={v => setIncludeInSchedule(!!v)}
+            />
+            <span>Include in auto-schedule</span>
+          </label>
+
+          {isDuplicate && (
+            <p className="text-red-600 text-sm">Workout name must be unique</p>
+          )}
+
+          <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
+            {template ? 'Update Workout' : 'Save Workout'}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <ExerciseImageDialog
+        exerciseName={previewExercise || ''}
+        open={showPreview}
+        onOpenChange={setShowPreview}
+      />
     </>
   );
 }
