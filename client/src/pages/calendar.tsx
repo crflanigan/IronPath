@@ -38,6 +38,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     addCustomTemplate,
     deleteCustomTemplate,
     updateCustomTemplate,
+    refreshCustomTemplates,
     customTemplates,
     loading
   } = useWorkoutStorage();
@@ -479,6 +480,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
             onCreate={handleCustomWorkoutCreate}
             onUpdate={handleCustomWorkoutUpdate}
+            refreshCustomTemplates={refreshCustomTemplates}
             template={templateToEdit ?? undefined}
             prefill={prefillTemplate ?? undefined}
             existingNames={customTemplates.map(t => t.name)}

@@ -35,6 +35,7 @@ interface CustomWorkoutBuilderModalProps {
     abs: AbsExercise[],
     includeInAutoSchedule: boolean,
   ) => void;
+  refreshCustomTemplates?: () => void;
   template?: CustomWorkoutTemplate | null;
   prefill?: {
     name: string;
@@ -49,6 +50,7 @@ export function CustomWorkoutBuilderModal({
   onClose,
   onCreate,
   onUpdate,
+  refreshCustomTemplates,
   template,
   prefill,
   existingNames,
@@ -153,6 +155,7 @@ export function CustomWorkoutBuilderModal({
       onUpdate(template.id, name, exercises, abs, includeInSchedule);
     } else {
       onCreate(name, exercises, abs, includeInSchedule);
+      refreshCustomTemplates?.();
     }
     popView();
     onClose();

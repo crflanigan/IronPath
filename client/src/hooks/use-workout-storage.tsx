@@ -204,6 +204,15 @@ export function useWorkoutStorage() {
     }
     return updated;
   };
+  const refreshCustomTemplates = async () => {
+    try {
+      const templatesData = await localWorkoutStorage.getCustomTemplates();
+      setCustomTemplates(templatesData);
+    } catch (err) {
+      console.error("Failed to refresh custom templates", err);
+    }
+  };
+
 
 
   const resetAllData = async () => {
@@ -228,6 +237,7 @@ export function useWorkoutStorage() {
     addCustomTemplate,
     deleteCustomTemplate,
     updateCustomTemplate,
+    refreshCustomTemplates,
     resetAllData,
     exportData,
     exportCSV
