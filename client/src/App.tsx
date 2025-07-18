@@ -13,6 +13,7 @@ import { HistoryPage } from '@/pages/history';
 import { Workout } from '@shared/schema';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function Navigation() {
   const [location, setLocation] = useLocation();
@@ -116,7 +117,9 @@ function AppContent() {
           )} />
           <Route path="/workout" component={() => (
             currentWorkout ? (
-              <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
+              <ErrorBoundary>
+                <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
+              </ErrorBoundary>
             ) : (
               <div className="max-w-md mx-auto p-4 text-center">
                 <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
