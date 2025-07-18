@@ -1,145 +1,197 @@
-import { useState, useEffect } from 'react';
-import { useViewStack } from '@/components/view-stack-provider';
+import React, { useState, useEffect } from 'react';
+import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
+import { format, parse, startOfWeek, getDay, addDays, subDays, startOfDay, isSameDay } from 'date-fns';
+import { enUS } from 'date-fns/locale';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CalendarGrid } from '@/components/calendar-grid';
-import { WorkoutCard } from '@/components/workout-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
-import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AutoScheduleModal } from '@/components/AutoScheduleModal';
-import { Workout, Exercise, AbsExercise } from '@shared/schema';
-import { CustomWorkoutTemplate } from '@/lib/storage';
+import { Exercise, AbsExercise, Workout } from '@shared/schema';
+import { workoutTemplates } from '@/lib/workout-data';
+import { formatLocalDate } from '@/lib/utils';
+import { Plus, Dumbbell, Calendar as CalendarIcon, Target, TrendingUp } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
-interface CalendarPageProps {
-  onNavigateToWorkout: (workout: Workout) => void;
+const locales = {
+  'en-US': enUS,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
+
+interface CalendarEvent {
+  id: number;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: Workout;
 }
 
-export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(
-    () => formatLocalDate(new Date())
-  );
-  const { currentView, pushView, popView } = useViewStack();
-  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-  const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
-  const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
-  const [dateForCreation, setDateForCreation] = useState<string | null>(null);
+export default function CalendarPage() {
   const {
     workouts,
-    getWorkoutByDate,
+    customTemplates,
+    loading,
     createWorkout,
-    createWorkoutForDate,
+    updateWorkout,
     deleteWorkout,
     addCustomTemplate,
-    deleteCustomTemplate,
     updateCustomTemplate,
-    customTemplates,
     refreshCustomTemplates,
-    loading
   } = useWorkoutStorage();
 
-  useEffect(() => {
-    if (selectedDate) {
-      loadWorkoutForDate(selectedDate);
-    }
-  }, [selectedDate]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showCustomWorkoutBuilder, setShowCustomWorkoutBuilder] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [view, setView] = useState<View>(Views.MONTH);
+  const [date, setDate] = useState(new Date());
 
-  const loadWorkoutForDate = async (date: string) => {
-    const workout = await getWorkoutByDate(date);
-    setSelectedWorkout(workout || null);
+  // Convert workouts to calendar events
+  const events: CalendarEvent[] = workouts.map((workout) => {
+    const workoutDate = new Date(workout.date + 'T00:00:00');
+    return {
+      id: workout.id,
+      title: workout.type || 'Custom Workout',
+      start: workoutDate,
+      end: workoutDate,
+      resource: workout,
+    };
+  });
+
+  // Get stats for the current month
+  const currentMonth = format(date, 'yyyy-MM');
+  const monthlyWorkouts = workouts.filter(w => w.date.startsWith(currentMonth));
+  const completedThisMonth = monthlyWorkouts.filter(w => w.completed).length;
+  const totalThisMonth = monthlyWorkouts.length;
+
+  // Get weekly stats
+  const weekStart = startOfWeek(date);
+  const weekEnd = addDays(weekStart, 6);
+  const weeklyWorkouts = workouts.filter(w => {
+    const workoutDate = new Date(w.date + 'T00:00:00');
+    return workoutDate >= weekStart && workoutDate <= weekEnd;
+  });
+  const completedThisWeek = weeklyWorkouts.filter(w => w.completed).length;
+
+  const handleSelectSlot = ({ start }: { start: Date }) => {
+    const dateStr = formatLocalDate(start);
+    setSelectedDate(dateStr);
+    setShowTemplateSelector(true);
   };
 
-  const handleDeleteSelectedWorkout = async () => {
-    if (!selectedWorkout) return;
-    await deleteWorkout(selectedWorkout.id);
-    setSelectedWorkout(null);
-  };
-
-  const openTemplateSelector = (date: string) => {
-    setDateForCreation(date);
-    pushView('templateSelector');
-  };
-
-  const handleCreateCustom = () => {
-    setTemplateToEdit(null);
-    setPrefillTemplate(null);
-  };
-
-  const handleClonePreset = (presetName: string) => {
-    const builtIn = workoutTemplates[presetName as keyof typeof workoutTemplates];
-    if (!builtIn) return;
-    setTemplateToEdit(null);
-    setPrefillTemplate({
-      name: `Custom - ${presetName}`,
-      exercises: builtIn.exercises.map(ex => ({
-        ...ex,
-        completed: false,
-        sets: ex.sets.map(s => ({ ...s, completed: false })),
-      })),
-      abs: builtIn.abs.map(a => ({ ...a, completed: false })),
-    });
-    // view transition handled in modal
+  const handleSelectEvent = (event: CalendarEvent) => {
+    // Navigate to workout details or edit
+    window.location.href = `/workout/${event.resource.id}`;
   };
 
   const handleTemplateSelect = async (templateName: string) => {
-    if (!dateForCreation) return;
-    const builtIn = workoutTemplates[templateName as keyof typeof workoutTemplates];
-    if (builtIn) {
-      await createWorkoutForDate(dateForCreation, templateName);
-    } else {
+    if (!selectedDate) return;
+
+    try {
+      // Check if it's a custom template
       const custom = customTemplates.find(t => t.name === templateName);
-      if (!custom) return;
-      await createWorkout({
-        date: dateForCreation,
-        type: templateName,
-        completed: false,
-        cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
-        abs: [],
-        exercises: custom.exercises.map(e => ({
-          ...e,
+      if (custom) {
+        const newWorkout = {
+          date: selectedDate,
+          type: custom.name,
           completed: false,
-          sets: e.sets.map(s => ({ ...s, completed: false }))
-        }))
+          cardio: { completed: false },
+          abs: custom.abs?.map(abs => ({ ...abs, completed: false })) || [],
+          exercises: custom.exercises.map(exercise => ({
+            ...exercise,
+            completed: false,
+            sets: exercise.sets || [{ weight: 0, reps: 0, rest: "2:00", completed: false }],
+          })),
+        };
+
+        const created = await createWorkout(newWorkout);
+        if (created) {
+          toast({
+            title: "Workout Created",
+            description: `${templateName} scheduled for ${selectedDate}`,
+          });
+          window.location.href = `/workout/${created.id}`;
+        }
+      } else {
+        // Handle built-in templates
+        const template = workoutTemplates[templateName as keyof typeof workoutTemplates];
+        if (template) {
+          const newWorkout = {
+            date: selectedDate,
+            type: templateName,
+            completed: false,
+            cardio: {
+              type: "Treadmill",
+              duration: "",
+              distance: "",
+              completed: false,
+            },
+            abs: template.abs.map(a => ({ ...a, completed: false })),
+            exercises: template.exercises.map(e => ({
+              ...e,
+              completed: false,
+              sets: e.sets.map(set => ({ ...set, completed: false })),
+            })),
+          };
+
+          const created = await createWorkout(newWorkout);
+          if (created) {
+            toast({
+              title: "Workout Created",
+              description: `${templateName} scheduled for ${selectedDate}`,
+            });
+            window.location.href = `/workout/${created.id}`;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error creating workout:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create workout",
+        variant: "destructive",
       });
     }
-    await loadWorkoutForDate(dateForCreation);
-    popView();
-    setDateForCreation(null);
+
+    setShowTemplateSelector(false);
+    setSelectedDate(null);
   };
 
   const handleCustomWorkoutCreate = async (
     name: string,
     exercises: Exercise[],
     abs: AbsExercise[],
-    include: boolean,
+    includeInSchedule: boolean,
   ) => {
-    if (!dateForCreation) return;
-    await addCustomTemplate({
-      name,
-      exercises,
-      abs,
-      includeInAutoSchedule: include,
-    });
-    await createWorkout({
-      date: dateForCreation,
-      type: name,
-      completed: false,
-      cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
-      abs: abs.map(a => ({ ...a, completed: false })),
-      exercises: exercises.map(e => ({
-        ...e,
-        completed: false,
-        sets: e.sets.map(s => ({ ...s, completed: false }))
-      }))
-    });
-    await loadWorkoutForDate(dateForCreation);
-    setPrefillTemplate(null);
-    setDateForCreation(null);
+    try {
+      await addCustomTemplate({
+        name,
+        exercises,
+        abs,
+        includeInAutoSchedule: includeInSchedule,
+      });
+
+      toast({
+        title: "Success",
+        description: "Custom workout template created!",
+      });
+    } catch (error) {
+      console.error('Error creating custom template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create custom workout template",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCustomWorkoutUpdate = async (
@@ -147,350 +199,201 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     name: string,
     exercises: Exercise[],
     abs: AbsExercise[],
-    include: boolean,
+    includeInSchedule: boolean,
   ) => {
-    await updateCustomTemplate(id, {
-      name,
-      exercises,
-      abs,
-      includeInAutoSchedule: include,
-    });
-    setTemplateToEdit(null);
-  };
+    try {
+      await updateCustomTemplate(id, {
+        name,
+        exercises,
+        abs,
+        includeInAutoSchedule: includeInSchedule,
+      });
 
-  const handleEditCustomTemplate = (template: CustomWorkoutTemplate) => {
-    setTemplateToEdit(template);
-  };
-
-  const handleDeleteCustomTemplate = async (id: number) => {
-    await deleteCustomTemplate(id);
-  };
-
-
-  const handleSelectDate = (date: string | Date) => {
-    setSelectedWorkout(null);
-
-    let normalized: string;
-
-    if (typeof date === "string") {
-      normalized = date; // assume already in YYYY-MM-DD format
-    } else {
-      normalized = formatLocalDate(date);
-    }
-
-    setSelectedDate(normalized);
-  };
-
-  const handleStartTodayWorkout = async () => {
-    const today = formatLocalDate(new Date());
-    const existingWorkout = await getWorkoutByDate(today);
-
-    if (existingWorkout) {
-      onNavigateToWorkout(existingWorkout);
-    } else {
-      // Create new workout for today
-      const workoutType = getTodaysWorkoutType();
-      const builtIn = workoutTemplates[workoutType as keyof typeof workoutTemplates];
-      let newWorkout: Workout | undefined;
-      if (builtIn) {
-        const template = builtIn;
-        newWorkout = await createWorkout({
-          date: today,
-          type: workoutType,
-          exercises: template.exercises.map(e => ({
-            ...e,
-            completed: false,
-            sets: e.sets.map(s => ({ ...s, completed: false }))
-          })),
-          abs: template.abs.map(a => ({ ...a, completed: false })),
-          cardio: {
-            type: 'Treadmill',
-            duration: '',
-            distance: '',
-            completed: false
-          },
-          completed: false
-        });
-      } else {
-        const custom = customTemplates.find(t => t.name === workoutType);
-        if (!custom) return;
-        newWorkout = await createWorkout({
-          date: today,
-          type: workoutType,
-          exercises: custom.exercises.map(e => ({
-            ...e,
-            completed: false,
-            sets: e.sets.map(s => ({ ...s, completed: false }))
-          })),
-          abs: [],
-          cardio: {
-            type: 'Treadmill',
-            duration: '',
-            distance: '',
-            completed: false
-          },
-          completed: false
-        });
-      }
-      if (newWorkout) {
-        onNavigateToWorkout(newWorkout);
-      }
+      toast({
+        title: "Success",
+        description: "Custom workout template updated!",
+      });
+    } catch (error) {
+      console.error('Error updating custom template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update custom workout template",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleStartWorkout = async (date: string) => {
-    const existingWorkout = await getWorkoutByDate(date);
-    
-    if (existingWorkout) {
-      onNavigateToWorkout(existingWorkout);
-    } else {
-      // Create new workout for selected date
-      const schedule = generateWorkoutSchedule(
-        parseISODate(date).getFullYear(),
-        parseISODate(date).getMonth() + 1
-      );
-      const scheduledWorkout = schedule.find(w => w.date === date);
-      
-      if (scheduledWorkout) {
-        const builtIn = workoutTemplates[scheduledWorkout.type as keyof typeof workoutTemplates];
-        let newWorkout: Workout | undefined;
-        if (builtIn) {
-          newWorkout = await createWorkout({
-            date: date,
-            type: scheduledWorkout.type,
-            exercises: builtIn.exercises.map(e => ({
-              ...e,
-              completed: false,
-              sets: e.sets.map(s => ({ ...s, completed: false })),
-            })),
-            abs: builtIn.abs.map(a => ({ ...a, completed: false })),
-            cardio: {
-              type: 'Treadmill',
-              duration: '',
-              distance: '',
-              completed: false
-            },
-            completed: false
-          });
-        } else {
-          const custom = customTemplates.find(t => t.name === scheduledWorkout.type);
-          if (!custom) return;
-          newWorkout = await createWorkout({
-            date: date,
-            type: scheduledWorkout.type,
-            exercises: custom.exercises.map(e => ({
-              ...e,
-              completed: false,
-              sets: e.sets.map(s => ({ ...s, completed: false })),
-            })),
-            abs: [],
-            cardio: {
-              type: 'Treadmill',
-              duration: '',
-              distance: '',
-              completed: false,
-            },
-            completed: false,
-          });
-        }
-
-        if (newWorkout) {
-          onNavigateToWorkout(newWorkout);
-        }
-      }
-    }
-  };
-
-  const getWorkoutStats = () => {
-    const completedWorkouts = workouts.filter(w => w.completed).length;
-    const totalWorkouts = workouts.length;
-    const currentStreak = calculateCurrentStreak();
-    
-    return { completedWorkouts, totalWorkouts, currentStreak };
-  };
-
-  const calculateCurrentStreak = () => {
-    const today = new Date();
-    let streak = 0;
-    
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateString = formatLocalDate(date);
-      
-      const workout = workouts.find(w => w.date === dateString);
-      if (workout && workout.completed) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    
-    return streak;
+  const eventStyleGetter = (event: CalendarEvent) => {
+    const isCompleted = event.resource.completed;
+    return {
+      style: {
+        backgroundColor: isCompleted ? '#10b981' : '#3b82f6',
+        borderColor: isCompleted ? '#059669' : '#2563eb',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+      },
+    };
   };
 
   if (loading) {
     return (
-      <div className="max-w-md mx-auto p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 35 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded"></div>
-            ))}
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading calendar...</div>
       </div>
     );
   }
 
-  const stats = getWorkoutStats();
-
-  const selectedWorkoutType = selectedWorkout?.type ||
-    (selectedDate
-      ? (() => {
-          const dateObj = parseISODate(selectedDate);
-          const schedule = generateWorkoutSchedule(
-            dateObj.getFullYear(),
-            dateObj.getMonth() + 1
-          );
-          return schedule.find(w => w.date === selectedDate)?.type || null;
-        })()
-      : null);
-
   return (
-    <div className="max-w-md mx-auto p-4 space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4">
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Workout Calendar</h1>
+          <p className="text-gray-600 dark:text-gray-400">Plan and track your fitness journey</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setEditingTemplate(null);
+              setShowCustomWorkoutBuilder(true);
+            }}
+            variant="outline"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Custom Workout
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.completedWorkouts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Week</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completedThisWeek}</div>
+            <p className="text-xs text-muted-foreground">
+              {weeklyWorkouts.length} total scheduled
+            </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completedThisMonth}</div>
+            <p className="text-xs text-muted-foreground">
+              of {totalThisMonth} workouts completed
+            </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.totalWorkouts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {totalThisMonth > 0 ? Math.round((completedThisMonth / totalThisMonth) * 100) : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              monthly completion rate
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Calendar */}
-      <CalendarGrid
-        currentDate={currentDate}
-        onDateChange={setCurrentDate}
-        onSelectDate={handleSelectDate}
-        workouts={workouts}
-        selectedDate={selectedDate}
-      />
-
-
-      {/* Workout Legend */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Workout Status</h3>
-          <div className="flex justify-center space-x-6">
-            <div className="flex items-center space-x-1">
-              <span className="text-green-600">✅</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Completed</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="text-orange-600">🕒</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Pending</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="text-blue-600">📅</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Today</span>
-            </div>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Dumbbell className="h-5 w-5" />
+            Workout Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[600px]">
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              view={view}
+              onView={setView}
+              date={date}
+              onNavigate={setDate}
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              selectable
+              eventPropGetter={eventStyleGetter}
+              components={{
+                event: ({ event }) => (
+                  <div className="text-xs">
+                    <div className="font-medium truncate">{event.title}</div>
+                    {event.resource.completed && (
+                      <Badge variant="secondary" className="text-xs mt-1">
+                        ✓ Complete
+                      </Badge>
+                    )}
+                  </div>
+                ),
+              }}
+              messages={{
+                next: "Next",
+                previous: "Previous",
+                today: "Today",
+                month: "Month",
+                week: "Week",
+                day: "Day",
+                agenda: "Agenda",
+                date: "Date",
+                time: "Time",
+                event: "Event",
+                noEventsInRange: "No workouts scheduled for this period",
+              }}
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Selected Workout Details */}
-      {selectedDate && (
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
-              {(() => {
-                const [year, month, day] = selectedDate.split('-').map(Number);
-                const dateObj = new Date(year, month - 1, day); // Avoids timezone shift
-                return dateObj.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                });
-              })()}
-            </h3>
-            <p className="text-center font-medium">
-              Selected Day's Workout: {selectedWorkoutType ?? 'None'}
-            </p>
-            <Button onClick={handleStartTodayWorkout} className="w-full">
-              Start Today's Workout
-            </Button>
-
-            {selectedWorkout && (
-              <WorkoutCard
-                workout={selectedWorkout}
-                onStart={() => onNavigateToWorkout(selectedWorkout)}
-                onView={() => onNavigateToWorkout(selectedWorkout)}
-                onDelete={handleDeleteSelectedWorkout}
-              />
-            )}
-
-            {!selectedWorkout && (
-              <p className="text-center text-gray-600 dark:text-gray-400">
-                No custom workout scheduled for this date
-              </p>
-            )}
-
-            <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
-              Create or Edit Custom Workout
-            </Button>
-
-            <Button
-              className="w-full"
-              variant="secondary"
-              onClick={() => setScheduleModalOpen(true)}
-            >
-              Customize Auto-Schedule
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-      <WorkoutTemplateSelectorModal
-        open={currentView === 'templateSelector'}
-        customTemplates={customTemplates}
-        onClose={() => popView()}
-        onSelectTemplate={handleTemplateSelect}
-        onCreateCustom={handleCreateCustom}
-        onClonePreset={handleClonePreset}
-        onDeleteTemplate={handleDeleteCustomTemplate}
-        onEditTemplate={handleEditCustomTemplate}
-      />
-        <ErrorBoundary>
-          <CustomWorkoutBuilderModal
-            open={currentView === 'customWorkoutBuilder'}
-            onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
-            onCreate={handleCustomWorkoutCreate}
-            onUpdate={handleCustomWorkoutUpdate}
-            template={templateToEdit ?? undefined}
-            prefill={prefillTemplate ?? undefined}
-            existingNames={customTemplates.map(t => t.name)}
-            refreshCustomTemplates={refreshCustomTemplates}
-          />
-        </ErrorBoundary>
-        <AutoScheduleModal
-          open={scheduleModalOpen}
-          onClose={() => setScheduleModalOpen(false)}
+      {/* Modals */}
+      {showTemplateSelector && (
+        <WorkoutTemplateSelectorModal
+          isOpen={showTemplateSelector}
+          onClose={() => {
+            setShowTemplateSelector(false);
+            setSelectedDate(null);
+          }}
+          onSelectTemplate={handleTemplateSelect}
+          onCreateCustom={() => {
+            setShowTemplateSelector(false);
+            setEditingTemplate(null);
+            setShowCustomWorkoutBuilder(true);
+          }}
+          selectedDate={selectedDate}
           customTemplates={customTemplates}
         />
-      </div>
-    );
-  }
+      )}
+
+      {showCustomWorkoutBuilder && (
+        <CustomWorkoutBuilderModal
+          onClose={() => {
+            setShowCustomWorkoutBuilder(false);
+            setEditingTemplate(null);
+          }}
+          onCreate={handleCustomWorkoutCreate}
+          onUpdate={editingTemplate ? handleCustomWorkoutUpdate : undefined}
+          refreshCustomTemplates={refreshCustomTemplates}
+          editingTemplate={editingTemplate}
+        />
+      )}
+    </div>
+  );
+}
