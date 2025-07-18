@@ -48,7 +48,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const topRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef<HTMLDivElement>(null);
@@ -83,23 +83,33 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
 
 
   useEffect(() => {
-    if (!autoSaveEnabled || !workout?.id) return;
-
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
+    if (!autoSaveEnabled || !workout?.id) {
+      return;
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
       handleSave();
     }, 2000);
 
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        saveTimeoutRef.current = null;
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+        autoSaveTimeoutRef.current = null;
       }
     };
   }, [workout, autoSaveEnabled, handleSave]);
+
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Find the first incomplete exercise
