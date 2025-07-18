@@ -9,6 +9,7 @@ import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from 
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
@@ -472,15 +473,17 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         onDeleteTemplate={handleDeleteCustomTemplate}
         onEditTemplate={handleEditCustomTemplate}
       />
-        <CustomWorkoutBuilderModal
-          open={currentView === 'customWorkoutBuilder'}
-          onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
-          onCreate={handleCustomWorkoutCreate}
-          onUpdate={handleCustomWorkoutUpdate}
-          template={templateToEdit ?? undefined}
-          prefill={prefillTemplate ?? undefined}
-          existingNames={customTemplates.map(t => t.name)}
-        />
+        <ErrorBoundary fallback={<div className="p-4">Failed to load builder.</div>}>
+          <CustomWorkoutBuilderModal
+            open={currentView === 'customWorkoutBuilder'}
+            onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
+            onCreate={handleCustomWorkoutCreate}
+            onUpdate={handleCustomWorkoutUpdate}
+            template={templateToEdit ?? undefined}
+            prefill={prefillTemplate ?? undefined}
+            existingNames={customTemplates.map(t => t.name)}
+          />
+        </ErrorBoundary>
         <AutoScheduleModal
           open={scheduleModalOpen}
           onClose={() => setScheduleModalOpen(false)}
