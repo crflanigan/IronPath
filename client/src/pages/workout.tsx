@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,20 +48,30 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const topRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef<HTMLDivElement>(null);
 
 
   useEffect(() => {
-    // Auto-save functionality
-    if (autoSaveEnabled) {
-      const saveTimeout = setTimeout(() => {
-        handleSave();
-      }, 2000);
-      
-      return () => clearTimeout(saveTimeout);
+    if (!autoSaveEnabled) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [workout, autoSaveEnabled]);
+
+    saveTimeoutRef.current = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+    };
+  }, [workout, autoSaveEnabled, handleSave]);
 
   useEffect(() => {
     // Find the first incomplete exercise
@@ -75,7 +85,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [workout.id]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       await updateWorkout(workout.id, {
         exercises: workout.exercises,
@@ -99,7 +109,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         variant: "destructive"
       });
     }
-  };
+  }, [updateWorkout, workout, autoSaveEnabled, toast]);
 
   const handleExerciseUpdate = (updatedExercise: Exercise) => {
     const updatedExercises = workout.exercises.map(e => 
