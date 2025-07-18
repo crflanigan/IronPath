@@ -39,6 +39,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     deleteCustomTemplate,
     updateCustomTemplate,
     customTemplates,
+    refreshCustomTemplates,
     loading
   } = useWorkoutStorage();
 
@@ -138,6 +139,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     });
     await loadWorkoutForDate(dateForCreation);
     setPrefillTemplate(null);
+    setDateForCreation(null);
   };
 
   const handleCustomWorkoutUpdate = async (
@@ -481,6 +483,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             template={templateToEdit ?? undefined}
             prefill={prefillTemplate ?? undefined}
             existingNames={customTemplates.map(t => t.name)}
+            refreshCustomTemplates={refreshCustomTemplates}
           />
         </ErrorBoundary>
         <AutoScheduleModal
