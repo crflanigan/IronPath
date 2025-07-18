@@ -7,7 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider, useThemeContext } from '@/components/theme-provider';
 import { ViewStackProvider } from '@/components/view-stack-provider';
 import { Button } from '@/components/ui/button';
-import { CalendarPage } from '@/pages/calendar';
+import CalendarPage from '@/pages/calendar';
 import { WorkoutPage } from '@/pages/workout';
 import { HistoryPage } from '@/pages/history';
 import { Workout } from '@shared/schema';
