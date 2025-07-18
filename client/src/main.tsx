@@ -2,10 +2,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 window.addEventListener('unhandledrejection', event => {
   console.error('Unhandled promise rejection:', event.reason);
+  event.preventDefault();
 });
 
 const rootEl = document.getElementById("root")!;

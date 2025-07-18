@@ -17,7 +17,7 @@ import { absLibrary } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { cn } from '@/lib/utils';
-import ErrorBoundary from './ErrorBoundary';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;

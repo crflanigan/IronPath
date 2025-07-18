@@ -13,7 +13,7 @@ import { HistoryPage } from '@/pages/history';
 import { Workout } from '@shared/schema';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function Navigation() {
   const [location, setLocation] = useLocation();
@@ -117,12 +117,7 @@ function AppContent() {
           )} />
           <Route path="/workout" component={() => (
             currentWorkout ? (
-              <ErrorBoundary fallback={(err, reset) => (
-                <div className="p-4 text-center space-y-4">
-                  <p className="text-sm text-muted-foreground">{err.message}</p>
-                  <Button onClick={reset}>Retry</Button>
-                </div>
-              )}>
+              <ErrorBoundary>
                 <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
               </ErrorBoundary>
             ) : (

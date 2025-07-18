@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -269,9 +269,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
   return (
-    <ErrorBoundary>
-      <>
-    <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
+    <>
+      <ErrorBoundary>
+        <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
       {/* Header */}
       <div className="flex items-center space-x-3">
         <Button
@@ -479,6 +479,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
     </div>
+      </ErrorBoundary>
     <AlertDialog open={showDialog} onOpenChange={handleDialogOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -494,7 +495,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-      </>
-    </ErrorBoundary>
+    </>
   );
 }
