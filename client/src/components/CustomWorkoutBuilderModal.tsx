@@ -17,6 +17,7 @@ import { absLibrary } from '@/lib/abs-library';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { cn } from '@/lib/utils';
+import ErrorBoundary from './ErrorBoundary';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -185,7 +186,8 @@ export function CustomWorkoutBuilderModal({
   };
 
   return (
-    <>
+    <ErrorBoundary>
+      <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
         <DialogHeader className="space-y-1">
@@ -298,6 +300,7 @@ export function CustomWorkoutBuilderModal({
       open={showPreview}
       onOpenChange={setShowPreview}
     />
-    </>
+      </>
+    </ErrorBoundary>
   );
 }

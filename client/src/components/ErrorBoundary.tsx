@@ -1,74 +1,58 @@
-import React from 'react';
-import { Button } from './ui/button';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryProps {
-  fallback?: React.ReactNode | ((error: Error, reset: () => void) => React.ReactNode);
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null };
-
-  private handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-    event.preventDefault();
-    const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-    this.setState({ hasError: true, error });
-    this.reportError(error);
-  };
-
-  private handleErrorEvent = (event: ErrorEvent) => {
-    this.setState({ hasError: true, error: event.error || new Error(event.message) });
-    this.reportError(event.error || new Error(event.message));
-  };
-
-  componentDidMount() {
-    window.addEventListener('unhandledrejection', this.handleUnhandledRejection);
-    window.addEventListener('error', this.handleErrorEvent);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
-    window.removeEventListener('error', this.handleErrorEvent);
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error', error, info);
-    this.reportError(error);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('ErrorBoundary caught an error', error, errorInfo);
+    this.setState({ errorInfo });
   }
 
-  private reportError(error: Error) {
-    // Simple error logging. In a real app, send to logging service here.
-    console.error(error);
-  }
-
-  reset = () => {
-    this.setState({ hasError: false, error: null });
+  resetError = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render() {
     if (this.state.hasError) {
-      if (typeof this.props.fallback === 'function') {
-        return this.props.fallback(this.state.error!, this.reset);
-      }
       return (
-        <div className="p-4 text-center space-y-4">
-          <h2 className="text-lg font-semibold">Something went wrong.</h2>
-          {this.state.error && (
-            <p className="text-sm text-muted-foreground">{this.state.error.message}</p>
+        <div className="p-6 space-y-4 text-center flex flex-col items-center">
+          <AlertTriangle className="w-8 h-8 text-destructive" />
+          <p className="text-sm text-muted-foreground">Something went wrong.</p>
+          {process.env.NODE_ENV === 'development' && this.state.error && (
+            <pre className="text-xs whitespace-pre-wrap text-left w-full overflow-auto bg-muted/50 p-2 rounded">
+              {this.state.error.message}
+              {this.state.errorInfo?.componentStack}
+            </pre>
           )}
-          <Button onClick={this.reset}>Retry</Button>
+          <div className="flex justify-center gap-2">
+            <Button onClick={this.resetError}>Try Again</Button>
+            <Button variant="secondary" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4 mr-2" /> Reload App
+            </Button>
+          </div>
         </div>
       );
     }
+
     return this.props.children;
   }
 }

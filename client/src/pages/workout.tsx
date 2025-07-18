@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -268,7 +269,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
   return (
-    <>
+    <ErrorBoundary>
+      <>
     <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
       {/* Header */}
       <div className="flex items-center space-x-3">
@@ -447,12 +449,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         <h3 className="font-semibold text-gray-900 dark:text-white">Main Workout</h3>
 
         {workout.exercises.map((exercise, index) => (
-          <ExerciseForm
-            key={exercise.machine}
-            exercise={exercise}
-            onUpdate={handleExerciseUpdate}
-            isActive={index === currentExerciseIndex}
-          />
+          <ErrorBoundary key={exercise.machine}>
+            <ExerciseForm
+              exercise={exercise}
+              onUpdate={handleExerciseUpdate}
+              isActive={index === currentExerciseIndex}
+            />
+          </ErrorBoundary>
         ))}
       </div>
 
@@ -491,6 +494,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-    </>
+      </>
+    </ErrorBoundary>
   );
 }
