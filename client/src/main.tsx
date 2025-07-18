@@ -1,7 +1,8 @@
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import ErrorBoundary from "./components/ErrorBoundary";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 window.addEventListener('unhandledrejection', event => {
   console.error('Unhandled promise rejection:', event.reason);
@@ -10,7 +11,9 @@ window.addEventListener('unhandledrejection', event => {
 const rootEl = document.getElementById("root")!;
 
 createRoot(rootEl).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>
 );
