@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,20 +48,58 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast } = useToast();
 
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const topRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef<HTMLDivElement>(null);
 
+  const handleSave = useCallback(async () => {
+    if (!workout?.id) return;
+    try {
+      await updateWorkout(workout.id, {
+        exercises: workout.exercises,
+        abs: workout.abs,
+        cardio: workout.cardio,
+        completed: workout.completed,
+        duration: workout.duration
+      });
+
+      if (autoSaveEnabled) {
+        toast({
+          title: "Auto-saved",
+          description: "Your workout progress has been saved",
+          duration: 2000
+        });
+      }
+    } catch (error) {
+      console.error("Autosave failed", error);
+      toast({
+        title: "Save failed",
+        description: "Failed to save workout progress",
+        variant: "destructive"
+      });
+    }
+  }, [updateWorkout, workout, autoSaveEnabled, toast]);
+
 
   useEffect(() => {
-    // Auto-save functionality
-    if (autoSaveEnabled) {
-      const saveTimeout = setTimeout(() => {
-        handleSave();
-      }, 2000);
-      
-      return () => clearTimeout(saveTimeout);
+    if (!autoSaveEnabled || !workout?.id) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [workout, autoSaveEnabled]);
+
+    saveTimeoutRef.current = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+    };
+  }, [workout, autoSaveEnabled, handleSave]);
 
   useEffect(() => {
     // Find the first incomplete exercise
@@ -75,31 +113,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [workout.id]);
 
-  const handleSave = async () => {
-    try {
-      await updateWorkout(workout.id, {
-        exercises: workout.exercises,
-        abs: workout.abs,
-        cardio: workout.cardio,
-        completed: workout.completed,
-        duration: workout.duration
-      });
-      
-      if (autoSaveEnabled) {
-        toast({
-          title: "Auto-saved",
-          description: "Your workout progress has been saved",
-          duration: 2000
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Save failed",
-        description: "Failed to save workout progress",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleExerciseUpdate = (updatedExercise: Exercise) => {
     const updatedExercises = workout.exercises.map(e => 
