@@ -38,6 +38,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     addCustomTemplate,
     deleteCustomTemplate,
     updateCustomTemplate,
+    refreshCustomTemplates,
     customTemplates,
     loading
   } = useWorkoutStorage();
@@ -138,7 +139,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     });
     await loadWorkoutForDate(dateForCreation);
     setPrefillTemplate(null);
-    setDateForCreation(null);
+    // Keep dateForCreation so newly created templates can be immediately selected
   };
 
   const handleCustomWorkoutUpdate = async (
@@ -466,7 +467,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       <WorkoutTemplateSelectorModal
         open={currentView === 'templateSelector'}
         customTemplates={customTemplates}
-        onClose={() => popView()}
+        onClose={() => {
+          popView();
+          setDateForCreation(null);
+        }}
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
         onClonePreset={handleClonePreset}
@@ -479,6 +483,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             onClose={() => { setTemplateToEdit(null); setPrefillTemplate(null); }}
             onCreate={handleCustomWorkoutCreate}
             onUpdate={handleCustomWorkoutUpdate}
+            refreshCustomTemplates={refreshCustomTemplates}
             template={templateToEdit ?? undefined}
             prefill={prefillTemplate ?? undefined}
             existingNames={customTemplates.map(t => t.name)}
