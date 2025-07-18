@@ -99,7 +99,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         type: templateName,
         completed: false,
         cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
-        abs: [],
+        abs: custom.abs.map(a => ({ ...a, completed: false })),
         exercises: custom.exercises.map(e => ({
           ...e,
           completed: false,
@@ -222,7 +222,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             completed: false,
             sets: e.sets.map(s => ({ ...s, completed: false }))
           })),
-          abs: [],
+          abs: custom.abs.map(a => ({ ...a, completed: false })),
           cardio: {
             type: 'Treadmill',
             duration: '',
@@ -283,7 +283,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
               completed: false,
               sets: e.sets.map(s => ({ ...s, completed: false })),
             })),
-            abs: [],
+            abs: custom.abs.map(a => ({ ...a, completed: false })),
             cardio: {
               type: 'Treadmill',
               duration: '',
@@ -292,7 +292,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             },
             completed: false,
           });
-        }
+       }
 
         if (newWorkout) {
           onNavigateToWorkout(newWorkout);
