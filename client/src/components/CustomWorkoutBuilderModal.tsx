@@ -26,22 +26,19 @@ interface CustomWorkoutBuilderModalProps {
     name: string,
     exercises: Exercise[],
     abs: AbsExercise[],
-    includeInAutoSchedule: boolean,
+    includeInSchedule: boolean,
   ) => void;
   onUpdate?: (
     id: number,
     name: string,
     exercises: Exercise[],
     abs: AbsExercise[],
-    includeInAutoSchedule: boolean,
+    includeInSchedule: boolean,
   ) => void;
-  template?: CustomWorkoutTemplate | null;
-  prefill?: {
-    name: string;
-    exercises: Exercise[];
-    abs: AbsExercise[];
-  } | null;
+  template?: CustomWorkoutTemplate;
+  prefill?: { name: string; exercises: Exercise[]; abs: AbsExercise[] };
   existingNames: string[];
+  refreshCustomTemplates?: () => void;
 }
 
 export function CustomWorkoutBuilderModal({
@@ -52,6 +49,7 @@ export function CustomWorkoutBuilderModal({
   template,
   prefill,
   existingNames,
+  refreshCustomTemplates,
 }: CustomWorkoutBuilderModalProps) {
   const { popView } = useViewStack();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -153,6 +151,10 @@ export function CustomWorkoutBuilderModal({
       onUpdate(template.id, name, exercises, abs, includeInSchedule);
     } else {
       onCreate(name, exercises, abs, includeInSchedule);
+      // Refresh custom templates to ensure state synchronization
+      if (refreshCustomTemplates) {
+        refreshCustomTemplates();
+      }
     }
     popView();
     onClose();
