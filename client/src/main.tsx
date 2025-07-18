@@ -1,20 +1,19 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import './index.css';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
-window.addEventListener('unhandledrejection', event => {
+// Add global promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
   event.preventDefault();
 });
 
-const rootEl = document.getElementById("root")!;
-
-createRoot(rootEl).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-  </React.StrictMode>
-);
+  </React.StrictMode>,
+)

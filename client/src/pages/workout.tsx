@@ -269,9 +269,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
   return (
-    <>
-      <ErrorBoundary>
-        <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
+    <ErrorBoundary>
+      <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
       {/* Header */}
       <div className="flex items-center space-x-3">
         <Button
@@ -478,12 +477,11 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           {workout.completed ? 'Workout Completed' : 'Complete Workout'}
         </Button>
       </div>
-    </div>
-      </ErrorBoundary>
-    <AlertDialog open={showDialog} onOpenChange={handleDialogOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{successMessage.title}</AlertDialogTitle>
+      </div>
+      <AlertDialog open={showDialog} onOpenChange={handleDialogOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{successMessage.title}</AlertDialogTitle>
           <AlertDialogDescription>
             {successMessage.description}
           </AlertDialogDescription>
@@ -494,7 +492,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialog>
-    </>
+      </AlertDialog>
+    </ErrorBoundary>
   );
 }

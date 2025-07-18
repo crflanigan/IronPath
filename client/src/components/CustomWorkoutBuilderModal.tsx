@@ -186,10 +186,10 @@ export function CustomWorkoutBuilderModal({
   };
 
   return (
-    <ErrorBoundary>
-      <>
+    <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+          <ErrorBoundary>
         <DialogHeader className="space-y-1">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription className="text-left">Select up to 15 exercises and name your workout.</DialogDescription>
@@ -293,6 +293,7 @@ export function CustomWorkoutBuilderModal({
             {template ? 'Update Workout' : 'Save Workout'}
           </Button>
         </div>
+          </ErrorBoundary>
       </DialogContent>
     </Dialog>
     <ExerciseImageDialog
@@ -300,7 +301,6 @@ export function CustomWorkoutBuilderModal({
       open={showPreview}
       onOpenChange={setShowPreview}
     />
-      </>
-    </ErrorBoundary>
+    </>
   );
 }
