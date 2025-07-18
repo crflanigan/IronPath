@@ -138,7 +138,6 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     });
     await loadWorkoutForDate(dateForCreation);
     setPrefillTemplate(null);
-    setDateForCreation(null);
   };
 
   const handleCustomWorkoutUpdate = async (
