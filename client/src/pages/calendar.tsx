@@ -139,7 +139,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     });
     await loadWorkoutForDate(dateForCreation);
     setPrefillTemplate(null);
-    setDateForCreation(null);
+    // Keep dateForCreation so newly created templates can be immediately selected
   };
 
   const handleCustomWorkoutUpdate = async (
@@ -467,7 +467,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
       <WorkoutTemplateSelectorModal
         open={currentView === 'templateSelector'}
         customTemplates={customTemplates}
-        onClose={() => popView()}
+        onClose={() => {
+          popView();
+          setDateForCreation(null);
+        }}
         onSelectTemplate={handleTemplateSelect}
         onCreateCustom={handleCreateCustom}
         onClonePreset={handleClonePreset}
