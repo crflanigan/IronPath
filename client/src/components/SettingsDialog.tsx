@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +10,13 @@ import { toast } from '@/hooks/use-toast';
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [usage, setUsage] = useState({ percent: 0, used: 0, limit: 0 });
+
+  useEffect(() => {
+    if (open) {
+      setUsage(localWorkoutStorage.getStorageUsage());
+    }
+  }, [open]);
 
   const handleExport = async () => {
     const data = await localWorkoutStorage.exportData();
@@ -74,6 +81,9 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           </AlertDialog>
         </div>
         <Separator />
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)
+        </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
           IronPath v1.1.0<br />
           Created by Casey Flanigan<br />

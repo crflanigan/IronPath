@@ -1,4 +1,5 @@
 import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise } from "@shared/schema";
+import { toast } from '@/hooks/use-toast';
 
 export interface CustomWorkoutTemplate {
   id: number;
@@ -24,39 +25,170 @@ interface ExerciseHistoryEntry {
 }
 
 export class LocalWorkoutStorage {
+  private storageLimit = 5 * 1024 * 1024; // 5MB approximate
+  private warningThreshold = 0.8;
+  private warned = false;
+  private memoryStore: Record<string, string> = {};
+  private storageFailed = false;
+
+  private safeGetItem(key: string): string | null {
+    if (typeof localStorage === 'undefined' || this.storageFailed) {
+      return this.memoryStore[key] ?? null;
+    }
+    try {
+      return localStorage.getItem(key);
+    } catch (err) {
+      console.error('localStorage getItem failed', err);
+      this.storageFailed = true;
+      return this.memoryStore[key] ?? null;
+    }
+  }
+
+  private safeSetItem(key: string, value: string): void {
+    if (typeof localStorage === 'undefined' || this.storageFailed) {
+      this.memoryStore[key] = value;
+      return;
+    }
+    try {
+      localStorage.setItem(key, value);
+      this.checkQuota();
+    } catch (err) {
+      console.error('localStorage setItem failed', err);
+      this.storageFailed = true;
+      this.memoryStore[key] = value;
+      this.handleStorageError(err);
+    }
+  }
+
+  private safeRemoveItem(key: string): void {
+    if (typeof localStorage === 'undefined' || this.storageFailed) {
+      delete this.memoryStore[key];
+      return;
+    }
+    try {
+      localStorage.removeItem(key);
+    } catch (err) {
+      console.error('localStorage removeItem failed', err);
+      delete this.memoryStore[key];
+      this.storageFailed = true;
+      this.handleStorageError(err);
+    }
+  }
+
+  private computeUsage(): number {
+    let total = 0;
+    const source = this.storageFailed ? this.memoryStore : localStorage;
+    const keys = this.storageFailed ? Object.keys(source) : Object.keys(source);
+    for (const key of keys) {
+      const value = this.storageFailed ? source[key] : (source as Storage).getItem(key) || '';
+      total += key.length + (value?.length || 0);
+    }
+    return total;
+  }
+
+  private checkQuota() {
+    const usage = this.computeUsage();
+    if (usage >= this.storageLimit * this.warningThreshold && !this.warned) {
+      toast({
+        title: 'Storage nearly full',
+        description: 'Old workouts will be removed automatically soon.',
+      });
+      this.warned = true;
+    }
+    if (usage > this.storageLimit) {
+      this.cleanupOldWorkouts();
+    }
+  }
+
+  private handleStorageError(err: unknown) {
+    const isQuota =
+      err instanceof DOMException &&
+      (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+    if (isQuota) {
+      this.cleanupOldWorkouts();
+      toast({
+        title: 'Storage full',
+        description: 'Older workout data was removed to free space.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Storage error',
+        description: 'Unable to access browser storage. Working in memory only.',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  getStorageUsage() {
+    const used = this.computeUsage();
+    return { used, limit: this.storageLimit, percent: used / this.storageLimit };
+  }
+
+  private cleanupOldWorkouts() {
+    const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
+    if (!stored) return;
+    let workouts: Workout[] = [];
+    try {
+      workouts = JSON.parse(stored);
+    } catch {
+      return;
+    }
+    workouts = workouts.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+    while (workouts.length && this.computeUsage() > this.storageLimit * this.warningThreshold) {
+      workouts.shift();
+    }
+    this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+  }
   private getCurrentId(): number {
-    const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_ID);
+    const stored = this.safeGetItem(STORAGE_KEYS.CURRENT_ID);
     return stored ? parseInt(stored, 10) : 1;
   }
 
   private setCurrentId(id: number): void {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_ID, id.toString());
+    this.safeSetItem(STORAGE_KEYS.CURRENT_ID, id.toString());
   }
 
   private getWorkouts(): Workout[] {
-    const stored = localStorage.getItem(STORAGE_KEYS.WORKOUTS);
-    const parsed = stored ? JSON.parse(stored) : [];
+    const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
+    let parsed: unknown = [];
+    try {
+      parsed = stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.error('Failed to parse workouts', err);
+      return [];
+    }
     const workouts = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
     return workouts;
   }
 
   private saveWorkouts(workouts: Workout[]): void {
-    localStorage.setItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+    this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
   }
 
   private getExerciseHistory(): Record<string, ExerciseHistoryEntry> {
-    const stored = localStorage.getItem(STORAGE_KEYS.EXERCISE_HISTORY);
-    const history = stored ? JSON.parse(stored) : {};
-    return history;
+    const stored = this.safeGetItem(STORAGE_KEYS.EXERCISE_HISTORY);
+    try {
+      return stored ? JSON.parse(stored) : {};
+    } catch (err) {
+      console.error('Failed to parse exercise history', err);
+      return {};
+    }
   }
 
   private saveExerciseHistory(history: Record<string, ExerciseHistoryEntry>): void {
-    localStorage.setItem(STORAGE_KEYS.EXERCISE_HISTORY, JSON.stringify(history));
+    this.safeSetItem(STORAGE_KEYS.EXERCISE_HISTORY, JSON.stringify(history));
   }
 
   private getCustomTemplatesInternal(): CustomWorkoutTemplate[] {
-    const stored = localStorage.getItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
-    const parsed = stored ? JSON.parse(stored) : [];
+    const stored = this.safeGetItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
+    let parsed: unknown = [];
+    try {
+      parsed = stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.error('Failed to parse custom templates', err);
+      return [];
+    }
     const templates = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
     return templates.map((t: CustomWorkoutTemplate) => ({
       includeInAutoSchedule: false,
@@ -66,7 +198,7 @@ export class LocalWorkoutStorage {
   }
 
   private saveCustomTemplates(templates: CustomWorkoutTemplate[]): void {
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_TEMPLATES, JSON.stringify(templates));
+    this.safeSetItem(STORAGE_KEYS.CUSTOM_TEMPLATES, JSON.stringify(templates));
   }
 
   getCustomTemplatesSync(): CustomWorkoutTemplate[] {
@@ -79,7 +211,7 @@ export class LocalWorkoutStorage {
 
   getAutoScheduleWorkouts(): string[] {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS);
+      const stored = this.safeGetItem(STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS);
       const parsed = stored ? JSON.parse(stored) : [];
       return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
     } catch {
@@ -88,7 +220,7 @@ export class LocalWorkoutStorage {
   }
 
   saveAutoScheduleWorkouts(names: string[]): void {
-    localStorage.setItem(
+    this.safeSetItem(
       STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS,
       JSON.stringify(names)
     );
@@ -236,7 +368,7 @@ export class LocalWorkoutStorage {
   }
 
   async getUserPreferences(): Promise<UserPreferences> {
-    const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
+    const stored = this.safeGetItem(STORAGE_KEYS.PREFERENCES);
     const defaultPrefs: UserPreferences = {
       id: 1,
       darkMode: false,
@@ -244,8 +376,13 @@ export class LocalWorkoutStorage {
       notifications: true,
       updatedAt: new Date()
     };
-    
-    return stored ? { ...defaultPrefs, ...JSON.parse(stored) } : defaultPrefs;
+
+    try {
+      return stored ? { ...defaultPrefs, ...JSON.parse(stored) } : defaultPrefs;
+    } catch (err) {
+      console.error('Failed to parse preferences', err);
+      return defaultPrefs;
+    }
   }
 
   async updateUserPreferences(updates: Partial<UserPreferences>): Promise<UserPreferences> {
@@ -256,7 +393,7 @@ export class LocalWorkoutStorage {
       updatedAt: new Date()
     };
     
-    localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(updated));
+    this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(updated));
     return updated;
   }
 
@@ -270,7 +407,7 @@ export class LocalWorkoutStorage {
 
   async importData(data: { workouts: Workout[]; preferences: UserPreferences; customTemplates?: CustomWorkoutTemplate[] }): Promise<void> {
     this.saveWorkouts(data.workouts);
-    localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(data.preferences));
+    this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(data.preferences));
 
     if (data.customTemplates) {
       this.saveCustomTemplates(data.customTemplates);
@@ -283,7 +420,7 @@ export class LocalWorkoutStorage {
 
   async clearAllData(): Promise<void> {
     Object.values(STORAGE_KEYS).forEach(key => {
-      localStorage.removeItem(key);
+      this.safeRemoveItem(key);
     });
   }
 }
