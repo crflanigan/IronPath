@@ -76,6 +76,34 @@ export function CustomWorkoutBuilderModal({
     both: { icon: '⚖️', label: 'Both' },
   };
 
+  const regionAliases: Record<string, string> = {
+    'Chest': 'Chest',
+    'Chest Pecs': 'Chest',
+    'Outer Pecs': 'Chest',
+    'Quads': 'Legs',
+    'Quads / Hams': 'Legs',
+    'Legs': 'Legs',
+    'Legs (Warm Up)': 'Legs',
+    'Inner Thighs': 'Thighs',
+    'Outer Thighs': 'Thighs',
+    'Outer Triceps': 'Triceps',
+  };
+
+  const regionOrder = [
+    'Chest',
+    'Back',
+    'Shoulders',
+    'Traps',
+    'Biceps',
+    'Triceps',
+    'Forearms',
+    'Legs',
+    'Thighs',
+    'Hamstrings',
+    'Glutes',
+    'Calves',
+  ];
+
   useEffect(() => {
     if (open) {
       if (template) {
@@ -177,8 +205,18 @@ export function CustomWorkoutBuilderModal({
 
   const grouped: Record<string, ExerciseOption[]> = {};
   filteredExercises.forEach(e => {
-    if (!grouped[e.region]) grouped[e.region] = [];
-    grouped[e.region].push(e);
+    const region = regionAliases[e.region] ?? e.region;
+    if (!grouped[region]) grouped[region] = [];
+    grouped[region].push(e);
+  });
+
+  const orderedGroups = Object.entries(grouped).sort((a, b) => {
+    const idxA = regionOrder.indexOf(a[0]);
+    const idxB = regionOrder.indexOf(b[0]);
+    if (idxA === -1 && idxB === -1) return a[0].localeCompare(b[0]);
+    if (idxA === -1) return 1;
+    if (idxB === -1) return -1;
+    return idxA - idxB;
   });
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -211,7 +249,7 @@ export function CustomWorkoutBuilderModal({
         </div>
         
         <div className="space-y-4 -mt-2">
-          {Object.entries(grouped).map(([region, exercises]) => (
+          {orderedGroups.map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
