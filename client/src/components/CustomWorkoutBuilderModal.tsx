@@ -86,6 +86,7 @@ export function CustomWorkoutBuilderModal({
     'Legs (Warm Up)': 'Legs',
     'Inner Thighs': 'Thighs',
     'Outer Thighs': 'Thighs',
+    'Outer Triceps': 'Triceps',
   };
 
   const regionOrder = [
@@ -95,7 +96,6 @@ export function CustomWorkoutBuilderModal({
     'Traps',
     'Biceps',
     'Triceps',
-    'Outer Triceps',
     'Forearms',
     'Legs',
     'Thighs',
