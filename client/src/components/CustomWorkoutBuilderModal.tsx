@@ -76,6 +76,28 @@ export function CustomWorkoutBuilderModal({
     both: { icon: '⚖️', label: 'Both' },
   };
 
+  const regionOrder = [
+    'Chest',
+    'Chest Pecs',
+    'Outer Pecs',
+    'Back',
+    'Shoulders',
+    'Traps',
+    'Biceps',
+    'Triceps',
+    'Outer Triceps',
+    'Forearms',
+    'Quads',
+    'Quads / Hams',
+    'Hamstrings',
+    'Glutes',
+    'Inner Thighs',
+    'Outer Thighs',
+    'Legs (Warm Up)',
+    'Legs',
+    'Calves',
+  ];
+
   useEffect(() => {
     if (open) {
       if (template) {
@@ -181,6 +203,15 @@ export function CustomWorkoutBuilderModal({
     grouped[e.region].push(e);
   });
 
+  const orderedGroups = Object.entries(grouped).sort((a, b) => {
+    const idxA = regionOrder.indexOf(a[0]);
+    const idxB = regionOrder.indexOf(b[0]);
+    if (idxA === -1 && idxB === -1) return a[0].localeCompare(b[0]);
+    if (idxA === -1) return 1;
+    if (idxB === -1) return -1;
+    return idxA - idxB;
+  });
+
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       popView();
@@ -211,7 +242,7 @@ export function CustomWorkoutBuilderModal({
         </div>
         
         <div className="space-y-4 -mt-2">
-          {Object.entries(grouped).map(([region, exercises]) => (
+          {orderedGroups.map(([region, exercises]) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
