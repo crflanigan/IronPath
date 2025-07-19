@@ -571,7 +571,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       {
         code: "N/A",
         machine: "Seated Chest Press",
-        equipment: "both",
+        equipment: "machine",
         region: "Chest",
         feel: "Medium",
         sets: [
