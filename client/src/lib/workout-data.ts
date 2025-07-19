@@ -113,11 +113,11 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Crunch with Legs Elevated", reps: 30 },
+      { name: "Legs-Up Crunch", reps: 30 },
       { name: "Jack Knife", reps: 30 },
-      { name: "Side Oblique Crunch with Legs Vertical", reps: 30 },
-      { name: "Decline 90 Degree Reverse Crunch", reps: 30 },
-      { name: "Side Oblique Crunch with Arms Extended", reps: 30 }
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Reverse Crunch", reps: 30 },
+      { name: "Side Oblique Knee Raise", reps: 30 }
     ]
   },
 
@@ -251,12 +251,12 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Crunch with Heel Push", reps: 30 },
-      { name: "Knee Raise (Vertical Chair)", reps: 30 },
-      { name: "Decline Side Oblique Crunch (Floor)", reps: 30 },
+      { name: "Crunch", reps: 30 },
+      { name: "Knee Raise", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
-      { name: "Side Oblique Ab Wheel", reps: 30 },
-      { name: "90 Degree Crunch", reps: 30 }
+      { name: "Side Oblique Knee Raise", reps: 30 },
+      { name: "Legs-Up Crunch", reps: 30 }
     ]
   },
 
@@ -404,12 +404,12 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Crunch with Heel Push", reps: 30 },
+      { name: "Crunch", reps: 30 },
       { name: "Straight Leg Thrust", reps: 30 },
-      { name: "Ball Side Oblique Crunch", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
       { name: "Knee Raise", reps: 30 },
       { name: "Side Oblique Knee Raise", reps: 30 },
-      { name: "Ab Wheel", reps: 30 }
+      { name: "Reverse Crunch", reps: 30 }
     ]
   },
 
@@ -560,9 +560,9 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Crunch", reps: 30 },
       { name: "Jack Knife", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
-      { name: "Ab Wheel", reps: 30 },
+      { name: "Straight Leg Thrust", reps: 30 },
       { name: "Side Oblique Leg Raise", reps: 30 },
-      { name: "Crunch with Arms Extended", reps: 30 }
+      { name: "Legs-In Crunch", reps: 30 }
     ]
   },
 
@@ -654,12 +654,12 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Crunch with Legs In", reps: 30 },
-      { name: "Decline 90 Degree Reverse Crunch", reps: 30 },
-      { name: "90 Degree Side Oblique Crunch", reps: 30 },
-      { name: "Decline Reverse Crunch", reps: 30 },
-      { name: "Side Oblique Crunch with Arms Extended", reps: 30 },
-      { name: "Ball Crunch", reps: 30 }
+      { name: "Legs-In Crunch", reps: 30 },
+      { name: "Reverse Crunch", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Straight Leg Thrust", reps: 30 },
+      { name: "Side Oblique Knee Raise", reps: 30 },
+      { name: "Crunch", reps: 30 }
     ]
   },
 
@@ -798,7 +798,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Side Oblique Knee Raise", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
-      { name: "Crunch", reps: 30 }
+      { name: "Legs-Up Crunch", reps: 30 }
     ]
   },
   "Chest, Shoulders & Legs": {
@@ -917,12 +917,12 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Ball Crunch", reps: 30 },
-      { name: "Decline Straight Leg Thrust", reps: 30 },
-      { name: "Decline Side Oblique Crunch", reps: 30 },
-      { name: "Straight Leg Lift with Thrust", reps: 30 },
-      { name: "Side Oblique Crunch with Heel Push", reps: 30 },
-      { name: "Decline Crunch", reps: 30 }
+      { name: "Crunch", reps: 30 },
+      { name: "Straight Leg Thrust", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Straight Leg Thrust", reps: 30 },
+      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Legs-In Crunch", reps: 30 }
     ]
   }
 };
