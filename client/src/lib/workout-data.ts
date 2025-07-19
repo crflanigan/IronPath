@@ -154,7 +154,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       {
         code: "N/A",
         machine: "Body Squat",
-        equipment: "both",
+        equipment: "freeweight",
         region: "Legs",
         feel: "Medium",
         sets: [
@@ -682,7 +682,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       {
         code: "N/A",
         machine: "Push Up (on Knees)",
-        equipment: "both",
+        equipment: "freeweight",
         region: "Chest",
         feel: "Light",
         sets: [
@@ -696,7 +696,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       {
         code: "N/A",
         machine: "Seated Shoulder Press",
-        equipment: "machine",
+        equipment: "both",
         region: "Shoulders",
         feel: "Medium",
         sets: [
@@ -710,7 +710,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       {
         code: "N/A",
         machine: "Cable Front Deltoid Raise",
-        equipment: "machine",
+        equipment: "both",
         region: "Shoulders",
         feel: "Medium",
         sets: [
