@@ -47,7 +47,10 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [showDialog, setShowDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
   const { updateWorkout } = useWorkoutStorage();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
+
+  const lastSavedRef = useRef<string>(JSON.stringify(initialWorkout));
+  const toastIdRef = useRef<string | null>(null);
 
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -56,31 +59,41 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
 
   const handleSave = useCallback(async () => {
     if (!workout?.id) return;
+
+    const serialized = JSON.stringify(workout);
+    if (serialized === lastSavedRef.current) return;
+
     try {
       await updateWorkout(workout.id, {
         exercises: workout.exercises,
         abs: workout.abs,
         cardio: workout.cardio,
         completed: workout.completed,
-        duration: workout.duration
+        duration: workout.duration,
       });
 
+      lastSavedRef.current = serialized;
+
       if (autoSaveEnabled) {
-        toast({
+        if (toastIdRef.current) {
+          dismiss(toastIdRef.current);
+        }
+        const { id } = toast({
           title: "Auto-saved",
           description: "Your workout progress has been saved",
-          duration: 2000
+          duration: 2000,
         });
+        toastIdRef.current = id;
       }
     } catch (error) {
       console.error("Autosave failed", error);
       toast({
         title: "Save failed",
         description: "Failed to save workout progress",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
-  }, [updateWorkout, workout, autoSaveEnabled, toast]);
+  }, [updateWorkout, workout, autoSaveEnabled, toast, dismiss]);
 
 
   useEffect(() => {
@@ -88,7 +101,11 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    if (!autoSaveEnabled || !workout?.id) {
+    if (
+      !autoSaveEnabled ||
+      !workout?.id ||
+      JSON.stringify(workout) === lastSavedRef.current
+    ) {
       return;
     }
 
