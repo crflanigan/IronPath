@@ -76,10 +76,20 @@ export function CustomWorkoutBuilderModal({
     both: { icon: '⚖️', label: 'Both' },
   };
 
+  const regionAliases: Record<string, string> = {
+    'Chest': 'Chest',
+    'Chest Pecs': 'Chest',
+    'Outer Pecs': 'Chest',
+    'Quads': 'Legs',
+    'Quads / Hams': 'Legs',
+    'Legs': 'Legs',
+    'Legs (Warm Up)': 'Legs',
+    'Inner Thighs': 'Thighs',
+    'Outer Thighs': 'Thighs',
+  };
+
   const regionOrder = [
     'Chest',
-    'Chest Pecs',
-    'Outer Pecs',
     'Back',
     'Shoulders',
     'Traps',
@@ -87,14 +97,10 @@ export function CustomWorkoutBuilderModal({
     'Triceps',
     'Outer Triceps',
     'Forearms',
-    'Quads',
-    'Quads / Hams',
+    'Legs',
+    'Thighs',
     'Hamstrings',
     'Glutes',
-    'Inner Thighs',
-    'Outer Thighs',
-    'Legs (Warm Up)',
-    'Legs',
     'Calves',
   ];
 
@@ -199,8 +205,9 @@ export function CustomWorkoutBuilderModal({
 
   const grouped: Record<string, ExerciseOption[]> = {};
   filteredExercises.forEach(e => {
-    if (!grouped[e.region]) grouped[e.region] = [];
-    grouped[e.region].push(e);
+    const region = regionAliases[e.region] ?? e.region;
+    if (!grouped[region]) grouped[region] = [];
+    grouped[region].push(e);
   });
 
   const orderedGroups = Object.entries(grouped).sort((a, b) => {
