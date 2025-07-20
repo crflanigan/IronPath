@@ -1,5 +1,5 @@
 import { render, fireEvent, screen, act, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkoutPage } from './workout';
 import { Workout } from '@shared/schema';
 
