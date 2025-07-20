@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,15 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { defaultWorkoutCycle } from '@/lib/workout-data';
 
@@ -27,6 +36,13 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [warning, setWarning] = useState(false);
+  const [draftHidden, setDraftHidden] = useState<Record<string, boolean>>({});
+  const [promptPrefs, setPromptPrefs] = useState<Record<string, boolean>>({});
+  const [pendingPresets, setPendingPresets] = useState<string[] | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const initialSelected = useRef<Set<string>>(new Set());
+  const originalHidden = useRef<Record<string, boolean>>({});
+  const saveList = useRef<string[]>([]);
 
   useEffect(() => {
     if (customTemplates) {
@@ -52,36 +68,65 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
       } else {
         initial = stored;
       }
+      initialSelected.current = new Set(initial);
       setSelected(new Set(initial));
+
+      const hidden = localWorkoutStorage.getHiddenPresets();
+      originalHidden.current = hidden;
+      setDraftHidden(hidden);
+      setPromptPrefs(localWorkoutStorage.getPresetPromptPrefs());
+      setWarning(false);
     }
   }, [open, templates, presetNames]);
 
-  useEffect(() => {
-    if (open) {
-      setWarning(false);
-    }
-  }, [open]);
-
   const toggle = (name: string) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(name)) {
-        if (prev.size === 1) {
+    if (selected.has(name)) {
+      if (presetNames.includes(name)) {
+        if (promptPrefs[name]) {
+          setDraftHidden(prev => ({
+            ...prev,
+            [name]: originalHidden.current[name] ?? false,
+          }));
+        }
+      }
+      setSelected(prev => {
+        const next = new Set(prev);
+        if (next.size === 1) {
           setWarning(true);
           return prev;
         }
         next.delete(name);
-      } else {
-        next.add(name);
-        setWarning(false);
+        return next;
+      });
+    } else {
+      setSelected(prev => new Set(prev).add(name));
+      setWarning(false);
+      if (presetNames.includes(name)) {
+        setDraftHidden(prev => {
+          if (prev[name]) {
+            return { ...prev, [name]: false };
+          }
+          return prev;
+        });
       }
-      return next;
-    });
+    }
   };
 
   const handleSave = () => {
     const list = Array.from(selected);
     if (list.length === 0) return;
+    const removed = Array.from(initialSelected.current).filter(
+      name => !selected.has(name) && presetNames.includes(name)
+    );
+    const toPrompt = removed.filter(name => !promptPrefs[name]);
+    if (toPrompt.length > 0) {
+      saveList.current = list;
+      setPendingPresets(toPrompt);
+      setDontShowAgain(false);
+      return;
+    }
+    localWorkoutStorage.saveHiddenPresets(draftHidden);
+    localWorkoutStorage.savePresetPromptPrefs(promptPrefs);
     localWorkoutStorage.saveAutoScheduleWorkouts(list);
     onClose();
   };
@@ -90,7 +135,33 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
     if (!isOpen) onClose();
   };
 
+  const finalize = (hide: boolean) => {
+    if (!pendingPresets) return;
+    setPendingPresets(null);
+    setDraftHidden(prev => {
+      const updated = { ...prev };
+      pendingPresets.forEach(name => {
+        updated[name] = hide;
+      });
+      localWorkoutStorage.saveHiddenPresets(updated);
+      return updated;
+    });
+    if (dontShowAgain) {
+      setPromptPrefs(prev => {
+        const updated = { ...prev };
+        pendingPresets.forEach(name => {
+          updated[name] = true;
+        });
+        localWorkoutStorage.savePresetPromptPrefs(updated);
+        return updated;
+      });
+    }
+    localWorkoutStorage.saveAutoScheduleWorkouts(saveList.current);
+    onClose();
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4">
         <DialogHeader>
@@ -133,5 +204,30 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
         </Button>
       </DialogContent>
     </Dialog>
+    <AlertDialog
+      open={pendingPresets !== null}
+      onOpenChange={o => !o && setPendingPresets(null)}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            You removed "{pendingPresets?.join(', ')}" from your auto-schedule.
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Would you also like to hide {pendingPresets && pendingPresets.length > 1 ? 'them' : 'it'} from the Create/Edit Custom Workout menu?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex items-center space-x-2 py-2">
+          <Checkbox id="dont-show" checked={dontShowAgain} onCheckedChange={v => setDontShowAgain(!!v)} />
+          <label htmlFor="dont-show" className="text-sm">Don't show again</label>
+        </div>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel onClick={() => setPendingPresets(null)}>Cancel</AlertDialogCancel>
+          <Button variant="outline" onClick={() => finalize(false)}>Keep Visible</Button>
+          <Button onClick={() => finalize(true)}>Also Hide</Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

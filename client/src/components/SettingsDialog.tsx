@@ -64,6 +64,9 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           <Button className="w-full" variant="secondary" onClick={() => setScheduleOpen(true)}>
             Customize Auto-Schedule
           </Button>
+          <Button className="w-full" variant="secondary" onClick={() => { localWorkoutStorage.saveHiddenPresets({}); toast({ title: 'Presets restored', description: 'All presets are visible.' }); }}>
+            Show hidden presets
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="w-full">Reset All Data</Button>
