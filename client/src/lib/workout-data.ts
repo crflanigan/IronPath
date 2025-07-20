@@ -29,7 +29,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "S5",
-        machine: "Converging Chest Press",
+        machine: "Seated Chest Press",
         equipment: "machine",
         region: "Chest Pecs",
         feel: "Medium",
@@ -113,7 +113,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Legs-Up Crunch", reps: 30 },
+      { name: "Legs-Up Vertical Crunch", reps: 30 },
       { name: "Jack Knife", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
@@ -256,7 +256,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
       { name: "Side Oblique Knee Raise", reps: 30 },
-      { name: "Legs-Up Crunch", reps: 30 }
+      { name: "Legs-Up Vertical Crunch", reps: 30 }
     ]
   },
 
@@ -264,7 +264,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     exercises: [
       {
         code: "N/A",
-        machine: "Wide Grip Pulldown (front)",
+        machine: "Wide Grip Pulldown",
         equipment: "machine",
         region: "Back",
         feel: "Medium",
@@ -278,7 +278,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "N/A",
-        machine: "Close Grip Pulldown (front)",
+        machine: "Close Grip Pulldown",
         equipment: "machine",
         region: "Back",
         feel: "Medium",
@@ -417,7 +417,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
     exercises: [
       {
         code: "N/A",
-        machine: "Wide Grip Pulldown (front)",
+        machine: "Wide Grip Pulldown",
         equipment: "machine",
         region: "Back",
         feel: "Medium",
@@ -445,7 +445,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "N/A",
-        machine: "Herculean Dabble Curl",
+        machine: "Preacher Curl",
         equipment: "freeweight",
         region: "Biceps",
         feel: "Medium",
@@ -562,7 +562,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Straight Leg Thrust", reps: 30 },
       { name: "Side Oblique Leg Raise", reps: 30 },
-      { name: "Legs-In Crunch", reps: 30 }
+      { name: "Cross-Leg Crunch", reps: 30 }
     ]
   },
 
@@ -654,7 +654,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
-      { name: "Legs-In Crunch", reps: 30 },
+      { name: "Cross-Leg Crunch", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Straight Leg Thrust", reps: 30 },
@@ -681,7 +681,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "N/A",
-        machine: "Push Up (on Knees)",
+        machine: "Push Up",
         equipment: "freeweight",
         region: "Chest",
         feel: "Light",
@@ -798,7 +798,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Side Oblique Knee Raise", reps: 30 },
       { name: "Reverse Crunch", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
-      { name: "Legs-Up Crunch", reps: 30 }
+      { name: "Legs-Up Vertical Crunch", reps: 30 }
     ]
   },
   "Chest, Shoulders & Legs": {
@@ -922,7 +922,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       { name: "Side Oblique Crunch", reps: 30 },
       { name: "Straight Leg Thrust", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
-      { name: "Legs-In Crunch", reps: 30 }
+      { name: "Cross-Leg Crunch", reps: 30 }
     ]
   }
 };
