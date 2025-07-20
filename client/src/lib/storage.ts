@@ -15,7 +15,9 @@ const STORAGE_KEYS = {
   CURRENT_ID: 'ironpath_current_id',
   EXERCISE_HISTORY: 'ironpath_exercise_history',
   CUSTOM_TEMPLATES: 'ironpath_custom_templates',
-  AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts'
+  AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts',
+  HIDDEN_PRESETS: 'ironpath_hidden_presets',
+  PRESET_PROMPTS: 'ironpath_preset_prompts'
 } as const;
 
 
@@ -217,6 +219,34 @@ export class LocalWorkoutStorage {
     } catch {
       return [];
     }
+  }
+
+  getHiddenPresets(): Record<string, boolean> {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.HIDDEN_PRESETS);
+      const parsed = stored ? JSON.parse(stored) : {};
+      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  saveHiddenPresets(presets: Record<string, boolean>): void {
+    this.safeSetItem(STORAGE_KEYS.HIDDEN_PRESETS, JSON.stringify(presets));
+  }
+
+  getPresetPromptPrefs(): Record<string, boolean> {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.PRESET_PROMPTS);
+      const parsed = stored ? JSON.parse(stored) : {};
+      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  savePresetPromptPrefs(prefs: Record<string, boolean>): void {
+    this.safeSetItem(STORAGE_KEYS.PRESET_PROMPTS, JSON.stringify(prefs));
   }
 
   saveAutoScheduleWorkouts(names: string[]): void {

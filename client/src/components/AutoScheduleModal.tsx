@@ -8,6 +8,15 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { defaultWorkoutCycle } from '@/lib/workout-data';
 
@@ -27,6 +36,10 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [warning, setWarning] = useState(false);
+  const [hiddenPresets, setHiddenPresets] = useState<Record<string, boolean>>({});
+  const [promptPrefs, setPromptPrefs] = useState<Record<string, boolean>>({});
+  const [pendingPreset, setPendingPreset] = useState<string | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   useEffect(() => {
     if (customTemplates) {
@@ -59,10 +72,12 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
   useEffect(() => {
     if (open) {
       setWarning(false);
+      setHiddenPresets(localWorkoutStorage.getHiddenPresets());
+      setPromptPrefs(localWorkoutStorage.getPresetPromptPrefs());
     }
   }, [open]);
 
-  const toggle = (name: string) => {
+  const removePreset = (name: string, hide: boolean) => {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(name)) {
@@ -71,12 +86,58 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
           return prev;
         }
         next.delete(name);
-      } else {
-        next.add(name);
-        setWarning(false);
       }
       return next;
     });
+    setWarning(false);
+    setHiddenPresets(prev => {
+      const updated = { ...prev, [name]: hide };
+      localWorkoutStorage.saveHiddenPresets(updated);
+      return updated;
+    });
+    if (dontShowAgain) {
+      setPromptPrefs(prev => {
+        const updated = { ...prev, [name]: true };
+        localWorkoutStorage.savePresetPromptPrefs(updated);
+        return updated;
+      });
+    }
+  };
+
+  const toggle = (name: string) => {
+    if (selected.has(name)) {
+      if (presetNames.includes(name)) {
+        if (promptPrefs[name]) {
+          removePreset(name, hiddenPresets[name] ?? false);
+        } else {
+          setPendingPreset(name);
+          setDontShowAgain(false);
+        }
+        return;
+      }
+      setSelected(prev => {
+        const next = new Set(prev);
+        if (next.size === 1) {
+          setWarning(true);
+          return prev;
+        }
+        next.delete(name);
+        return next;
+      });
+    } else {
+      setSelected(prev => new Set(prev).add(name));
+      setWarning(false);
+      if (presetNames.includes(name)) {
+        setHiddenPresets(prev => {
+          if (prev[name]) {
+            const updated = { ...prev, [name]: false };
+            localWorkoutStorage.saveHiddenPresets(updated);
+            return updated;
+          }
+          return prev;
+        });
+      }
+    }
   };
 
   const handleSave = () => {
@@ -133,5 +194,26 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
         </Button>
       </DialogContent>
     </Dialog>
+    <AlertDialog open={pendingPreset !== null} onOpenChange={o => !o && setPendingPreset(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            You removed "{pendingPreset}" from your auto-schedule.
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Would you also like to hide it from the Create/Edit Custom Workout menu?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex items-center space-x-2 py-2">
+          <Checkbox id="dont-show" checked={dontShowAgain} onCheckedChange={v => setDontShowAgain(!!v)} />
+          <label htmlFor="dont-show" className="text-sm">Don't show again</label>
+        </div>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel onClick={() => setPendingPreset(null)}>Cancel</AlertDialogCancel>
+          <Button variant="outline" onClick={() => { if (pendingPreset) { removePreset(pendingPreset, false); setPendingPreset(null); } }}>Just Remove</Button>
+          <Button onClick={() => { if (pendingPreset) { removePreset(pendingPreset, true); setPendingPreset(null); } }}>Also Hide</Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

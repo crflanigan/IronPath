@@ -5,9 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CustomWorkoutTemplate } from '@/lib/storage';
+import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -30,6 +31,23 @@ interface WorkoutTemplateSelectorModalProps {
 
 export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onClonePreset, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
   const { pushView } = useViewStack();
+  const [hiddenPresets, setHiddenPresets] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (open) {
+      setHiddenPresets(localWorkoutStorage.getHiddenPresets());
+    }
+  }, [open]);
+  const presetList = [
+    'Chest Day',
+    'Legs',
+    'Back & Biceps',
+    'Back, Biceps & Legs',
+    'Chest & Triceps',
+    'Chest & Shoulders',
+    'Chest, Shoulders & Legs',
+  ];
+  const visiblePresets = presetList.filter(name => !hiddenPresets[name]);
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onClose();
@@ -46,15 +64,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-2">
-          {[
-            'Chest Day',
-            'Legs',
-            'Back & Biceps',
-            'Back, Biceps & Legs',
-            'Chest & Triceps',
-            'Chest & Shoulders',
-            'Chest, Shoulders & Legs',
-          ].map(name => (
+          {visiblePresets.map(name => (
             <div key={name} className="flex items-center space-x-1">
               <Button
                 variant="outline"
