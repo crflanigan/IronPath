@@ -137,6 +137,7 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
 
   const finalize = (hide: boolean) => {
     if (!pendingPresets) return;
+    setPendingPresets(null);
     setDraftHidden(prev => {
       const updated = { ...prev };
       pendingPresets.forEach(name => {
