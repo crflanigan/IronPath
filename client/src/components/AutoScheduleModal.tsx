@@ -152,6 +152,7 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="space-y-4">
         <DialogHeader>
@@ -215,5 +216,6 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    </>
   );
 }
