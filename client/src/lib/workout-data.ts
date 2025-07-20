@@ -626,7 +626,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       },
       {
         code: "N/A",
-        machine: "Low-Pulley Kick Back",
+        machine: "High-Pulley Kick Back",
         equipment: "machine",
         region: "Triceps",
         feel: "Medium",
