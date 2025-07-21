@@ -159,6 +159,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 <Input
                   type="number"
                   inputMode="decimal"
+                  aria-label="Weight"
                   value={set.weight ?? ''}
                   onChange={(e) => {
                     const v = e.target.value;
