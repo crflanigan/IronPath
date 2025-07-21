@@ -155,9 +155,14 @@ export function CustomWorkoutBuilderModal({
 
   const handleSave = () => {
     if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
-    const exercises: Exercise[] = Array.from(selected).map(m => {
-      const info = exerciseLibrary.find(e => e.machine === m)!;
-      return {
+    const exercises: Exercise[] = [];
+    Array.from(selected).forEach(m => {
+      const info = exerciseLibrary.find(e => e.machine === m);
+      if (!info) {
+        console.warn(`Unknown exercise machine: ${m}`);
+        return;
+      }
+      exercises.push({
         machine: info.machine,
         region: info.region,
         equipment: info.equipment,
@@ -168,16 +173,22 @@ export function CustomWorkoutBuilderModal({
           { weight: undefined, reps: undefined, rest: '', completed: false },
           { weight: undefined, reps: undefined, rest: '', completed: false },
         ],
-      } as Exercise;
+      } as Exercise);
     });
-    const abs: AbsExercise[] = Array.from(selectedAbs).map(n => {
-      const info = absLibrary.find(a => a.name === n)!;
-      return {
+
+    const abs: AbsExercise[] = [];
+    Array.from(selectedAbs).forEach(n => {
+      const info = absLibrary.find(a => a.name === n);
+      if (!info) {
+        console.warn(`Unknown abs exercise: ${n}`);
+        return;
+      }
+      abs.push({
         name: info.name,
         reps: info.reps,
         time: info.time,
         completed: false,
-      } as AbsExercise;
+      } as AbsExercise);
     });
     if (template && onUpdate) {
       onUpdate(template.id, name, exercises, abs, includeInSchedule);
