@@ -49,10 +49,15 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const { updateWorkout } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
 
+  useEffect(() => {
+    setWorkout(initialWorkout);
+    workoutRef.current = initialWorkout;
+    lastSavedRef.current = JSON.stringify(initialWorkout);
+  }, [initialWorkout]);
+
   const lastSavedRef = useRef<string>(JSON.stringify(initialWorkout));
   const toastIdRef = useRef<string | null>(null);
 
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const workoutRef = useRef<Workout>(initialWorkout);
   const autoSaveEnabledRef = useRef<boolean>(true);
 
@@ -106,40 +111,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     }
   }, [updateWorkout, toast, dismiss]);
 
-
   useEffect(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-      autoSaveTimeoutRef.current = null;
-    }
+    if (!autoSaveEnabled || !workout?.id) return;
 
-    if (
-      !autoSaveEnabled ||
-      !workout?.id ||
-      JSON.stringify(workout) === lastSavedRef.current
-    ) {
-      return;
-    }
+    const timeoutId = setTimeout(handleSave, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [workout, autoSaveEnabled, handleSave]);
 
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      handleSave();
-    }, 2000);
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-        autoSaveTimeoutRef.current = null;
-      }
-    };
-  }, [workout, autoSaveEnabled]);
-
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     // Find the first incomplete exercise

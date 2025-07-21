@@ -38,17 +38,25 @@ vi.mock('@/hooks/use-workout-storage', () => {
   };
 });
 
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() })
-}));
+vi.mock('@/hooks/use-toast', () => {
+  return {
+    useToast: () => ({
+      toast: vi.fn(() => ({ id: 'toast1' })),
+      dismiss: vi.fn(),
+    }),
+  };
+});
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.clearAllMocks();
+});
 
 describe('Workout Auto-Save Memory Leak Fix', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
 
   it('should not stack multiple timeouts during rapid state changes', async () => {
     const { rerender } = render(
