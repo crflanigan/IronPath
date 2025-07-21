@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,28 +53,39 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const toastIdRef = useRef<string | null>(null);
 
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const workoutRef = useRef<Workout>(initialWorkout);
+  const autoSaveEnabledRef = useRef<boolean>(true);
 
   const topRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef<HTMLDivElement>(null);
 
-  const handleSave = useCallback(async () => {
-    if (!workout?.id) return;
+  useEffect(() => {
+    workoutRef.current = workout;
+  }, [workout]);
 
-    const serialized = JSON.stringify(workout);
+  useEffect(() => {
+    autoSaveEnabledRef.current = autoSaveEnabled;
+  }, [autoSaveEnabled]);
+
+  const handleSave = useCallback(async () => {
+    const currentWorkout = workoutRef.current;
+    if (!currentWorkout?.id) return;
+
+    const serialized = JSON.stringify(currentWorkout);
     if (serialized === lastSavedRef.current) return;
 
     try {
-      await updateWorkout(workout.id, {
-        exercises: workout.exercises,
-        abs: workout.abs,
-        cardio: workout.cardio,
-        completed: workout.completed,
-        duration: workout.duration,
+      await updateWorkout(currentWorkout.id, {
+        exercises: currentWorkout.exercises,
+        abs: currentWorkout.abs,
+        cardio: currentWorkout.cardio,
+        completed: currentWorkout.completed,
+        duration: currentWorkout.duration,
       });
 
       lastSavedRef.current = serialized;
 
-      if (autoSaveEnabled) {
+      if (autoSaveEnabledRef.current) {
         if (toastIdRef.current) {
           dismiss(toastIdRef.current);
         }
@@ -93,12 +104,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         variant: "destructive",
       });
     }
-  }, [updateWorkout, workout, autoSaveEnabled, toast, dismiss]);
+  }, [updateWorkout, toast, dismiss]);
 
 
   useEffect(() => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
     }
 
     if (
@@ -119,7 +131,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         autoSaveTimeoutRef.current = null;
       }
     };
-  }, [workout, autoSaveEnabled, handleSave]);
+  }, [workout, autoSaveEnabled]);
 
   useEffect(() => {
     return () => {
