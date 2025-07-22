@@ -17,7 +17,8 @@ const STORAGE_KEYS = {
   CUSTOM_TEMPLATES: 'ironpath_custom_templates',
   AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts',
   HIDDEN_PRESETS: 'ironpath_hidden_presets',
-  PRESET_PROMPTS: 'ironpath_preset_prompts'
+  PRESET_PROMPTS: 'ironpath_preset_prompts',
+  STREAK_DAYS: 'ironpath_streak_days'
 } as const;
 
 
@@ -254,6 +255,23 @@ export class LocalWorkoutStorage {
       STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS,
       JSON.stringify(names)
     );
+  }
+
+  getStreakDays(): number[] {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.STREAK_DAYS);
+      const parsed = stored ? JSON.parse(stored) : null;
+      const defaultDays = [0, 1, 2, 3, 4, 5, 6];
+      return Array.isArray(parsed)
+        ? parsed.filter(d => typeof d === 'number')
+        : defaultDays;
+    } catch {
+      return [0, 1, 2, 3, 4, 5, 6];
+    }
+  }
+
+  saveStreakDays(days: number[]): void {
+    this.safeSetItem(STORAGE_KEYS.STREAK_DAYS, JSON.stringify(days));
   }
 
   async getLastExerciseSets(machine: string): Promise<{ weight: number; reps: number; rest?: string }[] | undefined> {

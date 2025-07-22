@@ -11,6 +11,7 @@ import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelect
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
+import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 
@@ -26,6 +27,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const { currentView, pushView, popView } = useViewStack();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [streakModalOpen, setStreakModalOpen] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
@@ -371,7 +373,12 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+              <span>Day Streak</span>
+              <Button variant="link" size="sm" onClick={() => setStreakModalOpen(true)}>
+                Customize
+              </Button>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -493,6 +500,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
           open={scheduleModalOpen}
           onClose={() => setScheduleModalOpen(false)}
           customTemplates={customTemplates}
+        />
+        <CustomizeStreakModal
+          open={streakModalOpen}
+          onClose={() => setStreakModalOpen(false)}
         />
       </div>
     );
