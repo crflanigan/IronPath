@@ -65,6 +65,10 @@ export function CustomizeStreakModal({ open, onClose }: CustomizeStreakModalProp
           <DialogDescription>
             Choose which days count toward your streak
           </DialogDescription>
+          <p className="text-sm text-muted-foreground">
+            You can still work out on other days — only missed planned days break your
+            streak. Bonus workouts help but don’t hurt.
+          </p>
         </DialogHeader>
         <div className="space-y-2">
           {days.map((day, idx) => (
