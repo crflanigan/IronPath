@@ -11,8 +11,9 @@ import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelect
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
+import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
-import { CustomWorkoutTemplate } from '@/lib/storage';
+import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 
 interface CalendarPageProps {
   onNavigateToWorkout: (workout: Workout) => void;
@@ -26,6 +27,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const { currentView, pushView, popView } = useViewStack();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [streakModalOpen, setStreakModalOpen] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         type: templateName,
         completed: false,
         cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
-        abs: custom.abs.map(a => ({ ...a, completed: false })),
+        abs: (custom.abs ?? []).map(a => ({ ...a, completed: false })),
         exercises: custom.exercises.map(e => ({
           ...e,
           completed: false,
@@ -222,7 +224,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             completed: false,
             sets: e.sets.map(s => ({ ...s, completed: false }))
           })),
-          abs: custom.abs.map(a => ({ ...a, completed: false })),
+          abs: (custom.abs ?? []).map(a => ({ ...a, completed: false })),
           cardio: {
             type: 'Treadmill',
             duration: '',
@@ -283,7 +285,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
               completed: false,
               sets: e.sets.map(s => ({ ...s, completed: false })),
             })),
-            abs: custom.abs.map(a => ({ ...a, completed: false })),
+            abs: (custom.abs ?? []).map(a => ({ ...a, completed: false })),
             cardio: {
               type: 'Treadmill',
               duration: '',
@@ -310,22 +312,36 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   };
 
   const calculateCurrentStreak = () => {
-    const today = new Date();
+    const streakDays = localWorkoutStorage.getStreakDays();
+    const workoutMap = new Map(workouts.map(w => [w.date, w.completed]));
+
+    const lastCompleted = workouts
+      .filter(w => w.completed)
+      .map(w => parseISODate(w.date))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+
+    const startDate = lastCompleted && lastCompleted > new Date() ? lastCompleted : new Date();
     let streak = 0;
-    
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
+    const date = new Date(startDate);
+
+    for (let i = 0; i < 365; i++) {
       const dateString = formatLocalDate(date);
-      
-      const workout = workouts.find(w => w.date === dateString);
-      if (workout && workout.completed) {
+      const completed = workoutMap.get(dateString) ?? false;
+      const isStreakDay = streakDays.includes(date.getDay());
+
+      if (isStreakDay) {
+        if (completed) {
+          streak++;
+        } else {
+          break;
+        }
+      } else if (completed) {
         streak++;
-      } else {
-        break;
       }
+
+      date.setDate(date.getDate() - 1);
     }
-    
+
     return streak;
   };
 
@@ -368,12 +384,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setStreakModalOpen(true)}
+          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
+        </button>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">{stats.totalWorkouts}</div>
@@ -493,6 +511,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
           open={scheduleModalOpen}
           onClose={() => setScheduleModalOpen(false)}
           customTemplates={customTemplates}
+        />
+        <CustomizeStreakModal
+          open={streakModalOpen}
+          onClose={() => setStreakModalOpen(false)}
         />
       </div>
     );
