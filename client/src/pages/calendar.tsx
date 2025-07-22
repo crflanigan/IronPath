@@ -370,17 +370,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
-              <span>Day Streak</span>
-              <Button variant="link" size="sm" onClick={() => setStreakModalOpen(true)}>
-                Customize
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setStreakModalOpen(true)}
+          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
+        </button>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">{stats.totalWorkouts}</div>
