@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useViewStack } from '@/components/view-stack-provider';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarGrid } from '@/components/calendar-grid';
@@ -26,6 +27,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     () => formatLocalDate(new Date())
   );
   const { currentView, pushView, popView } = useViewStack();
+  const [, setLocation] = useLocation();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [streakModalOpen, setStreakModalOpen] = useState(false);
@@ -346,12 +348,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.completedWorkouts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setLocation('/history')}
+          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="text-2xl font-bold text-primary">{stats.completedWorkouts}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+        </button>
         <button
           type="button"
           onClick={() => setStreakModalOpen(true)}
@@ -360,12 +364,14 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
           <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
         </button>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.longestStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setLocation('/history')}
+          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="text-2xl font-bold text-orange-600">{stats.longestStreak}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
+        </button>
       </div>
 
       {/* Calendar */}
