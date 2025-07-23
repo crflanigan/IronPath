@@ -17,3 +17,18 @@ export function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+export function minutesFromDuration(duration?: string): number | undefined {
+  if (!duration) return undefined
+  const match = duration.match(/^(\d+)(?::(\d{1,2}))?/) // supports "mm" or "mm:ss"
+  if (!match) return undefined
+  const minutes = parseInt(match[1], 10)
+  if (isNaN(minutes)) return undefined
+  if (match[2]) {
+    const seconds = parseInt(match[2], 10)
+    if (!isNaN(seconds)) {
+      return minutes + seconds / 60
+    }
+  }
+  return minutes
+}
+
