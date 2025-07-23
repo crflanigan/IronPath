@@ -6,6 +6,8 @@ import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout } from '@shared/schema';
 import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 import { parseISODate } from '@/lib/utils';
+import { calculateDayStreak } from '@/lib/streak';
+import { localWorkoutStorage } from '@/lib/storage';
 
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -70,25 +72,8 @@ export function HistoryPage() {
     const totalDuration = completed.reduce((sum, w) => sum + (w.duration || 0), 0);
     const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
 
-    const sortedWorkouts = [...workouts]
-      .filter(w => w.completed)
-      .sort(
-        (a, b) =>
-          parseISODate(b.date).getTime() - parseISODate(a.date).getTime()
-      );
-
-    let currentStreak = 0;
-    const today = new Date();
-
-    for (let i = 0; i < sortedWorkouts.length; i++) {
-      const workoutDate = parseISODate(sortedWorkouts[i].date);
-      const diffDays = Math.floor((today.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays === currentStreak) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
+    const streakDays = localWorkoutStorage.getStreakDays();
+    const currentStreak = calculateDayStreak(workouts, streakDays);
 
     const weightProgress = calculateWeightProgress(completed);
 

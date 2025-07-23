@@ -7,6 +7,7 @@ import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
+import { calculateDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -306,43 +307,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const getWorkoutStats = () => {
     const completedWorkouts = workouts.filter(w => w.completed).length;
     const totalWorkouts = workouts.length;
-    const currentStreak = calculateCurrentStreak();
-    
-    return { completedWorkouts, totalWorkouts, currentStreak };
-  };
-
-  const calculateCurrentStreak = () => {
     const streakDays = localWorkoutStorage.getStreakDays();
-    const workoutMap = new Map(workouts.map(w => [w.date, w.completed]));
+    const currentStreak = calculateDayStreak(workouts, streakDays);
 
-    const lastCompleted = workouts
-      .filter(w => w.completed)
-      .map(w => parseISODate(w.date))
-      .sort((a, b) => b.getTime() - a.getTime())[0];
-
-    const startDate = lastCompleted && lastCompleted > new Date() ? lastCompleted : new Date();
-    let streak = 0;
-    const date = new Date(startDate);
-
-    for (let i = 0; i < 365; i++) {
-      const dateString = formatLocalDate(date);
-      const completed = workoutMap.get(dateString) ?? false;
-      const isStreakDay = streakDays.includes(date.getDay());
-
-      if (isStreakDay) {
-        if (completed) {
-          streak++;
-        } else {
-          break;
-        }
-      } else if (completed) {
-        streak++;
-      }
-
-      date.setDate(date.getDate() - 1);
-    }
-
-    return streak;
+    return { completedWorkouts, totalWorkouts, currentStreak };
   };
 
   if (loading) {
