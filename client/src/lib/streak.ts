@@ -32,3 +32,45 @@ export function calculateDayStreak(workouts: Workout[], streakDays: number[]): n
 
   return streak;
 }
+
+export function calculateLongestDayStreak(workouts: Workout[], streakDays: number[]): number {
+  if (workouts.length === 0) return 0;
+
+  const workoutMap = new Map(workouts.map(w => [w.date, w.completed]));
+  const sortedDates = workouts
+    .map(w => parseISODate(w.date))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  const startDate = sortedDates[0];
+  const endDate = (() => {
+    const last = sortedDates[sortedDates.length - 1];
+    const today = new Date();
+    return last > today ? last : today;
+  })();
+
+  let current = 0;
+  let longest = 0;
+  const date = new Date(startDate);
+
+  while (date <= endDate) {
+    const dateString = formatLocalDate(date);
+    const completed = workoutMap.get(dateString) ?? false;
+    const isStreakDay = streakDays.includes(date.getDay());
+
+    if (isStreakDay) {
+      if (completed) {
+        current++;
+        if (current > longest) longest = current;
+      } else {
+        current = 0;
+      }
+    } else if (completed) {
+      current++;
+      if (current > longest) longest = current;
+    }
+
+    date.setDate(date.getDate() + 1);
+  }
+
+  return longest;
+}

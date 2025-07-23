@@ -7,7 +7,7 @@ import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
-import { calculateDayStreak } from '@/lib/streak';
+import { calculateDayStreak, calculateLongestDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -306,11 +306,11 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
 
   const getWorkoutStats = () => {
     const completedWorkouts = workouts.filter(w => w.completed).length;
-    const totalWorkouts = workouts.length;
     const streakDays = localWorkoutStorage.getStreakDays();
     const currentStreak = calculateDayStreak(workouts, streakDays);
+    const longestStreak = calculateLongestDayStreak(workouts, streakDays);
 
-    return { completedWorkouts, totalWorkouts, currentStreak };
+    return { completedWorkouts, currentStreak, longestStreak };
   };
 
   if (loading) {
@@ -362,8 +362,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         </button>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.totalWorkouts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.longestStreak}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
           </CardContent>
         </Card>
       </div>
