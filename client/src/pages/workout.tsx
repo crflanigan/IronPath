@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
-import { parseISODate } from '@/lib/utils';
+import { parseISODate, minutesFromDuration } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
@@ -228,7 +228,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     // Simple duration calculation based on estimated time
     const exerciseTime = workout.exercises.length * 5; // 5 minutes per exercise
     const absTime = workout.abs.length * 2; // 2 minutes per ab exercise
-    const cardioTime = 15; // 15 minutes cardio
+    const entered = minutesFromDuration(workout.cardio?.duration);
+    const cardioTime = entered && entered > 15 ? Math.round(entered) : 15;
     return exerciseTime + absTime + cardioTime;
   };
 
