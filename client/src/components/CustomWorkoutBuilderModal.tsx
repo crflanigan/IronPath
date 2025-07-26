@@ -64,6 +64,19 @@ export function CustomWorkoutBuilderModal({
   const [showPreview, setShowPreview] = useState(false);
   const [equipmentFilter, setEquipmentFilter] = useState<'freeweight' | 'machine' | 'both'>('both');
 
+  const noPreviewAbs = new Set([
+    'Cross-Leg Crunch',
+    'Jack Knife',
+    'Legs-Up Vertical Crunch',
+    'Side Oblique Crunch',
+    'Side Oblique Leg Raise',
+    'Crunch',
+    'Knee Raise',
+    'Reverse Crunch',
+    'Side Oblique Knee Raise',
+    'Straight Leg Thrust',
+  ]);
+
   const cycleFilter = () => {
     setEquipmentFilter(prev =>
       prev === 'freeweight' ? 'machine' : prev === 'machine' ? 'both' : 'freeweight'
@@ -201,6 +214,7 @@ export function CustomWorkoutBuilderModal({
   };
 
   const handlePreview = (name: string) => {
+    if (noPreviewAbs.has(name)) return;
     setPreviewExercise(name);
     setShowPreview(true);
   };
