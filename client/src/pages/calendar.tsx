@@ -8,7 +8,7 @@ import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
-import { calculateDayStreak, calculateLongestDayStreak } from '@/lib/streak';
+import { calculateDayStreak, calculateTopDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -310,9 +310,9 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     const completedWorkouts = workouts.filter(w => w.completed).length;
     const streakDays = localWorkoutStorage.getStreakDays();
     const currentStreak = calculateDayStreak(workouts, streakDays);
-    const longestStreak = calculateLongestDayStreak(workouts, streakDays);
+    const topStreak = calculateTopDayStreak(workouts, streakDays);
 
-    return { completedWorkouts, currentStreak, longestStreak };
+    return { completedWorkouts, currentStreak, topStreak };
   };
 
   if (loading) {
@@ -369,8 +369,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
           onClick={() => setLocation('/history')}
           className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <div className="text-2xl font-bold text-orange-600">{stats.longestStreak}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
+          <div className="text-2xl font-bold text-orange-600">{stats.topStreak}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Top Streak</div>
         </button>
       </div>
 
