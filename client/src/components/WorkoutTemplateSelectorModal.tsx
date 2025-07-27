@@ -15,6 +15,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
 
@@ -32,6 +42,7 @@ interface WorkoutTemplateSelectorModalProps {
 export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, onSelectTemplate, onCreateCustom, onClonePreset, onDeleteTemplate, onEditTemplate }: WorkoutTemplateSelectorModalProps) {
   const { pushView } = useViewStack();
   const [hiddenPresets, setHiddenPresets] = useState<Record<string, boolean>>({});
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -147,9 +158,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          if (confirm('Delete this workout?')) {
-                            onDeleteTemplate(t.id);
-                          }
+                          setPendingDeleteId(t.id);
                         }}
                       >
                         Delete workout
@@ -163,6 +172,33 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
 
         </div>
       </DialogContent>
+      <AlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={o => !o && setPendingDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Workout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this workout?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                if (pendingDeleteId !== null) {
+                  onDeleteTemplate(pendingDeleteId);
+                  setPendingDeleteId(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
