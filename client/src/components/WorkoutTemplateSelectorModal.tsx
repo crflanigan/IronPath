@@ -15,6 +15,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
 
@@ -145,15 +156,28 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                       >
                         Edit workout
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (confirm('Delete this workout?')) {
-                            onDeleteTemplate(t.id);
-                          }
-                        }}
-                      >
-                        Delete workout
-                      </DropdownMenuItem>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem>Delete workout</DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Workout</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this workout?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 text-white hover:bg-red-700"
+                              onClick={() => onDeleteTemplate(t.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
