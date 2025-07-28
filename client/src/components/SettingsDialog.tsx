@@ -88,7 +88,7 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          IronPath v1.1.0<br />
+          IronPath v1.1.1<br />
           Created by Casey Flanigan<br />
           This is an open source project which can be found here: https://github.com/crflanigan/IronPath
         </div>
