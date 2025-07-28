@@ -133,7 +133,7 @@ PRs welcome. Please open an issue before large changes.
 
 ## 🔒 License
 
-MIT
+AGPLv3
 
 ---
 
