@@ -6,6 +6,7 @@ import { Exercise, ExerciseSet } from '@shared/schema';
 import { Check, Clock, HelpCircle } from 'lucide-react';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 
 interface ExerciseFormProps {
   exercise: Exercise;
@@ -20,6 +21,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   );
   const [showHelp, setShowHelp] = useState(false);
   const { toast } = useToast();
+  const focusToEnd = useCursorEndOnFocus();
 
   const isSetComplete = (set: ExerciseSet) =>
     set.weight !== undefined && set.reps !== undefined;
@@ -157,8 +159,9 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 </span>
                 
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
+                  pattern="[0-9]*"
                   aria-label="Weight"
                   value={set.weight ?? ''}
                   onChange={(e) => {
@@ -167,6 +170,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                       updateSet(index, 'weight', v === '' ? undefined : parseInt(v));
                     }
                   }}
+                  onFocus={focusToEnd}
                   className={`w-16 text-sm ${weightError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="lbs"
                   disabled={false}
@@ -175,8 +179,9 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                 <span className="text-xs text-gray-500 dark:text-gray-400">×</span>
                 
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
+                  pattern="[0-9]*"
                   value={set.reps ?? ''}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -184,6 +189,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                       updateSet(index, 'reps', v === '' ? undefined : parseInt(v));
                     }
                   }}
+                  onFocus={focusToEnd}
                   className={`w-14 text-sm ${repsError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="reps"
                   disabled={false}
