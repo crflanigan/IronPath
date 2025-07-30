@@ -10,6 +10,7 @@ import { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate, minutesFromDuration } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import confetti from 'canvas-confetti';
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
   const { updateWorkout } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
+  const focusToEnd = useCursorEndOnFocus();
 
   useEffect(() => {
     setWorkout(initialWorkout);
@@ -349,11 +351,14 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                       {absExercise.reps !== undefined ? (
                         <>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
+                            pattern="[0-9]*"
                             value={absExercise.reps}
                             onChange={(e) =>
                               handleAbsUpdate(index, 'reps', parseInt(e.target.value) || 0)
                             }
+                            onFocus={focusToEnd}
                             className="w-16 text-sm"
                             placeholder="reps"
                           />
