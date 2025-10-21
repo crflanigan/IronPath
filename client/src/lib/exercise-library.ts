@@ -19,5 +19,11 @@ export const exerciseLibrary: ExerciseOption[] = (() => {
       }
     });
   });
-  return Array.from(map.values()).sort((a, b) => a.region.localeCompare(b.region));
+  return Array.from(map.values()).sort((a, b) => {
+    const regionCompare = a.region.localeCompare(b.region);
+    if (regionCompare !== 0) {
+      return regionCompare;
+    }
+    return a.machine.localeCompare(b.machine);
+  });
 })();
