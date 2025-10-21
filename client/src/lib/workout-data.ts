@@ -236,6 +236,20 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         bestReps: 10
       },
       {
+        code: "N/A",
+        machine: "Seated Calf Raise",
+        equipment: "machine",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" }
+        ],
+        bestWeight: 0,
+        bestReps: 12
+      },
+      {
         code: "S3",
         machine: "Standing Calf Raise (1-DB)",
         equipment: "freeweight",
@@ -540,6 +554,20 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         ],
         bestWeight: 130,
         bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Calf Raise",
+        equipment: "machine",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" }
+        ],
+        bestWeight: 0,
+        bestReps: 12
       },
       {
         code: "N/A",
@@ -900,6 +928,20 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
         ],
         bestWeight: 130,
         bestReps: 15
+      },
+      {
+        code: "N/A",
+        machine: "Seated Calf Raise",
+        equipment: "machine",
+        region: "Calves",
+        feel: "Medium",
+        sets: [
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" },
+          { weight: 0, reps: 12, rest: "1:00" }
+        ],
+        bestWeight: 0,
+        bestReps: 12
       },
       {
         code: "N/A",
