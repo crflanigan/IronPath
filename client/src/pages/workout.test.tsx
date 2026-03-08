@@ -1,8 +1,39 @@
 import React from 'react';
-import { render, fireEvent, screen, act, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkoutPage } from './workout';
 import { Workout } from '@shared/schema';
+
+const mockUpdateWorkout = vi.fn();
+
+vi.mock('@/hooks/use-workout-storage', () => ({
+  useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout }),
+}));
+
+vi.mock('canvas-confetti', () => ({
+  default: vi.fn(),
+}));
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: vi.fn(() => ({ id: 'toast1' })),
+    dismiss: vi.fn(),
+  }),
+}));
+
+vi.mock('@/components/exercise-form', () => ({
+  ExerciseForm: ({ exercise, onUpdate, isActive }: any) => (
+    <div>
+      <p>{exercise.machine}</p>
+      <button
+        data-testid={`update-${exercise.machine}-${isActive ? 'active' : 'inactive'}`}
+        onClick={() => onUpdate({ ...exercise, bestReps: (exercise.bestReps ?? 0) + 1 })}
+      >
+        update
+      </button>
+    </div>
+  ),
+}));
 
 const baseWorkout: Workout = {
   id: 1,
@@ -18,37 +49,20 @@ const baseWorkout: Workout = {
       sets: [{ weight: 100, reps: 8, rest: '1:00', completed: false }],
       bestWeight: undefined,
       bestReps: undefined,
-      completed: false
-    }
+      completed: false,
+    },
   ],
-  abs: [
-    { name: 'Crunches', reps: 20, time: undefined, completed: false }
-  ],
+  abs: [{ name: 'Crunches', reps: 20, time: undefined, completed: false }],
   cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
   completed: false,
   duration: null,
   createdAt: new Date(),
-  updatedAt: new Date()
+  updatedAt: new Date(),
 };
-
-vi.mock('@/hooks/use-workout-storage', () => {
-  const mockUpdateWorkout = vi.fn();
-  return {
-    useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout })
-  };
-});
-
-vi.mock('@/hooks/use-toast', () => {
-  return {
-    useToast: () => ({
-      toast: vi.fn(() => ({ id: 'toast1' })),
-      dismiss: vi.fn(),
-    }),
-  };
-});
 
 beforeEach(() => {
   vi.useFakeTimers();
+  mockUpdateWorkout.mockReset();
 });
 
 afterEach(() => {
@@ -56,107 +70,56 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe.skip('Workout Auto-Save Memory Leak Fix', () => {
-
-  it('should not stack multiple timeouts during rapid state changes', async () => {
-    const { rerender } = render(
-      <WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />
-    );
+describe('WorkoutPage auto-save behavior', () => {
+  it('does not stack autosave calls during rapid changes', async () => {
+    render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
 
     for (let i = 0; i < 5; i++) {
-      const updated = { ...baseWorkout, duration: i };
-      rerender(<WorkoutPage workout={updated} onNavigateBack={() => {}} />);
+      fireEvent.click(screen.getByTestId('update-Bench Press-active'));
     }
 
-    act(() => {
-      vi.advanceTimersByTime(2000);
+    await act(async () => {
+      vi.advanceTimersByTime(2200);
     });
 
-    const { useWorkoutStorage } = await import('@/hooks/use-workout-storage');
-    expect(useWorkoutStorage().updateWorkout).toHaveBeenCalledTimes(1);
+    expect(mockUpdateWorkout).toHaveBeenCalledTimes(1);
   });
 
-  it('should cleanup timeout on component unmount', () => {
+  it('cleans up pending autosave timeout on unmount', () => {
     const clearSpy = vi.spyOn(global, 'clearTimeout');
-    const { unmount } = render(
-      <WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />
-    );
+    const { unmount } = render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
+
     unmount();
+
     expect(clearSpy).toHaveBeenCalled();
   });
-
-  it('should handle handleSave dependency changes correctly', async () => {
-    const workout2 = { ...baseWorkout, id: 2 };
-    const { rerender } = render(
-      <WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />
-    );
-    rerender(<WorkoutPage workout={workout2} onNavigateBack={() => {}} />);
-
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    const { useWorkoutStorage } = await import('@/hooks/use-workout-storage');
-    expect(useWorkoutStorage().updateWorkout).toHaveBeenCalledWith(workout2.id, expect.anything());
-  });
 });
 
-describe.skip('Auto-Save Integration', () => {
-  it('should save workout data after 2 seconds of inactivity', async () => {
-    const { useWorkoutStorage } = await import('@/hooks/use-workout-storage');
-    const mockStorage = useWorkoutStorage();
+describe('WorkoutPage exercise updates', () => {
+  it('updates only the selected exercise when machine names are duplicated', async () => {
+    const duplicateMachineWorkout: Workout = {
+      ...baseWorkout,
+      exercises: [
+        {
+          ...baseWorkout.exercises[0],
+          machine: 'Dup Machine',
+          bestReps: 1,
+        },
+        {
+          ...baseWorkout.exercises[0],
+          machine: 'Dup Machine',
+          bestReps: 2,
+        },
+      ],
+    };
 
-    render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
+    render(<WorkoutPage workout={duplicateMachineWorkout} onNavigateBack={() => {}} />);
 
-    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '100' } });
+    fireEvent.click(screen.getByTestId('update-Dup Machine-inactive'));
+    fireEvent.click(screen.getByText('Save Workout'));
 
-    await waitFor(() => {
-      expect(mockStorage.updateWorkout).toHaveBeenCalled();
-    }, { timeout: 2500 });
-  });
-
-  it('should not save during rapid changes until user stops', async () => {
-    const { useWorkoutStorage } = await import('@/hooks/use-workout-storage');
-    const mockStorage = useWorkoutStorage();
-
-    render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
-
-    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '100' } });
-    await new Promise(r => setTimeout(r, 500));
-    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '110' } });
-    await new Promise(r => setTimeout(r, 500));
-    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '120' } });
-
-    expect(mockStorage.updateWorkout).not.toHaveBeenCalled();
-
-    await waitFor(() => {
-      expect(mockStorage.updateWorkout).toHaveBeenCalledTimes(1);
-    }, { timeout: 3000 });
-  });
-});
-
-describe.skip('Memory Leak Prevention', () => {
-  it('should maintain stable memory usage during extended sessions', async () => {
-    render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
-
-    for (let i = 0; i < 100; i++) {
-      act(() => {
-        fireEvent.change(screen.getByLabelText('Weight'), { target: { value: `${i}` } });
-      });
-    }
-
-    expect(setTimeout).toHaveBeenCalledTimes(100);
-    expect(clearTimeout).toHaveBeenCalledTimes(99);
-  });
-
-  it('should handle component unmount gracefully', () => {
-    const { unmount } = render(<WorkoutPage workout={baseWorkout} onNavigateBack={() => {}} />);
-    fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '100' } });
-    unmount();
-    expect(() => {
-      act(() => {
-        vi.advanceTimersByTime(2000);
-      });
-    }).not.toThrow();
+    const payload = mockUpdateWorkout.mock.calls.at(-1)?.[1];
+    expect(payload.exercises[0].bestReps).toBe(1);
+    expect(payload.exercises[1].bestReps).toBe(3);
   });
 });

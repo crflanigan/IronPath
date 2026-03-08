@@ -1,4 +1,5 @@
-import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise } from "@shared/schema";
+import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise, exerciseSchema, absExerciseSchema, cardioSchema } from "@shared/schema";
+import { z } from "zod";
 import { toast } from '@/hooks/use-toast';
 
 export interface CustomWorkoutTemplate {
@@ -26,6 +27,38 @@ interface ExerciseHistoryEntry {
   sets: { weight: number; reps: number; rest?: string }[];
   date: string;
 }
+
+
+const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+const storedWorkoutSchema = z.object({
+  id: z.number().int().positive(),
+  date: dateStringSchema,
+  type: z.string().min(1),
+  exercises: z.array(exerciseSchema),
+  abs: z.array(absExerciseSchema),
+  cardio: cardioSchema.optional().nullable(),
+  completed: z.boolean().nullable().optional(),
+  duration: z.number().int().nullable().optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+const storedPreferencesSchema = z.object({
+  id: z.number().int().positive().optional(),
+  darkMode: z.boolean().optional(),
+  autoIncrement: z.boolean().optional(),
+  notifications: z.boolean().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+const customTemplateSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1),
+  exercises: z.array(exerciseSchema),
+  abs: z.array(absExerciseSchema).optional(),
+  includeInAutoSchedule: z.boolean().optional(),
+});
 
 export class LocalWorkoutStorage {
   private storageLimit = 5 * 1024 * 1024; // 5MB approximate
@@ -131,16 +164,26 @@ export class LocalWorkoutStorage {
   private cleanupOldWorkouts() {
     const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
     if (!stored) return;
+
     let workouts: Workout[] = [];
     try {
       workouts = JSON.parse(stored);
     } catch {
       return;
     }
+
     workouts = workouts.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
-    while (workouts.length && this.computeUsage() > this.storageLimit * this.warningThreshold) {
+    const targetUsage = this.storageLimit * this.warningThreshold;
+
+    while (workouts.length > 0) {
+      const projectedWorkouts = JSON.stringify(workouts);
+      const projectedUsage = this.computeUsage() - stored.length + projectedWorkouts.length;
+      if (projectedUsage <= targetUsage) {
+        break;
+      }
       workouts.shift();
     }
+
     this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
   }
   private getCurrentId(): number {
@@ -161,7 +204,27 @@ export class LocalWorkoutStorage {
       console.error('Failed to parse workouts', err);
       return [];
     }
-    const workouts = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+
+    if (!Array.isArray(parsed)) return [];
+
+    const workouts: Workout[] = [];
+    for (const candidate of parsed) {
+      const validated = storedWorkoutSchema.safeParse(candidate);
+      if (!validated.success) {
+        continue;
+      }
+
+      const workout = validated.data;
+      workouts.push({
+        ...workout,
+        completed: Boolean(workout.completed),
+        duration: workout.duration ?? null,
+        cardio: workout.cardio ?? undefined,
+        createdAt: workout.createdAt ?? new Date(),
+        updatedAt: workout.updatedAt ?? new Date(),
+      } as Workout);
+    }
+
     return workouts;
   }
 
@@ -313,6 +376,10 @@ export class LocalWorkoutStorage {
     return workouts.find(w => w.date === date);
   }
 
+  async getAllWorkouts(): Promise<Workout[]> {
+    return this.getWorkouts().sort((a, b) => a.date.localeCompare(b.date));
+  }
+
   async getWorkoutsByDateRange(startDate: string, endDate: string): Promise<Workout[]> {
     const workouts = this.getWorkouts();
     return workouts
@@ -454,15 +521,38 @@ export class LocalWorkoutStorage {
   }
 
   async importData(data: { workouts: Workout[]; preferences: UserPreferences; customTemplates?: CustomWorkoutTemplate[] }): Promise<void> {
-    this.saveWorkouts(data.workouts);
-    this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(data.preferences));
+    const workouts = z.array(storedWorkoutSchema).parse(data.workouts).map((workout) => ({
+      ...workout,
+      completed: Boolean(workout.completed),
+      duration: workout.duration ?? null,
+      cardio: workout.cardio ?? undefined,
+      createdAt: workout.createdAt ?? new Date(),
+      updatedAt: workout.updatedAt ?? new Date(),
+    })) as Workout[];
+
+    const preferences = storedPreferencesSchema.parse(data.preferences);
+    const normalizedPreferences: UserPreferences = {
+      id: preferences.id ?? 1,
+      darkMode: preferences.darkMode ?? false,
+      autoIncrement: preferences.autoIncrement ?? false,
+      notifications: preferences.notifications ?? true,
+      updatedAt: preferences.updatedAt ?? new Date(),
+    };
+
+    this.saveWorkouts(workouts);
+    this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(normalizedPreferences));
 
     if (data.customTemplates) {
-      this.saveCustomTemplates(data.customTemplates);
+      const templates = z.array(customTemplateSchema).parse(data.customTemplates).map((template) => ({
+        ...template,
+        abs: template.abs ?? [],
+        includeInAutoSchedule: template.includeInAutoSchedule ?? false,
+      }));
+      this.saveCustomTemplates(templates);
     }
 
     // Update current ID to prevent conflicts
-    const maxId = Math.max(...data.workouts.map(w => w.id), 0);
+    const maxId = Math.max(...workouts.map(w => w.id), 0);
     this.setCurrentId(maxId + 1);
   }
 

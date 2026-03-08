@@ -2,7 +2,7 @@ import { Workout } from '@shared/schema';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 
 export function calculateDayStreak(workouts: Workout[], streakDays: number[]): number {
-  const workoutMap = new Map(workouts.map(w => [w.date, w.completed]));
+  const workoutMap = buildWorkoutCompletionMap(workouts);
   const lastCompleted = workouts
     .filter(w => w.completed)
     .map(w => parseISODate(w.date))
@@ -36,7 +36,7 @@ export function calculateDayStreak(workouts: Workout[], streakDays: number[]): n
 export function calculateTopDayStreak(workouts: Workout[], streakDays: number[]): number {
   if (workouts.length === 0) return 0;
 
-  const workoutMap = new Map(workouts.map(w => [w.date, w.completed]));
+  const workoutMap = buildWorkoutCompletionMap(workouts);
   const sortedDates = workouts
     .map(w => parseISODate(w.date))
     .sort((a, b) => a.getTime() - b.getTime());
@@ -73,4 +73,15 @@ export function calculateTopDayStreak(workouts: Workout[], streakDays: number[])
   }
 
   return top;
+}
+
+function buildWorkoutCompletionMap(workouts: Workout[]): Map<string, boolean> {
+  const workoutMap = new Map<string, boolean>();
+
+  for (const workout of workouts) {
+    const existing = workoutMap.get(workout.date) ?? false;
+    workoutMap.set(workout.date, existing || Boolean(workout.completed));
+  }
+
+  return workoutMap;
 }
