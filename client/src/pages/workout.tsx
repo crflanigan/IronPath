@@ -134,15 +134,16 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   }, [workout.id]);
 
 
-  const handleExerciseUpdate = (updatedExercise: Exercise) => {
-    const updatedExercises = workout.exercises.map(e => 
-      e.machine === updatedExercise.machine ? updatedExercise : e
-    );
-    
-    setWorkout(prev => ({ ...prev, exercises: updatedExercises }));
+  const handleExerciseUpdate = (exerciseIndex: number, updatedExercise: Exercise) => {
+    setWorkout((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((exercise, index) =>
+        index === exerciseIndex ? updatedExercise : exercise
+      ),
+    }));
   };
 
-  const handleAbsUpdate = (index: number, field: keyof AbsExercise, value: string | number | boolean) => {
+  const handleAbsUpdate = (index: number, field: keyof AbsExercise, value: string | number | boolean | undefined) => {
     const updatedAbs = [...workout.abs];
     updatedAbs[index] = { ...updatedAbs[index], [field]: value };
     setWorkout(prev => ({ ...prev, abs: updatedAbs }));
@@ -355,9 +356,14 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                             inputMode="decimal"
                             pattern="[0-9]*"
                             value={absExercise.reps}
-                            onChange={(e) =>
-                              handleAbsUpdate(index, 'reps', parseInt(e.target.value) || 0)
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.trim();
+                              handleAbsUpdate(
+                                index,
+                                'reps',
+                                value === '' ? undefined : parseInt(value, 10)
+                              );
+                            }}
                             onFocus={focusToEnd}
                             className="w-16 text-sm"
                             placeholder="reps"
@@ -461,10 +467,10 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         <h3 className="font-semibold text-gray-900 dark:text-white">Main Workout</h3>
 
         {workout.exercises.map((exercise, index) => (
-          <ErrorBoundary key={exercise.machine}>
+          <ErrorBoundary key={`${exercise.machine}-${index}`}>
             <ExerciseForm
               exercise={exercise}
-              onUpdate={handleExerciseUpdate}
+              onUpdate={(updatedExercise) => handleExerciseUpdate(index, updatedExercise)}
               isActive={index === currentExerciseIndex}
             />
           </ErrorBoundary>

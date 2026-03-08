@@ -4,7 +4,7 @@ import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 import { formatLocalDate } from '@/lib/utils';
 
-const STORAGE_VERSION = "1.0.0";
+const STORAGE_VERSION = "1.1.0";
 const VERSION_KEY = "ironpath_version";
 
 export function useWorkoutStorage() {
@@ -16,12 +16,19 @@ export function useWorkoutStorage() {
   const checkStorageVersion = () => {
     try {
       const currentVersion = localStorage.getItem(VERSION_KEY);
-      if (currentVersion !== STORAGE_VERSION) {
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith('ironpath')) localStorage.removeItem(key);
-        });
+
+      if (!currentVersion) {
         localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+        return;
       }
+
+      if (currentVersion === STORAGE_VERSION) {
+        return;
+      }
+
+      // Keep user data by default. Future breaking changes should add
+      // an explicit migration step before bumping STORAGE_VERSION.
+      localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
     } catch (err) {
       console.error('Failed to verify storage version', err);
     }
@@ -35,7 +42,7 @@ export function useWorkoutStorage() {
   const loadData = async () => {
     try {
       const [workoutsData, prefsData, templatesData] = await Promise.all([
-        localWorkoutStorage.getWorkoutsByDateRange('2020-01-01', '2030-12-31'),
+        localWorkoutStorage.getAllWorkouts(),
         localWorkoutStorage.getUserPreferences(),
         localWorkoutStorage.getCustomTemplates()
       ]);
