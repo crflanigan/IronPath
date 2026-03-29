@@ -1,48 +1,33 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2-ironpath';
 const CACHE_NAME = `ironpath-${CACHE_VERSION}`;
-const urlsToCache = [
+
+// Core files we want cached immediately
+const STATIC_ASSETS = [
   '/',
+  '/index.html',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
-  // Add other static assets here
+  '/favicon-32x32.png'
 ];
 
-// Install event - cache resources
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('🚀 IronPath: Caching app shell for offline use');
+      return cache.addAll(STATIC_ASSETS);
+    })
   );
   self.skipWaiting();
 });
 
-// Fetch event - network first with cache fallback
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.open(CACHE_NAME).then(cache =>
-      fetch(event.request)
-        .then(response => {
-          cache.put(event.request, response.clone());
-          return response;
-        })
-        .catch(() => cache.match(event.request).then(res => res || cache.match('/')))
-    )
-  );
-});
-
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('🗑️ Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -52,80 +37,28 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Allow the page to trigger immediate activation
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
+// Cache-First strategy (ideal for gym with spotty Wi-Fi)
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
 
-// Background sync for offline data
-self.addEventListener('sync', event => {
-  if (event.tag === 'workout-sync') {
-    event.waitUntil(syncWorkoutData());
-  }
-});
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) return cachedResponse;   // ← offline wins
 
-async function syncWorkoutData() {
-  try {
-    // Implement background sync logic here
-    console.log('Syncing workout data...');
-    
-    // Get offline data from IndexedDB
-    const offlineData = await getOfflineData();
-    
-    // Sync with server when online
-    if (navigator.onLine && offlineData.length > 0) {
-      await syncWithServer(offlineData);
-    }
-  } catch (error) {
-    console.error('Background sync failed:', error);
-  }
-}
-
-async function getOfflineData() {
-  // Placeholder for IndexedDB operations
-  return [];
-}
-
-async function syncWithServer(data) {
-  // Placeholder for server sync
-  console.log('Syncing data with server:', data);
-}
-
-// Push notifications (optional)
-self.addEventListener('push', event => {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
-      actions: [
-        {
-          action: 'open',
-          title: 'Open App'
-        },
-        {
-          action: 'close',
-          title: 'Close'
+      return fetch(event.request).then(networkResponse => {
+        // Cache successful responses
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         }
-      ]
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
-  }
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  
-  if (event.action === 'open') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  }
+        return networkResponse;
+      }).catch(() => {
+        // Offline fallback for React Router SPA
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+        return new Response('Offline', { status: 503 });
+      });
+    })
+  );
 });
