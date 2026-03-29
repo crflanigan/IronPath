@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Switch, Route, useLocation } from 'wouter';
+import { Switch, Route, useLocation, useSearch } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { Toaster } from '@/components/ui/toaster';
@@ -15,8 +15,6 @@ import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-const CURRENT_WORKOUT_KEY = 'ironpath_current_workout_id';
 
 function Navigation() {
   const [location, setLocation] = useLocation();
@@ -78,30 +76,22 @@ function Header() {
 }
 
 function AppContent() {
-  const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [location, setLocation] = useLocation();
+  const search = useSearch();
   const { workouts, loading } = useWorkoutStorage();
 
-  // Restore workout after data loads (this is the key fix)
-  useEffect(() => {
-    if (loading || workouts.length === 0) return;
+  // Get workout ID from URL query param (?id=123)
+  const workoutId = search ? new URLSearchParams(search).get('id') : null;
 
-    const savedId = localStorage.getItem(CURRENT_WORKOUT_KEY);
-    if (savedId) {
-      const found = workouts.find(w => w.id === parseInt(savedId, 10));
-      if (found) setCurrentWorkout(found);
-    }
-  }, [workouts, loading]);
+  const currentWorkout = workoutId 
+    ? workouts.find(w => w.id === parseInt(workoutId, 10)) 
+    : null;
 
   const navigateToWorkout = (workout: Workout) => {
-    localStorage.setItem(CURRENT_WORKOUT_KEY, workout.id.toString());
-    setCurrentWorkout(workout);
-    setLocation('/workout');
+    setLocation(`/workout?id=${workout.id}`);
   };
 
   const navigateBack = () => {
-    localStorage.removeItem(CURRENT_WORKOUT_KEY);
-    setCurrentWorkout(null);
     setLocation('/');
   };
 
@@ -112,12 +102,12 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto">
         <Switch>
-          <Route path="/" component={() => <CalendarPage onNavigateToWorkout={navigateToWorkout} />} />
-          
+          <Route path="/" component={() => (
+            <CalendarPage onNavigateToWorkout={navigateToWorkout} />
+          )} />
+
           <Route path="/workout" component={() => {
-            if (loading) {
-              return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
-            }
+            if (loading) return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
             if (!currentWorkout) {
               return (
                 <div className="max-w-md mx-auto p-4 text-center">
@@ -134,7 +124,7 @@ function AppContent() {
           }} />
 
           <Route path="/history"><HistoryPage /></Route>
-          
+
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
