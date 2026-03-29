@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
@@ -11,6 +11,7 @@ import { CalendarPage } from '@/pages/calendar';
 import { WorkoutPage } from '@/pages/workout';
 import { HistoryPage } from '@/pages/history';
 import { Workout } from '@shared/schema';
+import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -91,17 +92,22 @@ function Header() {
 }
 
 function AppContent() {
-  const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [location, setLocation] = useLocation();
+  const { workouts } = useWorkoutStorage();
 
+  // Extract workout ID from URL (e.g. /workout/123)
+  const workoutIdMatch = location.match(/^\/workout\/(\d+)$/);
+  const workoutId = workoutIdMatch ? parseInt(workoutIdMatch[1], 10) : null;
+
+  const currentWorkout = workoutId 
+    ? workouts.find(w => w.id === workoutId) 
+    : null;
 
   const navigateToWorkout = (workout: Workout) => {
-    setCurrentWorkout(workout);
-    setLocation('/workout');
+    setLocation(`/workout/${workout.id}`);
   };
 
   const navigateBack = () => {
-    setCurrentWorkout(null);
     setLocation('/');
   };
 
@@ -115,21 +121,27 @@ function AppContent() {
           <Route path="/" component={() => (
             <CalendarPage onNavigateToWorkout={navigateToWorkout} />
           )} />
-          <Route path="/workout" component={() => (
-            currentWorkout ? (
+          
+          <Route path="/workout/:id" component={() => {
+            if (!currentWorkout) {
+              return (
+                <div className="max-w-md mx-auto p-4 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">Workout not found</p>
+                  <Button onClick={() => setLocation('/')} className="mt-4">
+                    Go to Calendar
+                  </Button>
+                </div>
+              );
+            }
+            return (
               <ErrorBoundary>
                 <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
               </ErrorBoundary>
-            ) : (
-              <div className="max-w-md mx-auto p-4 text-center">
-                <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
-                <Button onClick={() => setLocation('/')} className="mt-4">
-                  Go to Calendar
-                </Button>
-              </div>
-            )
-          )} />
+            );
+          }} />
+
           <Route path="/history"><HistoryPage /></Route>
+          
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
@@ -143,7 +155,6 @@ function AppContent() {
     </div>
   );
 }
-
 
 function App() {
   return (
