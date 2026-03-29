@@ -16,6 +16,8 @@ import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
+const CURRENT_WORKOUT_KEY = 'ironpath_current_workout_id';
+
 function Navigation() {
   const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useThemeContext();
@@ -92,22 +94,28 @@ function Header() {
 }
 
 function AppContent() {
+  const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [location, setLocation] = useLocation();
   const { workouts } = useWorkoutStorage();
 
-  // Extract workout ID from URL (e.g. /workout/123)
-  const workoutIdMatch = location.match(/^\/workout\/(\d+)$/);
-  const workoutId = workoutIdMatch ? parseInt(workoutIdMatch[1], 10) : null;
-
-  const currentWorkout = workoutId 
-    ? workouts.find(w => w.id === workoutId) 
-    : null;
+  // Restore current workout from localStorage on mount (for refresh / PWA reopen)
+  useEffect(() => {
+    const savedId = localStorage.getItem(CURRENT_WORKOUT_KEY);
+    if (savedId && workouts.length > 0) {
+      const found = workouts.find(w => w.id === parseInt(savedId, 10));
+      if (found) setCurrentWorkout(found);
+    }
+  }, [workouts]);
 
   const navigateToWorkout = (workout: Workout) => {
-    setLocation(`/workout/${workout.id}`);
+    localStorage.setItem(CURRENT_WORKOUT_KEY, workout.id.toString());
+    setCurrentWorkout(workout);
+    setLocation('/workout');
   };
 
   const navigateBack = () => {
+    localStorage.removeItem(CURRENT_WORKOUT_KEY);
+    setCurrentWorkout(null);
     setLocation('/');
   };
 
@@ -121,27 +129,21 @@ function AppContent() {
           <Route path="/" component={() => (
             <CalendarPage onNavigateToWorkout={navigateToWorkout} />
           )} />
-          
-          <Route path="/workout/:id" component={() => {
-            if (!currentWorkout) {
-              return (
-                <div className="max-w-md mx-auto p-4 text-center">
-                  <p className="text-gray-600 dark:text-gray-400">Workout not found</p>
-                  <Button onClick={() => setLocation('/')} className="mt-4">
-                    Go to Calendar
-                  </Button>
-                </div>
-              );
-            }
-            return (
+          <Route path="/workout" component={() => (
+            currentWorkout ? (
               <ErrorBoundary>
                 <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
               </ErrorBoundary>
-            );
-          }} />
-
+            ) : (
+              <div className="max-w-md mx-auto p-4 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
+                <Button onClick={() => setLocation('/')} className="mt-4">
+                  Go to Calendar
+                </Button>
+              </div>
+            )
+          )} />
           <Route path="/history"><HistoryPage /></Route>
-          
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
