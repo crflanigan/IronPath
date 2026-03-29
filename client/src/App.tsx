@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Switch, Route, useLocation, useSearch } from 'wouter';
+import { useState } from 'react';
+import { Switch, Route, useLocation, useParams } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { Toaster } from '@/components/ui/toaster';
@@ -20,27 +20,24 @@ function Navigation() {
   const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useThemeContext();
 
-  const navItems = [
-    { path: '/', label: 'Calendar' },
-    { path: '/history', label: 'History' }
-  ];
-
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-md mx-auto px-4">
         <div className="flex space-x-0">
-          {navItems.map(item => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              onClick={() => setLocation(item.path)}
-              className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-                location === item.path ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              {item.label}
-            </Button>
-          ))}
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/')}
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${location === '/' ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            Calendar
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/history')}
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${location === '/history' ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            History
+          </Button>
         </div>
       </div>
     </nav>
@@ -75,26 +72,31 @@ function Header() {
   );
 }
 
-function AppContent() {
-  const [location, setLocation] = useLocation();
-  const search = useSearch();
+// Wrapper so we can use useParams inside the route
+function WorkoutRoute() {
+  const params = useParams();
   const { workouts, loading } = useWorkoutStorage();
+  const workoutId = params.id ? parseInt(params.id, 10) : null;
+  const currentWorkout = workoutId ? workouts.find(w => w.id === workoutId) : null;
 
-  // Get workout ID from URL query param (?id=123)
-  const workoutId = search ? new URLSearchParams(search).get('id') : null;
+  if (loading) return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
+  if (!currentWorkout) {
+    return (
+      <div className="max-w-md mx-auto p-4 text-center">
+        <p className="text-gray-600 dark:text-gray-400">Workout not found</p>
+        <Button onClick={() => window.location.href = '/'} className="mt-4">Go to Calendar</Button>
+      </div>
+    );
+  }
 
-  const currentWorkout = workoutId 
-    ? workouts.find(w => w.id === parseInt(workoutId, 10)) 
-    : null;
+  return (
+    <ErrorBoundary>
+      <WorkoutPage workout={currentWorkout} onNavigateBack={() => window.location.href = '/'} />
+    </ErrorBoundary>
+  );
+}
 
-  const navigateToWorkout = (workout: Workout) => {
-    setLocation(`/workout?id=${workout.id}`);
-  };
-
-  const navigateBack = () => {
-    setLocation('/');
-  };
-
+function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -102,33 +104,13 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto">
         <Switch>
-          <Route path="/" component={() => (
-            <CalendarPage onNavigateToWorkout={navigateToWorkout} />
-          )} />
-
-          <Route path="/workout" component={() => {
-            if (loading) return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
-            if (!currentWorkout) {
-              return (
-                <div className="max-w-md mx-auto p-4 text-center">
-                  <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
-                  <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
-                </div>
-              );
-            }
-            return (
-              <ErrorBoundary>
-                <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
-              </ErrorBoundary>
-            );
-          }} />
-
-          <Route path="/history"><HistoryPage /></Route>
-
+          <Route path="/" component={CalendarPage} />
+          <Route path="/workout/:id" component={WorkoutRoute} />
+          <Route path="/history" component={HistoryPage} />
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
-              <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
+              <Button onClick={() => window.location.href = '/'} className="mt-4">Go to Calendar</Button>
             </div>
           </Route>
         </Switch>
