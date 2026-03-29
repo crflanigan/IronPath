@@ -23,8 +23,8 @@ function Navigation() {
   const { theme, toggleTheme } = useThemeContext();
 
   const navItems = [
-    { path: '/', label: 'Calendar', icon: '📅' },
-    { path: '/history', label: 'History', icon: '📊' }
+    { path: '/', label: 'Calendar' },
+    { path: '/history', label: 'History' }
   ];
 
   return (
@@ -37,9 +37,7 @@ function Navigation() {
               variant="ghost"
               onClick={() => setLocation(item.path)}
               className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-                location === item.path
-                  ? 'text-primary border-primary'
-                  : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
+                location === item.path ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               {item.label}
@@ -53,7 +51,6 @@ function Navigation() {
 
 function Header() {
   const { theme, toggleTheme } = useThemeContext();
-
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-md mx-auto px-4 py-3">
@@ -65,25 +62,12 @@ function Header() {
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">IronPath</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              )}
+            <Button variant="ghost" size="sm" onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <SettingsDialog>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <Button variant="ghost" size="sm" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <Settings className="h-4 w-4" />
               </Button>
             </SettingsDialog>
           </div>
@@ -96,16 +80,18 @@ function Header() {
 function AppContent() {
   const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
   const [location, setLocation] = useLocation();
-  const { workouts } = useWorkoutStorage();
+  const { workouts, loading } = useWorkoutStorage();
 
-  // Restore current workout from localStorage on mount (for refresh / PWA reopen)
+  // Restore workout after data loads (this is the key fix)
   useEffect(() => {
+    if (loading || workouts.length === 0) return;
+
     const savedId = localStorage.getItem(CURRENT_WORKOUT_KEY);
-    if (savedId && workouts.length > 0) {
+    if (savedId) {
       const found = workouts.find(w => w.id === parseInt(savedId, 10));
       if (found) setCurrentWorkout(found);
     }
-  }, [workouts]);
+  }, [workouts, loading]);
 
   const navigateToWorkout = (workout: Workout) => {
     localStorage.setItem(CURRENT_WORKOUT_KEY, workout.id.toString());
@@ -126,30 +112,33 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto">
         <Switch>
-          <Route path="/" component={() => (
-            <CalendarPage onNavigateToWorkout={navigateToWorkout} />
-          )} />
-          <Route path="/workout" component={() => (
-            currentWorkout ? (
+          <Route path="/" component={() => <CalendarPage onNavigateToWorkout={navigateToWorkout} />} />
+          
+          <Route path="/workout" component={() => {
+            if (loading) {
+              return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
+            }
+            if (!currentWorkout) {
+              return (
+                <div className="max-w-md mx-auto p-4 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
+                  <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
+                </div>
+              );
+            }
+            return (
               <ErrorBoundary>
                 <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
               </ErrorBoundary>
-            ) : (
-              <div className="max-w-md mx-auto p-4 text-center">
-                <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
-                <Button onClick={() => setLocation('/')} className="mt-4">
-                  Go to Calendar
-                </Button>
-              </div>
-            )
-          )} />
+            );
+          }} />
+
           <Route path="/history"><HistoryPage /></Route>
+          
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
-              <Button onClick={() => setLocation('/')} className="mt-4">
-                Go to Calendar
-              </Button>
+              <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
             </div>
           </Route>
         </Switch>
