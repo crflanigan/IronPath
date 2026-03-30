@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Switch, Route, useLocation, useParams } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
@@ -10,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { CalendarPage } from '@/pages/calendar';
 import { WorkoutPage } from '@/pages/workout';
 import { HistoryPage } from '@/pages/history';
-import { Workout } from '@shared/schema';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
@@ -74,6 +72,7 @@ function Header() {
 
 function WorkoutRoute() {
   const params = useParams();
+  const [, setLocation] = useLocation();
   const { workouts, loading } = useWorkoutStorage();
   const workoutId = params.id ? parseInt(params.id, 10) : null;
   const currentWorkout = workoutId ? workouts.find(w => w.id === workoutId) : null;
@@ -86,7 +85,7 @@ function WorkoutRoute() {
     return (
       <div className="max-w-md mx-auto p-4 text-center">
         <p className="text-gray-600 dark:text-gray-400">Workout not found</p>
-        <Button onClick={() => window.location.href = '/'} className="mt-4">Go to Calendar</Button>
+        <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
       </div>
     );
   }
@@ -95,7 +94,7 @@ function WorkoutRoute() {
     <ErrorBoundary>
       <WorkoutPage 
         workout={currentWorkout} 
-        onNavigateBack={() => window.location.href = '/'} 
+        onNavigateBack={() => setLocation('/')} 
       />
     </ErrorBoundary>
   );
