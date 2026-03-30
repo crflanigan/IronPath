@@ -17,11 +17,7 @@ import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 
-interface CalendarPageProps {
-  onNavigateToWorkout: (workout: Workout) => void;
-}
-
-export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
+export function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(
     () => formatLocalDate(new Date())
@@ -57,6 +53,10 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
   const loadWorkoutForDate = async (date: string) => {
     const workout = await getWorkoutByDate(date);
     setSelectedWorkout(workout || null);
+  };
+
+  const navigateToWorkout = (workout: Workout) => {
+    setLocation(`/workout/${workout.id}`);
   };
 
   const handleDeleteSelectedWorkout = async () => {
@@ -191,7 +191,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     const existingWorkout = await getWorkoutByDate(today);
 
     if (existingWorkout) {
-      onNavigateToWorkout(existingWorkout);
+      navigateToWorkout(existingWorkout);
     } else {
       // Create new workout for today
       const workoutType = getTodaysWorkoutType();
@@ -238,7 +238,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
         });
       }
       if (newWorkout) {
-        onNavigateToWorkout(newWorkout);
+        navigateToWorkout(newWorkout);
       }
     }
   };
@@ -247,7 +247,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
     const existingWorkout = await getWorkoutByDate(date);
     
     if (existingWorkout) {
-      onNavigateToWorkout(existingWorkout);
+      navigateToWorkout(existingWorkout);
     } else {
       // Create new workout for selected date
       const schedule = generateWorkoutSchedule(
@@ -300,7 +300,7 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
        }
 
         if (newWorkout) {
-          onNavigateToWorkout(newWorkout);
+          navigateToWorkout(newWorkout);
         }
       }
     }
@@ -430,8 +430,8 @@ export function CalendarPage({ onNavigateToWorkout }: CalendarPageProps) {
             {selectedWorkout && (
               <WorkoutCard
                 workout={selectedWorkout}
-                onStart={() => onNavigateToWorkout(selectedWorkout)}
-                onView={() => onNavigateToWorkout(selectedWorkout)}
+                onStart={() => navigateToWorkout(selectedWorkout)}
+                onView={() => navigateToWorkout(selectedWorkout)}
                 onDelete={handleDeleteSelectedWorkout}
               />
             )}

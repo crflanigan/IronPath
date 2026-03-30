@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Switch, Route, useLocation } from 'wouter';
+import { Switch, Route, useLocation, useParams } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { Toaster } from '@/components/ui/toaster';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CalendarPage } from '@/pages/calendar';
 import { WorkoutPage } from '@/pages/workout';
 import { HistoryPage } from '@/pages/history';
-import { Workout } from '@shared/schema';
+import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { Dumbbell, Moon, Sun, Settings } from 'lucide-react';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -19,29 +18,24 @@ function Navigation() {
   const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useThemeContext();
 
-  const navItems = [
-    { path: '/', label: 'Calendar', icon: '📅' },
-    { path: '/history', label: 'History', icon: '📊' }
-  ];
-
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-md mx-auto px-4">
         <div className="flex space-x-0">
-          {navItems.map(item => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              onClick={() => setLocation(item.path)}
-              className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-                location === item.path
-                  ? 'text-primary border-primary'
-                  : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              {item.label}
-            </Button>
-          ))}
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/')}
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${location === '/' ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            Calendar
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/history')}
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${location === '/history' ? 'text-primary border-primary' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            History
+          </Button>
         </div>
       </div>
     </nav>
@@ -50,7 +44,6 @@ function Navigation() {
 
 function Header() {
   const { theme, toggleTheme } = useThemeContext();
-
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-md mx-auto px-4 py-3">
@@ -62,25 +55,12 @@ function Header() {
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">IronPath</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              )}
+            <Button variant="ghost" size="sm" onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <SettingsDialog>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <Button variant="ghost" size="sm" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Settings className="h-4 w-4" />
               </Button>
             </SettingsDialog>
           </div>
@@ -90,21 +70,37 @@ function Header() {
   );
 }
 
+function WorkoutRoute() {
+  const params = useParams();
+  const [, setLocation] = useLocation();
+  const { workouts, loading } = useWorkoutStorage();
+  const workoutId = params.id ? parseInt(params.id, 10) : null;
+  const currentWorkout = workoutId ? workouts.find(w => w.id === workoutId) : null;
+
+  if (loading) {
+    return <div className="max-w-md mx-auto p-4 text-center">Loading workout...</div>;
+  }
+
+  if (!currentWorkout) {
+    return (
+      <div className="max-w-md mx-auto p-4 text-center">
+        <p className="text-gray-600 dark:text-gray-400">Workout not found</p>
+        <Button onClick={() => setLocation('/')} className="mt-4">Go to Calendar</Button>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <WorkoutPage 
+        workout={currentWorkout} 
+        onNavigateBack={() => setLocation('/')} 
+      />
+    </ErrorBoundary>
+  );
+}
+
 function AppContent() {
-  const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
-  const [location, setLocation] = useLocation();
-
-
-  const navigateToWorkout = (workout: Workout) => {
-    setCurrentWorkout(workout);
-    setLocation('/workout');
-  };
-
-  const navigateBack = () => {
-    setCurrentWorkout(null);
-    setLocation('/');
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
@@ -112,30 +108,13 @@ function AppContent() {
       
       <main className="flex-1 overflow-y-auto">
         <Switch>
-          <Route path="/" component={() => (
-            <CalendarPage onNavigateToWorkout={navigateToWorkout} />
-          )} />
-          <Route path="/workout" component={() => (
-            currentWorkout ? (
-              <ErrorBoundary>
-                <WorkoutPage workout={currentWorkout} onNavigateBack={navigateBack} />
-              </ErrorBoundary>
-            ) : (
-              <div className="max-w-md mx-auto p-4 text-center">
-                <p className="text-gray-600 dark:text-gray-400">No workout selected</p>
-                <Button onClick={() => setLocation('/')} className="mt-4">
-                  Go to Calendar
-                </Button>
-              </div>
-            )
-          )} />
-          <Route path="/history"><HistoryPage /></Route>
+          <Route path="/" component={CalendarPage} />
+          <Route path="/workout/:id" component={WorkoutRoute} />
+          <Route path="/history" component={HistoryPage} />
           <Route>
             <div className="max-w-md mx-auto p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Page not found</p>
-              <Button onClick={() => setLocation('/')} className="mt-4">
-                Go to Calendar
-              </Button>
+              <Button onClick={() => window.location.href = '/'} className="mt-4">Go to Calendar</Button>
             </div>
           </Route>
         </Switch>
@@ -143,7 +122,6 @@ function AppContent() {
     </div>
   );
 }
-
 
 function App() {
   return (
