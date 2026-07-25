@@ -1,6 +1,7 @@
 import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise, exerciseSchema, absExerciseSchema, cardioSchema } from "@shared/schema";
 import { z } from "zod";
 import { toast } from '@/hooks/use-toast';
+import { presetCycleNames } from '@/lib/workout-cycle';
 
 export interface CustomWorkoutTemplate {
   id: number;
@@ -457,11 +458,49 @@ export class LocalWorkoutStorage {
     return newTemplate;
   }
 
+  /**
+   * Keep the stored auto-schedule rotation in step with a template rename or
+   * deletion.
+   *
+   * The rotation persists workout *names*, so without this a rename silently
+   * drops the template from the schedule (the old name no longer resolves) and
+   * a deletion leaves behind a name that resolves to nothing — which, if it was
+   * the only selection, produced an empty cycle and stamped `type: undefined`
+   * across the calendar.
+   *
+   * Pass `null` as `nextName` for a deletion.
+   *
+   * Must be called *after* the template list has been written, so that the
+   * "is this name still claimed" check sees the new state.
+   */
+  private syncAutoScheduleName(previousName: string, nextName: string | null): void {
+    const selected = this.getAutoScheduleWorkouts();
+    if (!selected.includes(previousName)) return;
+
+    // A built-in preset, or another custom template, may still answer to this
+    // name. Rewriting the entry would silently deselect that one instead.
+    const stillClaimed =
+      presetCycleNames.has(previousName) ||
+      this.getCustomTemplatesInternal().some(t => t.name === previousName);
+    if (stillClaimed) return;
+
+    const updated =
+      nextName === null
+        ? selected.filter(name => name !== previousName)
+        : selected.map(name => (name === previousName ? nextName : name));
+
+    this.saveAutoScheduleWorkouts(updated);
+  }
+
   async deleteCustomTemplate(id: number): Promise<boolean> {
     const templates = this.getCustomTemplatesInternal();
+    const removed = templates.find(t => t.id === id);
     const filtered = templates.filter(t => t.id !== id);
     if (filtered.length === templates.length) return false;
     this.saveCustomTemplates(filtered);
+    if (removed) {
+      this.syncAutoScheduleName(removed.name, null);
+    }
     return true;
   }
 
@@ -472,6 +511,7 @@ export class LocalWorkoutStorage {
     const templates = this.getCustomTemplatesInternal();
     const index = templates.findIndex(t => t.id === id);
     if (index === -1) return undefined;
+    const previousName = templates[index].name;
     const updated = {
       ...templates[index],
       ...updates,
@@ -479,6 +519,9 @@ export class LocalWorkoutStorage {
     };
     templates[index] = updated;
     this.saveCustomTemplates(templates);
+    if (updated.name !== previousName) {
+      this.syncAutoScheduleName(previousName, updated.name);
+    }
     return updated;
   }
 
