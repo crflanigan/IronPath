@@ -25,8 +25,33 @@ const STORAGE_KEYS = {
   HIDDEN_PRESETS: 'ironpath_hidden_presets',
   PRESET_PROMPTS: 'ironpath_preset_prompts',
   STREAK_DAYS: 'ironpath_streak_days',
-  QUARANTINE: 'ironpath_quarantined_workouts'
+  QUARANTINE: 'ironpath_quarantined_workouts',
+  CUSTOM_EXERCISES: 'ironpath_custom_exercises'
 } as const;
+
+/**
+ * An exercise the user added themselves.
+ *
+ * `block` decides which half of a workout it belongs to, and therefore how it
+ * is logged. A main exercise is sets x weight x reps like everything in the
+ * built-in library. A warm-up entry joins the core block, which records reps
+ * *or* a duration and has no weight at all — the right home for a bear crawl
+ * or a carry, which the weighted model only fits by pretending the load is 0.
+ */
+export interface CustomExercise {
+  id: number;
+  name: string;
+  block: 'main' | 'warmup';
+  equipment?: 'machine' | 'freeweight' | 'both';
+  region?: string;
+  defaultWeight?: number;
+  defaultReps?: number;
+  defaultRest?: string;
+  defaultTime?: string;
+  /** Chosen from the bundled photos; absent means no image, which is the default. */
+  imageSlug?: string | null;
+  createdAt?: string;
+}
 
 /** A stored record that could not be parsed, kept so it is not simply lost. */
 export interface QuarantinedWorkout {
@@ -77,6 +102,20 @@ const customTemplateSchema = z.object({
   includeInAutoSchedule: z.boolean().optional(),
 });
 
+const customExerciseSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1),
+  block: z.enum(['main', 'warmup']),
+  equipment: z.enum(['machine', 'freeweight', 'both']).optional(),
+  region: z.string().optional(),
+  defaultWeight: z.number().optional(),
+  defaultReps: z.number().optional(),
+  defaultRest: z.string().optional(),
+  defaultTime: z.string().optional(),
+  imageSlug: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+});
+
 const exerciseHistorySchema = z.record(
   z.string(),
   z.object({
@@ -109,6 +148,7 @@ const backupSchema = z.object({
   hiddenPresets: z.record(z.string(), z.boolean()).optional(),
   presetPrompts: z.record(z.string(), z.boolean()).optional(),
   streakDays: z.array(z.number().int().min(0).max(6)).optional(),
+  customExercises: z.array(customExerciseSchema).optional(),
   quarantined: z
     .array(
       z.object({
@@ -134,6 +174,7 @@ export interface IronPathBackup {
   presetPrompts: Record<string, boolean>;
   streakDays: number[];
   quarantined: QuarantinedWorkout[];
+  customExercises: CustomExercise[];
 }
 
 export class LocalWorkoutStorage {
@@ -707,6 +748,58 @@ export class LocalWorkoutStorage {
     return updated;
   }
 
+  getCustomExercises(): CustomExercise[] {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.CUSTOM_EXERCISES);
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(parsed)) return [];
+      // Skip anything unreadable rather than losing the whole list to one bad
+      // entry; these are cheap to recreate, unlike logged workouts.
+      return parsed.flatMap(candidate => {
+        const validated = customExerciseSchema.safeParse(candidate);
+        return validated.success ? [validated.data as CustomExercise] : [];
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  private saveCustomExercises(exercises: CustomExercise[]): void {
+    this.safeSetItem(STORAGE_KEYS.CUSTOM_EXERCISES, JSON.stringify(exercises));
+  }
+
+  addCustomExercise(exercise: Omit<CustomExercise, 'id' | 'createdAt'>): CustomExercise {
+    const existing = this.getCustomExercises();
+    const created: CustomExercise = {
+      ...exercise,
+      id: existing.length > 0 ? Math.max(...existing.map(e => e.id)) + 1 : 1,
+      createdAt: new Date().toISOString(),
+    };
+    this.saveCustomExercises([...existing, created]);
+    return created;
+  }
+
+  updateCustomExercise(
+    id: number,
+    updates: Omit<CustomExercise, 'id' | 'createdAt'>,
+  ): CustomExercise | undefined {
+    const existing = this.getCustomExercises();
+    const index = existing.findIndex(e => e.id === id);
+    if (index === -1) return undefined;
+    const updated = { ...existing[index], ...updates };
+    existing[index] = updated;
+    this.saveCustomExercises(existing);
+    return updated;
+  }
+
+  deleteCustomExercise(id: number): boolean {
+    const existing = this.getCustomExercises();
+    const remaining = existing.filter(e => e.id !== id);
+    if (remaining.length === existing.length) return false;
+    this.saveCustomExercises(remaining);
+    return true;
+  }
+
   async getUserPreferences(): Promise<UserPreferences> {
     const stored = this.safeGetItem(STORAGE_KEYS.PREFERENCES);
     const defaultPrefs: UserPreferences = {
@@ -762,7 +855,8 @@ export class LocalWorkoutStorage {
       hiddenPresets: this.getHiddenPresets(),
       presetPrompts: this.getPresetPromptPrefs(),
       streakDays: this.getStreakDays(),
-      quarantined: this.getQuarantinedWorkouts()
+      quarantined: this.getQuarantinedWorkouts(),
+      customExercises: this.getCustomExercises()
     };
   }
 
@@ -825,6 +919,9 @@ export class LocalWorkoutStorage {
     }
     // Carried across so a record set aside on the old device is still
     // recoverable on the new one rather than quietly disappearing in transit.
+    if (backup.customExercises) {
+      this.saveCustomExercises(backup.customExercises as CustomExercise[]);
+    }
     if (backup.quarantined) {
       this.safeSetItem(STORAGE_KEYS.QUARANTINE, JSON.stringify(backup.quarantined));
     }

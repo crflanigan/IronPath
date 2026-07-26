@@ -7,6 +7,8 @@ import { Check, Clock, HelpCircle } from 'lucide-react';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
+import { hasExerciseImage } from '@/lib/exercise-images';
+import { localWorkoutStorage } from '@/lib/storage';
 
 interface ExerciseFormProps {
   exercise: Exercise;
@@ -22,6 +24,12 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
   const [showHelp, setShowHelp] = useState(false);
   const { toast } = useToast();
   const focusToEnd = useCursorEndOnFocus();
+
+  // No point offering help that resolves to a placeholder.
+  const hasReferencePhoto = hasExerciseImage(
+    localExercise.machine,
+    localWorkoutStorage.getCustomExercises().find(e => e.name === localExercise.machine)?.imageSlug,
+  );
 
   const isSetComplete = (set: ExerciseSet) =>
     set.weight !== undefined && set.reps !== undefined;
@@ -124,14 +132,16 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => setShowHelp(true)}
-              className="text-gray-500 hover:text-primary"
-            >
-              <HelpCircle className="h-5 w-5" />
-              <span className="sr-only">Help</span>
-            </button>
+            {hasReferencePhoto && (
+              <button
+                type="button"
+                onClick={() => setShowHelp(true)}
+                className="text-gray-500 hover:text-primary"
+              >
+                <HelpCircle className="h-5 w-5" />
+                <span className="sr-only">{`Show reference photo for ${localExercise.machine}`}</span>
+              </button>
+            )}
             {localExercise.completed && <Check className="h-5 w-5 text-green-500" />}
             {isActive && !localExercise.completed && <Clock className="h-5 w-5 text-blue-500" />}
           </div>

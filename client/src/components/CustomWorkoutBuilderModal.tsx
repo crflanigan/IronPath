@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,26 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import type { Exercise, AbsExercise } from '@shared/schema';
-import { CustomWorkoutTemplate } from '@/lib/storage';
+import { CustomWorkoutTemplate, localWorkoutStorage, type CustomExercise } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
-import { absLibrary } from '@/lib/abs-library';
+import { absLibrary, type AbsExerciseOption } from '@/lib/abs-library';
+import { hasExerciseImage } from '@/lib/exercise-images';
+import { NewExerciseForm } from './NewExerciseForm';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from './ErrorBoundary';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 
 interface CustomWorkoutBuilderModalProps {
   open: boolean;
@@ -73,19 +85,10 @@ export function CustomWorkoutBuilderModal({
   const [previewExercise, setPreviewExercise] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [equipmentFilter, setEquipmentFilter] = useState<'freeweight' | 'machine' | 'both'>('both');
+  const [customExercises, setCustomExercises] = useState<CustomExercise[]>([]);
+  const [addingExercise, setAddingExercise] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<CustomExercise | null>(null);
 
-  const noPreviewAbs = new Set([
-    'Cross-Leg Crunch',
-    'Jack Knife',
-    'Legs-Up Vertical Crunch',
-    'Side Oblique Crunch',
-    'Side Oblique Leg Raise',
-    'Crunch',
-    'Knee Raise',
-    'Reverse Crunch',
-    'Side Oblique Knee Raise',
-    'Straight Leg Thrust',
-  ]);
 
   const cycleFilter = () => {
     setEquipmentFilter(prev =>
@@ -129,6 +132,8 @@ export function CustomWorkoutBuilderModal({
 
   useEffect(() => {
     if (open) {
+      setCustomExercises(localWorkoutStorage.getCustomExercises());
+      setAddingExercise(false);
       if (template) {
         setName(template.name);
         setSelected(new Set(template.exercises.map(e => e.machine)));
@@ -172,6 +177,56 @@ export function CustomWorkoutBuilderModal({
     });
   };
 
+  /**
+   * What the builder can offer, and what it must not lose.
+   *
+   * Built-in library, plus the user's own exercises, plus anything the
+   * template being edited already references. That last part matters: the
+   * save path looks each selected exercise up here, and previously dropped
+   * whatever it could not find — so editing a template after an exercise was
+   * renamed or deleted silently removed it from the workout.
+   */
+  const availableExercises: ExerciseOption[] = useMemo(() => {
+    const merged = new Map<string, ExerciseOption>();
+    exerciseLibrary.forEach(e => merged.set(e.machine, e));
+    customExercises
+      .filter(e => e.block === 'main')
+      .forEach(e =>
+        merged.set(e.name, {
+          machine: e.name,
+          region: e.region ?? 'Other',
+          equipment: e.equipment ?? 'both',
+        }),
+      );
+    (template?.exercises ?? []).forEach(e => {
+      if (!merged.has(e.machine)) {
+        merged.set(e.machine, { machine: e.machine, region: e.region, equipment: e.equipment });
+      }
+    });
+    return Array.from(merged.values());
+  }, [customExercises, template]);
+
+  const availableAbs: AbsExerciseOption[] = useMemo(() => {
+    const merged = new Map<string, AbsExerciseOption>();
+    absLibrary.forEach(a => merged.set(a.name, a));
+    customExercises
+      .filter(e => e.block === 'warmup')
+      .forEach(e => merged.set(e.name, { name: e.name, reps: e.defaultReps, time: e.defaultTime }));
+    (template?.abs ?? []).forEach(a => {
+      if (!merged.has(a.name)) merged.set(a.name, { name: a.name, reps: a.reps, time: a.time });
+    });
+    return Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [customExercises, template]);
+
+  const customByName = useMemo(
+    () => new Map(customExercises.map(e => [e.name, e])),
+    [customExercises],
+  );
+
+  /** Only offer a preview when there is actually a photo behind it. */
+  const previewable = (exerciseName: string) =>
+    hasExerciseImage(exerciseName, customByName.get(exerciseName)?.imageSlug);
+
   const trimmedName = name.trim().toLowerCase();
   const clashesWithTemplate = existingNames
     .filter(n => !template || n.toLowerCase() !== template.name.toLowerCase())
@@ -183,7 +238,7 @@ export function CustomWorkoutBuilderModal({
     if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
     const exercises: Exercise[] = [];
     Array.from(selected).forEach(m => {
-      const info = exerciseLibrary.find(e => e.machine === m);
+      const info = availableExercises.find(e => e.machine === m);
       if (!info) {
         console.warn(`Unknown exercise machine: ${m}`);
         return;
@@ -204,7 +259,7 @@ export function CustomWorkoutBuilderModal({
 
     const abs: AbsExercise[] = [];
     Array.from(selectedAbs).forEach(n => {
-      const info = absLibrary.find(a => a.name === n);
+      const info = availableAbs.find(a => a.name === n);
       if (!info) {
         console.warn(`Unknown abs exercise: ${n}`);
         return;
@@ -226,16 +281,16 @@ export function CustomWorkoutBuilderModal({
     onClose();
   };
 
-  const handlePreview = (name: string) => {
-    if (noPreviewAbs.has(name)) return;
-    setPreviewExercise(name);
+  const handlePreview = (exerciseName: string) => {
+    if (!previewable(exerciseName)) return;
+    setPreviewExercise(exerciseName);
     setShowPreview(true);
   };
 
   const warning12 = selected.size >= 12 && selected.size < 15;
   const warning15 = selected.size === 15;
 
-  const filteredExercises = exerciseLibrary.filter(e => {
+  const filteredExercises = availableExercises.filter(e => {
     if (equipmentFilter === 'both') return true;
     if (equipmentFilter === 'machine') return e.equipment !== 'freeweight';
     return e.equipment !== 'machine';
@@ -272,10 +327,24 @@ export function CustomWorkoutBuilderModal({
         <DialogHeader className="space-y-1">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription className="text-left">Select up to 15 exercises and name your workout.</DialogDescription>
-          <p className="text-sm text-muted-foreground text-left">Tap any exercise name to preview it.</p>
+          <p className="text-sm text-muted-foreground text-left">Tap an exercise name to preview it.</p>
         </DialogHeader>
         
-        <div className="flex justify-end -mt-3">
+        <div className="flex items-center justify-between gap-2 -mt-3">
+          {/* Placed first so the filter toggle stays flush right exactly where
+              it was; it keeps its fixed width and this button does the
+              shrinking if space runs short. The label stays put when the form
+              is open — a second button reading "Cancel" beside the form's own
+              would be ambiguous to read and to announce. */}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="min-w-0 shrink"
+            onClick={() => setAddingExercise(v => !v)}
+          >
+            <span className="truncate">+ New exercise</span>
+          </Button>
           <button
             type="button"
             onClick={cycleFilter}
@@ -285,6 +354,28 @@ export function CustomWorkoutBuilderModal({
             <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
           </button>
         </div>
+
+        {addingExercise && (
+          <NewExerciseForm
+            regions={regionOrder}
+            takenNames={[
+              ...availableExercises.map(e => e.machine),
+              ...availableAbs.map(a => a.name),
+            ]}
+            onCancel={() => setAddingExercise(false)}
+            onCreate={created => {
+              const saved = localWorkoutStorage.addCustomExercise(created);
+              setCustomExercises(localWorkoutStorage.getCustomExercises());
+              setAddingExercise(false);
+              // Tick it straight away — you added it because you want it.
+              if (saved.block === 'main') {
+                setSelected(prev => (prev.size < 15 ? new Set(prev).add(saved.name) : prev));
+              } else {
+                setSelectedAbs(prev => new Set(prev).add(saved.name));
+              }
+            }}
+          />
+        )}
         
         <div className="space-y-4 -mt-2">
           {orderedGroups.map(([region, exercises]) => (
@@ -305,15 +396,33 @@ export function CustomWorkoutBuilderModal({
                             checked={selected.has(ex.machine)}
                             onCheckedChange={() => toggle(ex.machine)}
                           />
-                          <button
-                            type="button"
-                            onClick={() => handlePreview(ex.machine)}
-                            className="truncate text-sm text-left hover:text-primary"
-                            title={ex.machine}
-                          >
-                            {ex.machine}
-                          </button>
+                          {previewable(ex.machine) ? (
+                            <button
+                              type="button"
+                              onClick={() => handlePreview(ex.machine)}
+                              className="truncate text-sm text-left hover:text-primary"
+                              title={ex.machine}
+                            >
+                              {ex.machine}
+                            </button>
+                          ) : (
+                            <span className="truncate text-sm text-left" title={ex.machine}>
+                              {ex.machine}
+                            </span>
+                          )}
                         </div>
+                        {customByName.has(ex.machine) && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Remove ${ex.machine}`}
+                            className="ml-auto h-6 px-2 text-xs text-muted-foreground"
+                            onClick={() => setPendingRemoval(customByName.get(ex.machine)!)}
+                          >
+                            Remove
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -325,7 +434,7 @@ export function CustomWorkoutBuilderModal({
         <div className="border rounded p-2">
           <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-            {absLibrary.map(abs => {
+            {availableAbs.map(abs => {
               const isLong = abs.name.length > 30;
               return (
                 <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
@@ -336,15 +445,33 @@ export function CustomWorkoutBuilderModal({
                         checked={selectedAbs.has(abs.name)}
                         onCheckedChange={() => toggleAbs(abs.name)}
                       />
-                      <button
-                        type="button"
-                        onClick={() => handlePreview(abs.name)}
-                        className="truncate text-sm text-left hover:text-primary"
-                        title={abs.name}
-                      >
-                        {abs.name}
-                      </button>
+                      {previewable(abs.name) ? (
+                        <button
+                          type="button"
+                          onClick={() => handlePreview(abs.name)}
+                          className="truncate text-sm text-left hover:text-primary"
+                          title={abs.name}
+                        >
+                          {abs.name}
+                        </button>
+                      ) : (
+                        <span className="truncate text-sm text-left" title={abs.name}>
+                          {abs.name}
+                        </span>
+                      )}
                     </div>
+                    {customByName.has(abs.name) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove ${abs.name}`}
+                        className="ml-auto h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() => setPendingRemoval(customByName.get(abs.name)!)}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -385,9 +512,38 @@ export function CustomWorkoutBuilderModal({
     </Dialog>
     <ExerciseImageDialog
       exerciseName={previewExercise || ''}
+      imageSlug={previewExercise ? customByName.get(previewExercise)?.imageSlug : undefined}
       open={showPreview}
       onOpenChange={setShowPreview}
     />
+    <AlertDialog
+      open={pendingRemoval !== null}
+      onOpenChange={isOpen => !isOpen && setPendingRemoval(null)}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove “{pendingRemoval?.name}”?</AlertDialogTitle>
+          <AlertDialogDescription>
+            It stops appearing in this list. Workouts and templates that already
+            include it are unaffected — they keep their own copy.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600 text-white hover:bg-red-700"
+            onClick={() => {
+              if (!pendingRemoval) return;
+              localWorkoutStorage.deleteCustomExercise(pendingRemoval.id);
+              setCustomExercises(localWorkoutStorage.getCustomExercises());
+              setPendingRemoval(null);
+            }}
+          >
+            Remove
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }

@@ -5,31 +5,32 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { exerciseImageSrc } from '@/lib/exercise-images';
 
 interface ExerciseImageDialogProps {
   exerciseName: string;
+  /** Set for a user-added exercise that borrowed one of the bundled photos. */
+  imageSlug?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function ExerciseImageDialog({
   exerciseName,
+  imageSlug,
   open,
   onOpenChange
 }: ExerciseImageDialogProps) {
-  const [error, setError] = useState(false);
-  useEffect(() => {
-    setError(false);
-  }, [exerciseName]);
-  const slug = exerciseName
-    .toLowerCase()
-    .replace(/\(.*?\)/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9\-]/g, '');
-  const src = `/exercise-images/${slug}.jpg`;
+  const [failedToLoad, setFailedToLoad] = useState(false);
 
-  const handleError = () => setError(true);
+  useEffect(() => {
+    setFailedToLoad(false);
+  }, [exerciseName, imageSlug]);
+
+  // Callers only offer the preview when a photo exists, so this is a
+  // belt-and-braces fallback rather than the common case it used to be.
+  const src = exerciseImageSrc(exerciseName, imageSlug);
+  const showPlaceholder = failedToLoad || src === null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,18 +38,18 @@ export function ExerciseImageDialog({
         <DialogHeader className="p-4 pb-0">
           <DialogTitle>{exerciseName}</DialogTitle>
         </DialogHeader>
-        {!error ? (
+        {showPlaceholder ? (
           <img
-            src={src}
-            alt={exerciseName}
-            onError={handleError}
-            className="w-full h-auto object-contain"
+            src="/exercise-images/placeholder.svg"
+            alt=""
+            className="w-full h-auto object-contain p-6"
           />
         ) : (
           <img
-            src="/exercise-images/placeholder.svg"
-            alt="Placeholder"
-            className="w-full h-auto object-contain p-6"
+            src={src as string}
+            alt={`Reference photo for ${exerciseName}`}
+            onError={() => setFailedToLoad(true)}
+            className="w-full h-auto object-contain"
           />
         )}
       </DialogContent>
