@@ -1,34 +1,25 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
- * Navigate and wait until the service worker has settled.
+ * Count document loads on a page.
  *
- * On a first visit the app registers its service worker, which calls
- * `clients.claim()`. That fires `controllerchange`, and `index.html` responds by
- * calling `window.location.reload()` — so a first load silently becomes two.
- *
- * That reload discards anything typed before it lands, which makes every test
- * that interacts quickly flaky (and is a real defect for users, not just for
- * tests — see the service-worker fix). Reloading once deliberately puts the page
- * in a steady state where the controller is already installed, so
- * `controllerchange` cannot fire again for this context.
- *
- * Once the underlying bug is fixed, this can collapse back to `page.goto(path)`.
+ * Has to be observed from outside: each reload gets a fresh document with its
+ * own `performance` timeline, so nothing measured *inside* the page can tell
+ * one load from two.
  */
-export async function gotoSettled(page: Page, path = '/'): Promise<void> {
-  await page.goto(path);
-  await page.waitForFunction(() => !!navigator.serviceWorker?.controller, null, {
-    timeout: 15_000,
+export function trackPageLoads(page: Page): { count: number } {
+  const counter = { count: 0 };
+  page.on('load', () => {
+    counter.count += 1;
   });
-  await page.reload();
-  await page.waitForLoadState('load');
+  return counter;
 }
 
-/** Number of times the document has loaded — 1 unless something reloaded it. */
-export async function countPageLoads(page: Page): Promise<number> {
-  return page.evaluate(
-    () => performance.getEntriesByType('navigation').length,
-  );
+/** Resolves once the service worker is installed, activated and in control. */
+export async function waitForServiceWorker(page: Page): Promise<void> {
+  await page.waitForFunction(() => !!navigator.serviceWorker?.controller, null, {
+    timeout: 20_000,
+  });
 }
 
 /**

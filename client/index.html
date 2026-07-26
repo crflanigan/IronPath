@@ -34,39 +34,28 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Service Worker Registration -->
+    <!--
+      Service Worker Registration
+
+      Register and nothing else, deliberately.
+
+      This previously posted SKIP_WAITING to any incoming worker and reloaded
+      the page on `controllerchange`. Two consequences: every first visit
+      became two page loads about 100ms apart, and — the reason it matters —
+      any worker update detected during an open session activated immediately
+      and reloaded the page underneath the user. Mid-workout that discards
+      whatever has not yet hit the 2s autosave.
+
+      A new worker now waits and takes over on the next cold start. Updates
+      still land promptly because sw.js serves navigations network-first, so a
+      refresh while online always fetches the current index.html and, with it,
+      the current bundles.
+    -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker
-            .register('/sw.js')
-            .then((reg) => {
-              console.log('ServiceWorker registration successful with scope:', reg.scope);
-
-              if (reg.waiting) {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-
-              reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    }
-                  });
-                }
-              });
-            })
-            .catch((err) => {
-              console.log('ServiceWorker registration failed: ', err);
-            });
-
-          let refreshing;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (refreshing) return;
-            refreshing = true;
-            window.location.reload();
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('ServiceWorker registration failed: ', err);
           });
         });
       }
