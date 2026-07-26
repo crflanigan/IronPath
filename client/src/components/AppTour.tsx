@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { markTourSeen } from '@/lib/onboarding';
+import { isStandalone, markTourSeen } from '@/lib/onboarding';
+import { InstallGuide } from '@/components/InstallGuide';
 
 /**
- * A three-step first-run tour.
+ * The first-run tour: three steps, plus an install step for anyone not
+ * already running from a home screen.
  *
  * Two decisions worth knowing before changing this:
  *
@@ -16,19 +18,20 @@ import { markTourSeen } from '@/lib/onboarding';
  *    Screenshots of your own UI rot; the calendar changed the week this was
  *    written. Pointing at the real button cannot go stale and weighs nothing.
  *
- * Installing the app is deliberately *not* a step here. Asking someone to
- * install before they have used anything converts badly — see InstallPrompt,
- * which waits for a second visit.
+ * See INSTALL_STEP below for why installing ended up here rather than in a
+ * separately timed prompt.
  */
 
 interface Step {
-  /** Matches a `data-tour` attribute. Absent means a centred card. */
+  /** Matches a `data-tour` attribute. Absent dims the whole screen. */
   target?: string;
   title: string;
   body: string;
+  /** Renders the platform-specific install instructions under the body. */
+  install?: boolean;
 }
 
-const STEPS: Step[] = [
+const BASE_STEPS: Step[] = [
   {
     target: 'calendar',
     title: 'Your month at a glance',
@@ -46,6 +49,28 @@ const STEPS: Step[] = [
   },
 ];
 
+/**
+ * Installing is the last step rather than a separate well-timed prompt.
+ *
+ * The original design split it out, on the reasoning that install asks
+ * convert better once someone has got value from the app. That optimised the
+ * wrong thing: the actual problem is not conversion, it is that people see no
+ * app store listing, assume the app is not real, and have to be *told* this
+ * can live on a home screen. That is explanation, and explanation belongs
+ * where people are already looking.
+ *
+ * Skipped entirely for anyone already running standalone.
+ */
+const INSTALL_STEP: Step = {
+  title: 'Keep it on your home screen',
+  body: 'IronPath is not in an app store — it installs straight from the browser, which is why there is nothing to download and nothing to update.',
+  install: true,
+};
+
+function buildSteps(): Step[] {
+  return isStandalone() ? BASE_STEPS : [...BASE_STEPS, INSTALL_STEP];
+}
+
 /** Padding around the highlighted element, in px. */
 const HALO = 6;
 
@@ -60,9 +85,11 @@ export function AppTour({ onClose }: { onClose: () => void }) {
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Fixed at mount: the step list must not change length underneath an index.
+  const [steps] = useState(buildSteps);
 
-  const step = STEPS[index];
-  const isLast = index === STEPS.length - 1;
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
 
   const finish = useCallback(() => {
     markTourSeen();
@@ -187,7 +214,7 @@ export function AppTour({ onClose }: { onClose: () => void }) {
       >
         <div className="mx-auto max-w-md space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            Step {index + 1} of {STEPS.length}
+            Step {index + 1} of {steps.length}
           </p>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {step.title}
@@ -195,6 +222,7 @@ export function AppTour({ onClose }: { onClose: () => void }) {
           <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
             {step.body}
           </p>
+          {step.install && <InstallGuide />}
 
           <div className="flex items-center justify-between pt-1">
             <Button variant="ghost" size="sm" onClick={finish}>

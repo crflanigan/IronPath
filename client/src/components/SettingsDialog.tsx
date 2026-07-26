@@ -8,6 +8,24 @@ import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { toast } from '@/hooks/use-toast';
 import { backupFilename, describeBackup, downloadJson, readJsonFile } from '@/lib/backup';
 import { resetTour } from '@/lib/onboarding';
+import { InstallGuide } from '@/components/InstallGuide';
+import { installRoute } from '@/lib/install';
+
+/** Hidden entirely once the app is installed, rather than shown as a no-op. */
+function InstallSection() {
+  if (installRoute() === 'none') return null;
+  return (
+    <>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          Install IronPath
+        </p>
+        <InstallGuide />
+      </div>
+      <Separator />
+    </>
+  );
+}
 
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -129,6 +147,11 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           </AlertDialog>
         </div>
         <Separator />
+        {/* The permanent answer to "how do I get this on my phone?".
+            Renders nothing once the app is installed. The tour covers this
+            too, but a tour is seen once and skippable — this is where someone
+            looks a week later, or when a friend asks them. */}
+        <InstallSection />
         {/* Replaces a "don't show this again" checkbox on the tour itself.
             Skipping already means never again, so the only control worth
             having is the one that brings it back. */}
