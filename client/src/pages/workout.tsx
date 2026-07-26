@@ -44,6 +44,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [workout, setWorkout] = useState<Workout>(initialWorkout);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [autoSaveEnabled] = useState(true);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
@@ -91,6 +92,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       });
 
       lastSavedRef.current = serialized;
+      setLastSavedAt(new Date());
 
       if (autoSaveEnabledRef.current) {
         if (toastIdRef.current) {
@@ -324,9 +326,23 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                   {stats.completedItems}/{stats.totalItems} items
                 </span>
               </div>
+              {/* Was a hardcoded ✅ — a status light with one possible state,
+                  in the most valuable strip of the workout screen. A green
+                  check also reads as "just saved" rather than "autosave is on".
+                  The clock time is the thing you would actually want to know,
+                  and it needs no ticking timer to stay true. */}
               <div className="flex items-center space-x-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Auto-save:</span>
-                <span className="text-sm text-green-600">✅</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {lastSavedAt ? 'Saved' : 'Auto-save on'}
+                </span>
+                {lastSavedAt && (
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {lastSavedAt.toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -18,6 +18,7 @@ vi.mock('@/lib/utils', async importActual => {
 });
 
 import { CalendarGrid } from './calendar-grid';
+import { formatLocalDate } from '@/lib/utils';
 
 const props = {
   currentDate: new Date(2026, 6, 1),
@@ -53,9 +54,36 @@ describe('the 42-cell day grid', () => {
     expect(formatCalls.n).toBeGreaterThan(afterFirst);
   });
 
-  it("still marks today's cell", () => {
+  // Today used to be marked with a 📅 glyph, and the teal fill it also had was
+  // suppressed whenever the day happened to be selected — which it is by
+  // default. Dropping the glyph therefore only works if the fill is
+  // unconditional, so that is what these two assert.
+  it("marks today's cell with the primary fill", () => {
     const now = new Date();
     const { container } = render(<CalendarGrid {...props} currentDate={now} />);
-    expect(container.textContent).toContain('📅');
+
+    const today = container.querySelector(`[data-today="true"]`);
+    expect(today).not.toBeNull();
+    expect(today!.className).toContain('bg-primary');
+    // The base classes carry `dark:bg-gray-800`, which tailwind-merge keys
+    // separately from an unprefixed `bg-primary` — so without an explicit dark
+    // variant, today renders unmarked in dark mode. It did.
+    expect(today!.className).toContain('dark:bg-primary');
+  });
+
+  it("keeps today's fill when today is the selected day", () => {
+    const now = new Date();
+    const { container } = render(
+      <CalendarGrid {...props} currentDate={now} selectedDate={formatLocalDate(now)} />,
+    );
+
+    const today = container.querySelector(`[data-today="true"]`);
+    expect(today!.className).toContain('bg-primary');
+  });
+
+  it('leaves days without a completed workout unmarked', () => {
+    const { container } = render(<CalendarGrid {...props} />);
+    expect(container.textContent).not.toContain('🕒');
+    expect(container.textContent).not.toContain('📅');
   });
 });
