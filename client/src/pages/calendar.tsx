@@ -16,6 +16,12 @@ import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import type { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
+import { AppTour } from '@/components/AppTour';
+import { InstallPrompt } from '@/components/InstallPrompt';
+import { hasSeenTour, recordVisit } from '@/lib/onboarding';
+
+/** One visit per page load, not per mount. See the effect that reads it. */
+let visitRecorded = false;
 
 export function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -30,6 +36,9 @@ export function CalendarPage() {
   const [templateToEdit, setTemplateToEdit] = useState<CustomWorkoutTemplate | null>(null);
   const [prefillTemplate, setPrefillTemplate] = useState<{ name: string; exercises: Exercise[]; abs: AbsExercise[] } | null>(null);
   const [dateForCreation, setDateForCreation] = useState<string | null>(null);
+  // Read once at mount rather than on every render: finishing the tour writes
+  // the flag, and re-reading it would tear the overlay down mid-transition.
+  const [showTour, setShowTour] = useState(() => !hasSeenTour());
   const {
     workouts,
     getWorkoutByDate,
@@ -43,6 +52,16 @@ export function CalendarPage() {
     customTemplates,
     loading
   } = useWorkoutStorage();
+
+  // Counts this page load, which is what gates the install prompt to a second
+  // visit. Module-scoped so React's development double-invoke of effects does
+  // not count one load twice.
+  useEffect(() => {
+    if (!visitRecorded) {
+      visitRecorded = true;
+      recordVisit();
+    }
+  }, []);
 
   useEffect(() => {
     if (selectedDate) {
@@ -284,6 +303,9 @@ export function CalendarPage() {
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
+      {showTour && <AppTour onClose={() => setShowTour(false)} />}
+      <InstallPrompt />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-3 gap-4">
         <button
@@ -384,6 +406,7 @@ export function CalendarPage() {
                 is the 95% action and this is occasional. Same colour, less ink —
                 the hierarchy comes from turning this down, not from shouting. */}
             <Button
+              data-tour="custom-workout"
               className="w-full border-primary text-primary hover:bg-primary/10 hover:text-primary"
               variant="outline"
               onClick={() => openTemplateSelector(selectedDate)}

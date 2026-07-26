@@ -35,7 +35,15 @@ test('a backup exports and restores through the UI', async ({ page }) => {
   const backupJson = readFileSync((await download.path())!, 'utf8');
 
   // The backup must be self-sufficient, so wipe everything.
-  await page.evaluate(() => localStorage.clear());
+  //
+  // Wiping the device also wipes the flag that suppresses the first-run tour,
+  // which is correct behaviour — someone who clears their data really is a new
+  // visitor again — but this test is about the backup round trip, and the tour
+  // would sit over the controls it needs. Put the flag back, and only it.
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('ironpath_tour_seen', '1');
+  });
   await page.reload();
   await expect(page.getByText('No custom workout scheduled for this date')).toBeVisible();
 
