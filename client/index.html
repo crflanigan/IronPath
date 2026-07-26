@@ -3,8 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>IronPath - Workout Tracker</title>
-    <meta name="description" content="IronPath is a progressive web app for tracking workouts with offline capabilities, calendar-based scheduling, and detailed exercise logging." />
+    <!--
+      Title and description are written for how people search and for what a
+      crawler can quote, not for how the app is built. "Progressive web app
+      with offline capabilities" described the technology; nobody types that.
+      There are also at least five other fitness apps called IronPath or Iron
+      Path, one of which used the identical title "IronPath - Workout Tracker",
+      so the differentiators have to be in the title itself.
+    -->
+    <title>IronPath — Free Offline Workout Tracker, No Account Needed</title>
+    <meta name="description" content="A free workout tracker that works entirely offline. No account, no signup, no server — your training log stays on your phone. Plan a rotation, log every set, keep your history." />
+    <link rel="canonical" href="https://ironpath.app/" />
     <meta name="theme-color" content="#14B8A6" />
     
     <!-- PWA Meta Tags -->
@@ -18,20 +27,104 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="IronPath - Workout Tracker" />
-    <meta property="og:description" content="Track your workouts with this progressive web app featuring offline capabilities and detailed exercise logging." />
+    <!-- Open Graph. Absolute image URLs — several scrapers do not resolve
+         relative ones, which is why previews were coming back blank. -->
+    <meta property="og:site_name" content="IronPath" />
+    <meta property="og:title" content="IronPath — Free Offline Workout Tracker, No Account Needed" />
+    <meta property="og:description" content="A free workout tracker that works entirely offline. No account, no signup, no server — your training log stays on your phone." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-image.png" />
-    
+    <meta property="og:url" content="https://ironpath.app/" />
+    <meta property="og:image" content="https://ironpath.app/og-image.png" />
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="IronPath - Workout Tracker" />
-    <meta name="twitter:description" content="Track your workouts with this progressive web app featuring offline capabilities and detailed exercise logging." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:title" content="IronPath — Free Offline Workout Tracker, No Account Needed" />
+    <meta name="twitter:description" content="A free workout tracker that works entirely offline. No account, no signup, no server — your training log stays on your phone." />
+    <meta name="twitter:image" content="https://ironpath.app/og-image.png" />
+
+    <!--
+      Structured data. This is the single most useful thing on the page for
+      anything reading the site without executing JavaScript — which includes
+      most LLM crawlers. The app is client-rendered, so before this existed the
+      only machine-readable text about IronPath was the meta description.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "IronPath",
+      "url": "https://ironpath.app/",
+      "applicationCategory": "HealthApplication",
+      "applicationSubCategory": "Workout Tracker",
+      "operatingSystem": "Any (web browser, installable as a PWA)",
+      "browserRequirements": "Requires JavaScript. Works offline once loaded.",
+      "description": "A free, local-first workout tracker. No account, no signup and no server: every workout, template and history entry is stored in your own browser on your own device. Works completely offline, including in a basement gym with no signal. Plan a rotation on a calendar, log weight, reps and rest set by set, add your own exercises, and export a full backup whenever you want.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "isAccessibleForFree": true,
+      "featureList": [
+        "Works fully offline — no network required after first load",
+        "No account, no signup, no login",
+        "No server and no sync: data stays on your device",
+        "Calendar-based workout scheduling with an auto-rotating split",
+        "Set-by-set logging of weight, reps and rest",
+        "Custom workout templates",
+        "User-added custom exercises",
+        "Reference photos for exercises",
+        "Workout streaks over the days you choose to count",
+        "Full JSON backup export and restore",
+        "CSV export of workout history",
+        "Dark mode",
+        "Installable as a progressive web app",
+        "Free and open source (AGPLv3)"
+      ],
+      "softwareVersion": "1.2.0",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "codeRepository": "https://github.com/crflanigan/IronPath",
+      "author": {
+        "@type": "Person",
+        "name": "Casey Flanigan"
+      }
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      React replaces everything inside #root on mount, so this is what the app
+      looks like for the ~100ms before the bundle runs — and, more to the point,
+      it is the only thing anything that does not execute JavaScript will ever
+      see. The app is entirely client-rendered, so until this existed the most
+      substantial text on the homepage was a code comment.
+
+      Styles are inline on purpose: the stylesheet is a separate bundle, so
+      classes would not be applied yet and this would flash unstyled.
+
+      It doubles as the no-JavaScript fallback, which is why it names the one
+      requirement and links somewhere useful.
+    -->
+    <div id="root">
+      <main style="max-width:34rem;margin:0 auto;padding:3rem 1.5rem;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#0f172a;line-height:1.6">
+        <h1 style="font-size:1.75rem;font-weight:700;margin:0 0 .5rem">IronPath</h1>
+        <p style="font-size:1.05rem;margin:0 0 1.5rem;color:#334155">
+          A free workout tracker that works entirely offline. No account, no signup,
+          no server — your training log stays on your phone.
+        </p>
+        <ul style="margin:0 0 1.5rem;padding-left:1.1rem;color:#334155">
+          <li>Plan a rotation on a calendar, or let it schedule itself</li>
+          <li>Log weight, reps and rest set by set, prefilled from last time</li>
+          <li>Build custom workouts and add your own exercises</li>
+          <li>Works with no signal at all, and installs like an app</li>
+          <li>Export a full backup whenever you want</li>
+        </ul>
+        <p style="font-size:.9rem;color:#64748b;margin:0">
+          IronPath needs JavaScript to run. It is free and open source —
+          <a href="https://github.com/crflanigan/IronPath" style="color:#0d9488">source on GitHub</a>.
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     
     <!--

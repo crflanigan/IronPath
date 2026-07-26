@@ -1,1 +1,29 @@
+# IronPath is a free, open source workout tracker. Everything here is public
+# and there is no user data on the server to protect — there is no server.
+# Crawlers and AI agents are welcome, and named explicitly so the intent is on
+# the record rather than merely implied by the absence of a rule.
+
+User-agent: *
+Allow: /
+
+# Assistants that answer "what is a simple offline workout tracker" are a
+# channel this app is a genuine answer to, so they are opted in deliberately.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://ironpath.app/sitemap.xml

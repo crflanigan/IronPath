@@ -1,33 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Only routes that exist. This previously listed /calendar, /custom-workout,
+  /settings and /workout, none of which are routes — the SPA fallback returns
+  index.html with HTTP 200 for any path, so all four were soft 404s serving
+  content identical to /. Six URLs, one real page, four of them fictional.
+
+  /workout/:id is deliberately absent: those are per-device records that exist
+  only in one person's browser.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ironpath.app/</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://ironpath.app/calendar</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ironpath.app/history</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://ironpath.app/custom-workout</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://ironpath.app/settings</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://ironpath.app/workout</loc>
-    <lastmod>2025-07-12</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>
