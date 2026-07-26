@@ -1,83 +1,47 @@
 import { useEffect, useState } from 'react';
-import { Download, Share, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InstallGuide } from '@/components/InstallGuide';
 import {
   dismissInstall,
   hasDismissedInstall,
   hasSeenTour,
-  isIOS,
   isStandalone,
   visitCount,
 } from '@/lib/onboarding';
+import { installRoute, subscribeToInstallability } from '@/lib/install';
 
 /**
- * "Add to home screen", for people who do not know that is a thing.
+ * A second-visit reminder, for people who skipped the tour.
  *
- * Not being in an app store reads to a lot of people as the app not being
- * real, and the install affordance is buried — on iOS it is inside the Share
- * sheet, which nobody finds by accident.
- *
- * Timing is deliberate: this waits for a **second visit**. Asking someone to
- * install before they have used anything converts badly, and it is also the
- * point at which the ask stops being pushy and starts being useful.
+ * This used to be the *only* place installing was explained, which was the
+ * wrong call: gated behind a visit count and behind Chrome firing
+ * `beforeinstallprompt`, it was invisible exactly when someone went looking.
+ * The tour now covers it and Settings keeps a permanent copy; this is the
+ * backstop for whoever skipped both.
  */
-
-/** Chrome's install event, which is not in lib.dom. */
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
-function shouldConsiderPrompting(): boolean {
-  // Already installed, already said no, or still finding their feet.
+function shouldShow(): boolean {
   if (isStandalone()) return false;
   if (hasDismissedInstall()) return false;
+  // Whoever sat through the tour has already been told.
   if (!hasSeenTour()) return false;
   return visitCount() >= 2;
 }
 
 export function InstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(shouldShow);
+  const [, force] = useState(0);
 
-  useEffect(() => {
-    if (!shouldConsiderPrompting()) return;
+  // `beforeinstallprompt` can land after this mounts, which changes the guide
+  // from written instructions to a one-tap button.
+  useEffect(() => subscribeToInstallability(() => force(n => n + 1)), []);
 
-    // iOS has no install API whatsoever, so instructions are the only option.
-    if (isIOS()) {
-      setVisible(true);
-      return;
-    }
-
-    const onBeforeInstall = (e: Event) => {
-      // Suppress Chrome's own mini-infobar so this is the only ask.
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-  }, []);
+  if (!visible || installRoute() === 'none') return null;
 
   const close = () => {
     dismissInstall();
     setVisible(false);
   };
-
-  const install = async () => {
-    if (!deferred) return;
-    try {
-      await deferred.prompt();
-      await deferred.userChoice;
-    } catch {
-      // The browser refused to show it — nothing useful to do, and certainly
-      // nothing worth breaking the page over.
-    }
-    close();
-  };
-
-  if (!visible) return null;
 
   return (
     <div
@@ -90,29 +54,8 @@ export function InstallPrompt() {
           <p className="text-sm font-medium text-gray-900 dark:text-white">
             Install IronPath
           </p>
-
-          {isIOS() ? (
-            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-              Tap
-              {/* The Share glyph is the one thing people genuinely cannot find,
-                  so it is drawn inline rather than described. */}
-              <Share className="mx-1 inline h-4 w-4 align-text-bottom" aria-label="Share" />
-              in Safari&rsquo;s toolbar, then <strong>Add to Home Screen</strong>.
-              It opens full screen and works with no signal.
-            </p>
-          ) : (
-            <>
-              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                Add it to your home screen. It opens full screen and works with
-                no signal.
-              </p>
-              <Button size="sm" onClick={install}>
-                Install
-              </Button>
-            </>
-          )}
+          <InstallGuide onInstalled={close} />
         </div>
-
         <Button
           variant="ghost"
           size="sm"
