@@ -482,6 +482,7 @@ export function CalendarPage() {
             template={templateToEdit ?? undefined}
             prefill={prefillTemplate ?? undefined}
             existingNames={customTemplates.map(t => t.name)}
+            reservedNames={Object.keys(workoutTemplates)}
           />
         </ErrorBoundary>
         <AutoScheduleModal
