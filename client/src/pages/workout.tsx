@@ -164,7 +164,10 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const handleCompleteWorkout = async () => {
     const allExercisesComplete = workout.exercises.every(e => e.completed);
     const allAbsComplete = workout.abs.every(a => a.completed);
-    const cardioComplete = workout.cardio?.completed || false;
+    // A workout with no cardio block has nothing outstanding there. Requiring
+    // `cardio.completed` unconditionally left such a workout impossible to
+    // finish — the button refused forever, with no cardio section to tick.
+    const cardioComplete = !workout.cardio || Boolean(workout.cardio.completed);
     const allFieldsFilled = workout.exercises.every(ex =>
       ex.sets.every(
         s => s.weight !== undefined && s.reps !== undefined
@@ -241,11 +244,14 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const totalExercises = workout.exercises.length;
     const completedAbs = workout.abs.filter(a => a.completed).length;
     const totalAbs = workout.abs.length;
-    const cardioComplete = workout.cardio?.completed ? 1 : 0;
-    
-    const totalItems = totalExercises + totalAbs + 1; // +1 for cardio
+    // Only count cardio when the workout actually has a cardio block, or the
+    // total is permanently one higher than anything the user can complete.
+    const hasCardio = Boolean(workout.cardio);
+    const cardioComplete = hasCardio && workout.cardio?.completed ? 1 : 0;
+
+    const totalItems = totalExercises + totalAbs + (hasCardio ? 1 : 0);
     const completedItems = completedExercises + completedAbs + cardioComplete;
-    
+
     return {
       completedExercises,
       totalExercises,
@@ -254,7 +260,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       cardioComplete,
       totalItems,
       completedItems,
-      percentage: Math.round((completedItems / totalItems) * 100)
+      percentage: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
     };
   };
 

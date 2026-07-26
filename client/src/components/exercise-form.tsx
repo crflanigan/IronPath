@@ -91,11 +91,19 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     return 'pending';
   };
 
+  // A previous best only exists once the exercise has actually been done
+  // before. Exercises added through the custom workout builder carry none, and
+  // treating that as zero made the first set anyone logged look like a
+  // personal record.
+  const hasRecordedBest = localExercise.bestWeight !== undefined;
+
   const getWeightChange = () => {
-    const currentWeight = Math.max(...localExercise.sets.map(s => s.weight || 0));
-    const bestWeight = localExercise.bestWeight || 0;
-    const difference = currentWeight - bestWeight;
-    
+    if (!hasRecordedBest) return { change: '', color: '' };
+
+    const weights = localExercise.sets.map(s => s.weight ?? 0);
+    const currentWeight = weights.length > 0 ? Math.max(...weights) : 0;
+    const difference = currentWeight - localExercise.bestWeight!;
+
     if (difference > 0) return { change: `↑ +${difference} lbs`, color: 'text-blue-600' };
     if (difference < 0) return { change: `↓ ${Math.abs(difference)} lbs`, color: 'text-red-600' };
     return { change: '', color: '' };
@@ -242,18 +250,21 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
           })}
         </div>
 
-        {/* Best Performance */}
-        <div className="mt-2 flex items-center space-x-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">BEST:</span>
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-            {localExercise.bestWeight} lbs × {localExercise.bestReps} reps
-          </span>
-          {getWeightChange().change && (
-            <span className={`text-xs ${getWeightChange().color}`}>
-              {getWeightChange().change}
+        {/* Best Performance — omitted entirely when there is nothing to compare against */}
+        {hasRecordedBest && (
+          <div className="mt-2 flex items-center space-x-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">BEST:</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              {localExercise.bestWeight} lbs
+              {localExercise.bestReps !== undefined && ` × ${localExercise.bestReps} reps`}
             </span>
-          )}
-        </div>
+            {getWeightChange().change && (
+              <span className={`text-xs ${getWeightChange().color}`}>
+                {getWeightChange().change}
+              </span>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
     <ExerciseImageDialog
