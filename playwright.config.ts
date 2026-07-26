@@ -21,6 +21,26 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+
+    /**
+     * Every spec except onboarding.spec.ts tests the app as a *returning*
+     * user, so the first-run tour is marked as already seen here.
+     *
+     * This is not papering over anything: the tour is a full-screen overlay,
+     * and without this it intercepts the first click of every test. Adding a
+     * dismissal step to each of a hundred specs would put the tour on the
+     * critical path of tests that have nothing to do with it. The first-run
+     * path is covered directly in onboarding.spec.ts, which clears this.
+     */
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: BASE_URL,
+          localStorage: [{ name: 'ironpath_tour_seen', value: '1' }],
+        },
+      ],
+    },
   },
 
   projects: [

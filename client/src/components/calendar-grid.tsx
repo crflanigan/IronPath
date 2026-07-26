@@ -132,7 +132,7 @@ export function CalendarGrid({
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1" data-tour="calendar">
         {daysOfWeek.map(day => (
           <div key={day} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-2">
             {day}

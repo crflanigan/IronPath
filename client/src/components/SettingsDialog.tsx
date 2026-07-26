@@ -7,6 +7,7 @@ import { localWorkoutStorage } from '@/lib/storage';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { toast } from '@/hooks/use-toast';
 import { backupFilename, describeBackup, downloadJson, readJsonFile } from '@/lib/backup';
+import { resetTour } from '@/lib/onboarding';
 
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -127,6 +128,20 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        <Separator />
+        {/* Replaces a "don't show this again" checkbox on the tour itself.
+            Skipping already means never again, so the only control worth
+            having is the one that brings it back. */}
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            resetTour();
+            window.location.reload();
+          }}
+        >
+          Replay welcome tour
+        </Button>
         <Separator />
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)

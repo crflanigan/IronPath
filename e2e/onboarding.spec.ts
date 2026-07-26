@@ -1,0 +1,169 @@
+import { test, expect, type Page } from '@playwright/test';
+
+/**
+ * The first-run tour and the install prompt.
+ *
+ * Every other spec runs with `ironpath_tour_seen` pre-set by the Playwright
+ * config, because the tour is a full-screen overlay that would otherwise
+ * intercept the first click of every test. This file is the exception: it
+ * clears that flag and exercises the path a genuinely new visitor takes.
+ *
+ * The load-bearing test here is the last one. A tour that traps someone in an
+ * overlay, or that leaves the page padded after it closes, is worse than no
+ * tour at all — this app gets used mid-workout.
+ */
+
+/**
+ * Start as someone who has never opened the app, and land on the page.
+ *
+ * Deliberately not `addInitScript`: that re-runs on *every* navigation, so a
+ * later reload would wipe the very flag under test and the tour would appear
+ * to come back. Clearing once and reloading gives a genuinely fresh visitor
+ * whose subsequent navigations behave normally.
+ */
+async function asNewVisitor(page: Page) {
+  await page.goto('/');
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+    } catch {
+      /* private mode */
+    }
+  });
+  await page.reload();
+}
+
+test.describe('the first-run tour', () => {
+  test('greets a new visitor and walks three steps', async ({ page }) => {
+    await asNewVisitor(page);
+
+    const tour = page.getByTestId('app-tour');
+    await expect(tour).toBeVisible();
+    await expect(tour.getByText('Step 1 of 3')).toBeVisible();
+    await expect(tour.getByRole('heading', { name: 'Your month at a glance' })).toBeVisible();
+
+    // Scoped to the tour: a bare "Next" also matches the calendar's
+    // "Next month" button.
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await expect(tour.getByRole('heading', { name: 'Build your own' })).toBeVisible();
+
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await expect(tour.getByRole('heading', { name: 'Keep a backup' })).toBeVisible();
+
+    // The step that exists because most users have no backup and no way back.
+    await expect(tour).toContainText('only on this device');
+
+    await tour.getByRole('button', { name: 'Got it' }).click();
+    await expect(tour).toHaveCount(0);
+  });
+
+  test('keeps every highlight clear of its own panel', async ({ page }) => {
+    await asNewVisitor(page);
+
+    const tour = page.getByTestId('app-tour');
+    const halo = tour.locator('div[style*="box-shadow"]').first();
+    const panel = page.getByTestId('app-tour-panel');
+
+    // Step two shipped broken the first time: the halo was drawn, and moved,
+    // and was completely invisible because it sat underneath the panel. An
+    // earlier version of this test only checked that the halo *moved* between
+    // steps, which the broken code also did — so it caught nothing. What
+    // matters is that the highlight is somewhere a person can actually see.
+    for (let step = 1; step <= 3; step++) {
+      await expect(halo).toBeVisible();
+      await page.waitForTimeout(700); // smooth-scroll settle
+
+      const h = await halo.boundingBox();
+      const p = await panel.boundingBox();
+      expect(h, `step ${step}: no halo`).not.toBeNull();
+      expect(p, `step ${step}: no panel`).not.toBeNull();
+
+      expect(
+        h!.y + h!.height,
+        `step ${step}: highlight is hidden behind the tour panel`,
+      ).toBeLessThanOrEqual(p!.y + 1);
+
+      expect(h!.y, `step ${step}: highlight is above the viewport`)
+        .toBeGreaterThanOrEqual(-1);
+
+      if (step < 3) {
+        await tour.getByRole('button', { name: 'Next' }).click();
+      }
+    }
+  });
+
+  test('does not come back on the next visit', async ({ page }) => {
+    await asNewVisitor(page);
+    await page.getByTestId('app-tour').getByRole('button', { name: 'Skip' }).click();
+    await expect(page.getByTestId('app-tour')).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByRole('button', { name: "Start Today's Workout" })).toBeVisible();
+    await expect(page.getByTestId('app-tour')).toHaveCount(0);
+  });
+
+  test('can be replayed from Settings', async ({ page }) => {
+    // Starts as a returning user, per the config default.
+    await page.goto('/');
+    await expect(page.getByTestId('app-tour')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('button', { name: 'Replay welcome tour' }).click();
+
+    await expect(page.getByTestId('app-tour')).toBeVisible();
+  });
+
+  test('leaves the page usable after it closes', async ({ page }) => {
+    await asNewVisitor(page);
+
+    const tour = page.getByTestId('app-tour');
+    await tour.getByRole('button', { name: 'Skip' }).click();
+    await expect(tour).toHaveCount(0);
+
+    // The tour pads the body so it can scroll a target clear of its own
+    // panel. Failing to undo that would leave dead space below the app
+    // forever, on a page nobody would think to blame the tour for.
+    const padding = await page.evaluate(() => document.body.style.paddingBottom);
+    expect(padding === '' || padding === '0px').toBe(true);
+
+    // And the app still works.
+    await page.getByRole('button', { name: "Start Today's Workout" }).click();
+    await expect(page).toHaveURL(/\/workout\/\d+$/);
+    await expect(page.getByLabel('Weight').first()).toBeVisible();
+  });
+});
+
+test.describe('the install prompt', () => {
+  test('stays quiet on a first visit', async ({ page }) => {
+    await asNewVisitor(page);
+
+    // Asking someone to install before they have used anything converts
+    // badly, so this waits for a second visit even once the tour is done.
+    await page.getByTestId('app-tour').getByRole('button', { name: 'Skip' }).click();
+    await expect(page.getByTestId('install-prompt')).toHaveCount(0);
+  });
+
+  test('never appears when the app is already installed', async ({ page }) => {
+    await page.addInitScript(() => {
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (q: string) =>
+        q.includes('display-mode: standalone')
+          ? ({
+              matches: true,
+              media: q,
+              onchange: null,
+              addEventListener() {},
+              removeEventListener() {},
+              addListener() {},
+              removeListener() {},
+              dispatchEvent: () => false,
+            } as unknown as MediaQueryList)
+          : real(q);
+      localStorage.setItem('ironpath_visits', '9');
+    });
+
+    await page.goto('/');
+    await page.goto('/');
+    await expect(page.getByTestId('install-prompt')).toHaveCount(0);
+  });
+});
