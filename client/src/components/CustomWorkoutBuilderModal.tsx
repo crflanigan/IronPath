@@ -43,6 +43,15 @@ interface CustomWorkoutBuilderModalProps {
     abs: AbsExercise[];
   } | null;
   existingNames: string[];
+  /**
+   * Names the built-in workouts already answer to.
+   *
+   * Templates are looked up by name, and `workoutTemplates[name]` is checked
+   * first — so a custom workout sharing a preset's name is unreachable: choose
+   * it and you silently get the built-in one instead. Cheaper to refuse the
+   * name than to let someone build a workout they can never open.
+   */
+  reservedNames?: string[];
 }
 
 export function CustomWorkoutBuilderModal({
@@ -54,6 +63,7 @@ export function CustomWorkoutBuilderModal({
   template,
   prefill,
   existingNames,
+  reservedNames = [],
 }: CustomWorkoutBuilderModalProps) {
   const { popView } = useViewStack();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -162,9 +172,12 @@ export function CustomWorkoutBuilderModal({
     });
   };
 
-  const isDuplicate = existingNames
+  const trimmedName = name.trim().toLowerCase();
+  const clashesWithTemplate = existingNames
     .filter(n => !template || n.toLowerCase() !== template.name.toLowerCase())
-    .some(n => n.toLowerCase() === name.trim().toLowerCase());
+    .some(n => n.toLowerCase() === trimmedName);
+  const clashesWithPreset = reservedNames.some(n => n.toLowerCase() === trimmedName);
+  const isDuplicate = clashesWithTemplate || clashesWithPreset;
 
   const handleSave = () => {
     if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
@@ -355,7 +368,12 @@ export function CustomWorkoutBuilderModal({
             />
             <span>Include in auto-schedule</span>
           </label>
-          {isDuplicate && (
+          {clashesWithPreset && (
+            <p className="text-red-600 text-sm">
+              “{name.trim()}” is a built-in workout. Choose a different name.
+            </p>
+          )}
+          {clashesWithTemplate && (
             <p className="text-red-600 text-sm">Workout name must be unique</p>
           )}
           <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
