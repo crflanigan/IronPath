@@ -30,9 +30,12 @@ export function CalendarGrid({
 }: CalendarGridProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const today = new Date();
+  // A `new Date()` built during render is a fresh object every time, so using
+  // it as a memo dependency meant the 42-cell grid was rebuilt on every
+  // render and the memo cached nothing. A day string is stable.
+  const todayKey = new Date().toDateString();
 
-  
+
   const calendarDays = useMemo(() => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -62,7 +65,7 @@ export function CalendarGrid({
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dateString = formatLocalDate(date);
-      const isToday = date.toDateString() === today.toDateString();
+      const isToday = date.toDateString() === todayKey;
 
       days.push({
         day,
@@ -83,7 +86,7 @@ export function CalendarGrid({
     }
 
     return days;
-  }, [year, month, today]);
+  }, [year, month, todayKey]);
 
   const workoutSchedule = useMemo(
     () => generateWorkoutSchedule(year, month + 1),
