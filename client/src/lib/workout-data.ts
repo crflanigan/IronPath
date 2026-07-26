@@ -1,6 +1,7 @@
 import { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
 import { formatLocalDate } from "@/lib/utils";
 import { localWorkoutStorage } from "@/lib/storage";
+import { defaultWorkoutCycle } from "@/lib/workout-cycle";
 
 type TemplateExercise = Omit<Exercise, 'completed' | 'sets'> & {
   sets: Omit<ExerciseSet, 'completed'>[];
@@ -969,23 +970,10 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
   }
 };
 
-// Default 14-day workout cycle
-export const defaultWorkoutCycle: string[] = [
-  "Chest & Triceps",
-  "Back & Biceps",
-  "Legs",
-  "Chest & Shoulders",
-  "Back, Biceps & Legs",
-  "Chest Day",
-  "Back & Biceps",
-  "Chest, Shoulders & Legs",
-  "Legs",
-  "Chest & Triceps",
-  "Back, Biceps & Legs",
-  "Chest & Shoulders",
-  "Back & Biceps",
-  "Chest, Shoulders & Legs"
-];
+// The built-in 14-day cycle lives in ./workout-cycle so storage.ts can read it
+// without creating an import cycle. Re-exported so existing imports from
+// '@/lib/workout-data' keep working.
+export { defaultWorkoutCycle };
 
 export function getWorkoutCycle(): string[] {
   const selected = localWorkoutStorage.getAutoScheduleWorkouts();
@@ -1004,7 +992,13 @@ export function getWorkoutCycle(): string[] {
     )
     .map(t => t.name);
 
-  return [...presets, ...customs];
+  const cycle = [...presets, ...customs];
+
+  // Every selection can go stale — a template gets renamed or deleted and its
+  // stored name no longer resolves. An empty cycle would make `dayIndex %
+  // cycle.length` NaN and stamp `type: undefined` across the whole calendar,
+  // so fall back to the built-in rotation rather than emit a broken schedule.
+  return cycle.length > 0 ? cycle : defaultWorkoutCycle;
 }
 
 // Generate workout schedule for a given month
