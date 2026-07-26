@@ -1,4 +1,8 @@
-import { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise, exerciseSchema, absExerciseSchema, cardioSchema } from "@shared/schema";
+// Types only from @shared/schema — importing a *value* from there would pull
+// Drizzle's Postgres table builder into the browser bundle. Runtime schemas
+// come from the Drizzle-free module instead.
+import type { Workout, InsertWorkout, UserPreferences, Exercise, AbsExercise } from "@shared/schema";
+import { exerciseSchema, absExerciseSchema, cardioSchema } from "@shared/workout-schemas";
 import { z } from "zod";
 import { toast } from '@/hooks/use-toast';
 import { presetCycleNames } from '@/lib/workout-cycle';

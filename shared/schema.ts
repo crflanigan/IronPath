@@ -1,59 +1,25 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import {
+  exerciseSchema,
+  absExerciseSchema,
+  cardioSchema,
+  exerciseSetSchema,
+  workoutTypes
+} from "./workout-schemas";
 
-// Exercise set schema
-const exerciseSetSchema = z.object({
-  weight: z.number().optional(),
-  reps: z.number().optional(),
-  rest: z.string().optional(), // e.g., "1:30"
-  completed: z.boolean().default(false)
-});
-
-// Exercise schema
-const exerciseSchema = z.object({
-  code: z.string().optional(), // Machine code like "S16"
-  machine: z.string(),
-  equipment: z.enum(["machine", "freeweight", "both"]),
-  region: z.string(),
-  feel: z.enum(["Light", "Medium", "Hard", "Heavy", "N/A"]),
-  sets: z.array(exerciseSetSchema),
-  bestWeight: z.number().optional(),
-  bestReps: z.number().optional(),
-  completed: z.boolean().default(false)
-});
-
-// Abs exercise schema
-const absExerciseSchema = z.object({
-  name: z.string(),
-  reps: z.number().optional(),
-  time: z.string().optional(), // For time-based exercises like planks
-  completed: z.boolean().default(false)
-});
-
-// Cardio schema
-const cardioSchema = z.object({
-  type: z.enum(["Treadmill", "Bike", "Elliptical", "Rowing"]),
-  duration: z.string().optional(), // e.g., "15:00"
-  distance: z.string().optional(), // e.g., "2.5"
-  completed: z.boolean().default(false)
-});
-
-// Workout types (add all valid workout templates here)
-export const workoutTypes = [
-  "Chest, Shoulder Focus",
-  "Legs",
-  "Chest, Tricep Focus",
-  "Back, Biceps, and Legs",
-  "Chest, Shoulders, and Back",
-  "Chest Day",
-  "Back & Biceps",
-  "Back, Biceps & Legs",
-  "Chest & Triceps",
-  "Chest & Shoulders",
-  "Leg Day",
-  "Chest, Shoulders & Legs"
-] as const;
+/**
+ * Database tables.
+ *
+ * This module imports `drizzle-orm/pg-core`, so anything that imports a
+ * *value* from here pulls the Postgres table builder in with it. The client is
+ * a browser app with no database, so it must only ever import types from here
+ * — or, for runtime schemas, import from ./workout-schemas directly.
+ *
+ * Everything in ./workout-schemas is re-exported below so existing imports
+ * keep working either way.
+ */
 
 // Workouts table
 export const workouts = pgTable("workouts", {
@@ -95,11 +61,7 @@ export type Workout = typeof workouts.$inferSelect;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
-export type Exercise = z.infer<typeof exerciseSchema>;
-export type ExerciseSet = z.infer<typeof exerciseSetSchema>;
-export type AbsExercise = z.infer<typeof absExerciseSchema>;
-export type Cardio = z.infer<typeof cardioSchema>;
-export type WorkoutType = typeof workoutTypes[number];
 
-// Export schemas for validation
-export { exerciseSchema, exerciseSetSchema, absExerciseSchema, cardioSchema };
+// Re-exported from ./workout-schemas so existing import sites are unchanged.
+export { exerciseSchema, exerciseSetSchema, absExerciseSchema, cardioSchema, workoutTypes };
+export type { Exercise, ExerciseSet, AbsExercise, Cardio, WorkoutType } from "./workout-schemas";

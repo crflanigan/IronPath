@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkoutPage } from './workout';
-import { Workout } from '@shared/schema';
+import type { Workout } from '@shared/schema';
 
 const mockUpdateWorkout = vi.fn();
 

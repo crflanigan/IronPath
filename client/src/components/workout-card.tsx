@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Workout } from '@shared/schema';
+import type { Workout } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
 import {
   Calendar,

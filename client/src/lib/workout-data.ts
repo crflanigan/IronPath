@@ -1,4 +1,4 @@
-import { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
+import type { Exercise, AbsExercise, WorkoutType, ExerciseSet } from "@shared/schema";
 import { formatLocalDate } from "@/lib/utils";
 import { localWorkoutStorage } from "@/lib/storage";
 import { defaultWorkoutCycle } from "@/lib/workout-cycle";

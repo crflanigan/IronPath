@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Exercise, ExerciseSet } from '@shared/schema';
+import type { Exercise, ExerciseSet } from '@shared/schema';
 import { Check, Clock, HelpCircle } from 'lucide-react';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';

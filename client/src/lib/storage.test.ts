@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { LocalWorkoutStorage } from './storage'
-import { InsertWorkout } from '@shared/schema'
+import type { InsertWorkout } from '@shared/schema'
 
 function makeWorkout(date: string): InsertWorkout {
   return {
