@@ -243,68 +243,6 @@ export function CalendarPage() {
     }
   };
 
-  const handleStartWorkout = async (date: string) => {
-    const existingWorkout = await getWorkoutByDate(date);
-    
-    if (existingWorkout) {
-      navigateToWorkout(existingWorkout);
-    } else {
-      // Create new workout for selected date
-      const schedule = generateWorkoutSchedule(
-        parseISODate(date).getFullYear(),
-        parseISODate(date).getMonth() + 1
-      );
-      const scheduledWorkout = schedule.find(w => w.date === date);
-      
-      if (scheduledWorkout) {
-        const builtIn = workoutTemplates[scheduledWorkout.type as keyof typeof workoutTemplates];
-        let newWorkout: Workout | undefined;
-        if (builtIn) {
-          newWorkout = await createWorkout({
-            date: date,
-            type: scheduledWorkout.type,
-            exercises: builtIn.exercises.map(e => ({
-              ...e,
-              completed: false,
-              sets: e.sets.map(s => ({ ...s, completed: false })),
-            })),
-            abs: builtIn.abs.map(a => ({ ...a, completed: false })),
-            cardio: {
-              type: 'Treadmill',
-              duration: '',
-              distance: '',
-              completed: false
-            },
-            completed: false
-          });
-        } else {
-          const custom = customTemplates.find(t => t.name === scheduledWorkout.type);
-          if (!custom) return;
-          newWorkout = await createWorkout({
-            date: date,
-            type: scheduledWorkout.type,
-            exercises: custom.exercises.map(e => ({
-              ...e,
-              completed: false,
-              sets: e.sets.map(s => ({ ...s, completed: false })),
-            })),
-            abs: (custom.abs ?? []).map(a => ({ ...a, completed: false })),
-            cardio: {
-              type: 'Treadmill',
-              duration: '',
-              distance: '',
-              completed: false,
-            },
-            completed: false,
-          });
-       }
-
-        if (newWorkout) {
-          navigateToWorkout(newWorkout);
-        }
-      }
-    }
-  };
 
   const getWorkoutStats = () => {
     const completedWorkouts = workouts.filter(w => w.completed).length;

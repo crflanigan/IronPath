@@ -64,7 +64,7 @@ export function slugForExercise(name: string): string {
     .replace(/\(.*?\)/g, '')
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9\-]/g, '');
+    .replace(/[^a-z0-9-]/g, '');
 }
 
 /** Path to a photo, or null when there is no photo for this exercise. */

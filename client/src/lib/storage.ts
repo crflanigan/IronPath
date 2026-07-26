@@ -408,7 +408,7 @@ export class LocalWorkoutStorage {
    */
   private getWorkouts(): Workout[] {
     const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
-    let parsed: unknown = [];
+    let parsed: unknown;
     try {
       parsed = stored ? JSON.parse(stored) : [];
     } catch (err) {
@@ -472,7 +472,7 @@ export class LocalWorkoutStorage {
 
   private getCustomTemplatesInternal(): CustomWorkoutTemplate[] {
     const stored = this.safeGetItem(STORAGE_KEYS.CUSTOM_TEMPLATES);
-    let parsed: unknown = [];
+    let parsed: unknown;
     try {
       parsed = stored ? JSON.parse(stored) : [];
     } catch (err) {

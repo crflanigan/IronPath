@@ -75,7 +75,6 @@ for (const width of WIDTHS) {
       .evaluate(el => el.scrollWidth - el.clientWidth);
     expect(dialogOverflow).toBeLessThanOrEqual(1);
 
-    // eslint-disable-next-line no-console
     console.log(
       `GEOM ${width} w=${box.width.toFixed(2)} h=${box.height.toFixed(2)} ` +
         `top=${box.y.toFixed(1)} rightAlign=${(row.x + row.width - (box.x + box.width)).toFixed(2)}`,

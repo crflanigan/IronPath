@@ -1,5 +1,9 @@
 # IronPath Full Project Overview
 
+> Reference notes on repository layout and data flow. The [README](../README.md)
+> is the authoritative description of what the app does; this document goes
+> deeper on structure and can lag behind it.
+
 ## Repository Structure
 
 The project consists of a React + TypeScript client, a small Express server and a shared schema package. Below is the top level layout (generated from `tree -L 2`).
@@ -118,7 +122,7 @@ Modal for choosing which workouts appear in the automatic rotation. Combines def
 Small dialog that loads an exercise help image based on the machine name. Falls back to a placeholder if not found.
 
 ### SettingsDialog.tsx
-Provides export/import buttons, link to auto‑schedule settings and a destructive reset option which clears all local storage keys. Also displays app version information.
+Backup export and restore, a link to auto-schedule settings, a control to unhide presets, storage usage, and a destructive reset that clears every local storage key. Also displays app version information.
 
 ### theme-provider.tsx
 Context provider around the `useTheme` hook, exposing the current theme and `toggleTheme` to children.
@@ -182,13 +186,13 @@ Simple fallback page when a route is missing.
 
 ## Data Flow
 
-1. **Initial Load** – `use-workout-storage` loads workouts, preferences and custom templates from `localStorage` through `LocalWorkoutStorage`. If the local storage version does not match `STORAGE_VERSION` the data is cleared to avoid mismatches.
+1. **Initial Load** – `use-workout-storage` loads workouts, preferences and custom templates from `localStorage` through `LocalWorkoutStorage`. A `STORAGE_VERSION` marker is recorded, but data is **kept** across version changes; breaking changes are expected to ship an explicit migration. Records that fail validation are repaired where possible and otherwise quarantined under `ironpath_quarantined_workouts` rather than dropped.
 2. **Workout Creation** – The calendar page uses built‑in or custom templates to create a `Workout` object. When creating a workout, `createWorkout` pulls last used sets from exercise history to prefill weights/reps/rest.
 3. **During Workout** – As sets are edited in `ExerciseForm`, the workout page updates local state and (if auto-save is on) calls `updateWorkout` which writes back to localStorage via `LocalWorkoutStorage.updateWorkout`.
 4. **Completing a Workout** – When `handleCompleteWorkout` is called, the workout is validated, marked completed and saved. Completed exercises update the exercise history so future sessions can be pre-filled.
 5. **Template Rotation** – `generateWorkoutSchedule` (using `getWorkoutCycle`) determines which workout type falls on which calendar date. `AutoScheduleModal` can alter the rotation by letting the user select presets and custom templates. Selected names are stored under `ironpath_auto_schedule_workouts` in localStorage.
 6. **Custom Workouts** – Created or edited via `CustomWorkoutBuilderModal`. Stored templates are kept under `ironpath_custom_templates` and included in the schedule if marked for auto scheduling.
-7. **Export/Import** – `useWorkoutStorage.exportData/exportCSV` read from `LocalWorkoutStorage` and trigger download of JSON or CSV files. Import is currently stubbed.
+7. **Export/Import** – Settings writes a complete JSON backup covering every stored key, and restores from one after confirming what it contains. History additionally offers a CSV export for spreadsheets.
 8. **Server Side** – The Express server currently only serves the client and provides an in-memory storage interface placeholder. API routes can later persist data to a real database.
 
 ## LocalStorage Keys
@@ -234,7 +238,7 @@ Simple fallback page when a route is missing.
 
 ## How the Service Worker Uses localStorage
 
-The service worker (`public/sw.js`) caches static assets for offline use and listens for background sync events to eventually sync workouts with a server. It does not manipulate localStorage directly; all storage logic lives in the client through `LocalWorkoutStorage`.
+The service worker (`public/sw.js`) serves navigations **network-first** so a deploy reaches installed apps, and everything else cache-first. It precaches the app shell, the build's hashed bundles and all exercise photos. It does not touch localStorage; all storage logic lives in the client through `LocalWorkoutStorage`.
 
 ## Additional Notes
 
