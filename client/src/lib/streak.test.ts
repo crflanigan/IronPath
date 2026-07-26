@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { calculateTopDayStreak } from './streak'
-import { Workout } from '@shared/schema'
+import type { Workout } from '@shared/schema'
 
 let idCounter = 1
 

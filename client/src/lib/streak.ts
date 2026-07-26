@@ -1,4 +1,4 @@
-import { Workout } from '@shared/schema';
+import type { Workout } from '@shared/schema';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 
 export function calculateDayStreak(workouts: Workout[], streakDays: number[]): number {

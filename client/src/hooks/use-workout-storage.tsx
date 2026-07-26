@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Workout, InsertWorkout, UserPreferences, Exercise } from '@shared/schema';
+import type { Workout, InsertWorkout, UserPreferences, Exercise } from '@shared/schema';
 import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 import { formatLocalDate } from '@/lib/utils';

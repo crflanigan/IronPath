@@ -14,7 +14,7 @@ import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModa
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
-import { Workout, Exercise, AbsExercise } from '@shared/schema';
+import type { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 
 export function CalendarPage() {

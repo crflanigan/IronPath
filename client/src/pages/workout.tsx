@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
+import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate, minutesFromDuration } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

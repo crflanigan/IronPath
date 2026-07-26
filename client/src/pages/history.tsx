@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { Workout } from '@shared/schema';
+import type { Workout } from '@shared/schema';
 import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react';
 import { parseISODate } from '@/lib/utils';
 import { calculateDayStreak } from '@/lib/streak';

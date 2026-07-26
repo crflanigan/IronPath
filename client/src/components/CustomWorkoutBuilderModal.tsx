@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Exercise, AbsExercise } from '@shared/schema';
+import type { Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate } from '@/lib/storage';
 import { exerciseLibrary } from '@/lib/exercise-library';
 import { ExerciseOption } from '@/lib/exercise-library';
