@@ -16,7 +16,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function Navigation() {
   const [location, setLocation] = useLocation();
-  const { theme, toggleTheme } = useThemeContext();
 
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">

@@ -43,7 +43,7 @@ interface WorkoutPageProps {
 export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: WorkoutPageProps) {
   const [workout, setWorkout] = useState<Workout>(initialWorkout);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [autoSaveEnabled] = useState(true);
   const [celebrated, setCelebrated] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
