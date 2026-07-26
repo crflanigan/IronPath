@@ -170,7 +170,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   type="text"
                   inputMode="decimal"
                   pattern="[0-9]*"
-                  aria-label="Weight"
+                  aria-label={`Weight, set ${index + 1}`}
                   value={set.weight ?? ''}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -190,6 +190,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   type="text"
                   inputMode="decimal"
                   pattern="[0-9]*"
+                  aria-label={`Reps, set ${index + 1}`}
                   value={set.reps ?? ''}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -207,6 +208,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9:]*"
+                  aria-label={`Rest, set ${index + 1}`}
                   value={set.rest ?? ''}
                   onChange={(e) => {
                     const inputEv = e.nativeEvent as InputEvent;
@@ -239,6 +241,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label={`Mark set ${index + 1} complete`}
                     onClick={() => markSetComplete(index)}
                     className="text-blue-600 hover:text-blue-800"
                   >

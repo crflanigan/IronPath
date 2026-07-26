@@ -30,7 +30,7 @@ async function closeTemplateSelector(page: Page) {
 
 async function createCustomWorkout(page: Page, name: string) {
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
-  await page.getByRole('button', { name: 'Create Custom Workout' }).click();
+  await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
 
   const builder = builderDialog(page);
   await expect(builder).toBeVisible();

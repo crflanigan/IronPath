@@ -288,6 +288,7 @@ export function CustomWorkoutBuilderModal({
                       <div className="flex items-center gap-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <Checkbox
+                            aria-label={ex.machine}
                             checked={selected.has(ex.machine)}
                             onCheckedChange={() => toggle(ex.machine)}
                           />
@@ -318,6 +319,7 @@ export function CustomWorkoutBuilderModal({
                   <div className="flex items-center gap-1">
                     <div className="flex items-center gap-2 min-w-0">
                       <Checkbox
+                        aria-label={abs.name}
                         checked={selectedAbs.has(abs.name)}
                         onCheckedChange={() => toggleAbs(abs.name)}
                       />
@@ -344,9 +346,10 @@ export function CustomWorkoutBuilderModal({
           {warning15 && (
             <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn't effective. Consider splitting it up.</p>
           )}
-          <Input placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
+          <Input aria-label="Workout name" placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
           <label className="flex items-center space-x-2 text-sm">
             <Checkbox
+              aria-label="Include in auto-schedule"
               checked={includeInSchedule}
               onCheckedChange={v => setIncludeInSchedule(!!v)}
             />

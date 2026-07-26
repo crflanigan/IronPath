@@ -74,6 +74,7 @@ export function CustomizeStreakModal({ open, onClose }: CustomizeStreakModalProp
           {days.map((day, idx) => (
             <label key={day} className="flex items-center space-x-2 text-sm">
               <Checkbox
+                aria-label={day}
                 checked={selected.has(idx)}
                 onCheckedChange={() => toggle(idx)}
               />

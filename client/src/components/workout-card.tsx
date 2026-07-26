@@ -49,6 +49,7 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
+              aria-label="Delete this workout"
               size="icon"
               variant="ghost"
               className="absolute top-2 left-2 h-6 w-6 p-0 text-red-600 hover:bg-red-100 dark:hover:bg-red-900"

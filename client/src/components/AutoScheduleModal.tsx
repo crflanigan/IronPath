@@ -176,7 +176,7 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
             <div className="space-y-2">
               {presetNames.map(name => (
                 <label key={name} className="flex items-center space-x-2 text-sm">
-                  <Checkbox checked={selected.has(name)} onCheckedChange={() => toggle(name)} />
+                  <Checkbox aria-label={name} checked={selected.has(name)} onCheckedChange={() => toggle(name)} />
                   <span>{name}</span>
                 </label>
               ))}
@@ -188,7 +188,7 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
               <div className="space-y-2">
                 {templates.map(t => (
                   <label key={t.id} className="flex items-center space-x-2 text-sm">
-                    <Checkbox checked={selected.has(t.name)} onCheckedChange={() => toggle(t.name)} />
+                    <Checkbox aria-label={t.name} checked={selected.has(t.name)} onCheckedChange={() => toggle(t.name)} />
                     <span>{t.name}</span>
                   </label>
                 ))}
@@ -218,7 +218,7 @@ export function AutoScheduleModal({ open, onClose, customTemplates }: AutoSchedu
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="flex items-center space-x-2 py-2">
-          <Checkbox id="dont-show" checked={dontShowAgain} onCheckedChange={v => setDontShowAgain(!!v)} />
+          <Checkbox id="dont-show" aria-label="Don't show again" checked={dontShowAgain} onCheckedChange={v => setDontShowAgain(!!v)} />
           <label htmlFor="dont-show" className="text-sm">Don't show again</label>
         </div>
         <AlertDialogFooter className="gap-2">

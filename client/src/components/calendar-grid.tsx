@@ -113,6 +113,7 @@ export function CalendarGrid({
         <Button
           variant="ghost"
           size="sm"
+          aria-label="Previous month"
           onClick={() => navigateMonth('prev')}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
         >
@@ -124,6 +125,7 @@ export function CalendarGrid({
         <Button
           variant="ghost"
           size="sm"
+          aria-label="Next month"
           onClick={() => navigateMonth('next')}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
         >
