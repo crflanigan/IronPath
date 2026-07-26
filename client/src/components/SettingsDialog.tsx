@@ -6,11 +6,17 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { localWorkoutStorage } from '@/lib/storage';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { toast } from '@/hooks/use-toast';
+import { backupFilename, describeBackup, downloadJson, readJsonFile } from '@/lib/backup';
 
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [usage, setUsage] = useState({ percent: 0, used: 0, limit: 0 });
+  // Held between choosing a file and confirming the replace, so the summary
+  // shown in the dialog describes the file actually about to be restored.
+  const [pendingImport, setPendingImport] = useState<{ data: unknown; summary: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (open) {
@@ -19,27 +25,55 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
   }, [open]);
 
   const handleExport = async () => {
-    const data = await localWorkoutStorage.exportData();
-    const headers = ['id', 'date', 'type', 'completed', 'duration'];
-    const rows = data.workouts.map(w => [w.id, w.date, w.type, w.completed, w.duration ?? ''].join(','));
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'workouts.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      downloadJson(backupFilename(), await localWorkoutStorage.exportData());
+    } catch {
+      toast({
+        title: 'Export failed',
+        description: 'Your workouts could not be exported.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleImport = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+  const handleFileChosen = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Reset immediately so choosing the same file twice still fires onChange.
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const data = await readJsonFile(file);
+      setPendingImport({ data, summary: describeBackup(data) });
+    } catch (error) {
       toast({
-        title: 'Import not implemented',
-        description: 'Importing workouts will be available in a future update.'
+        title: "Couldn't read that file",
+        description: error instanceof Error ? error.message : 'Unknown error.',
+        variant: 'destructive',
       });
-      e.target.value = '';
     }
+  };
+
+  const confirmImport = async () => {
+    if (!pendingImport) return;
+    const { data } = pendingImport;
+    setPendingImport(null);
+
+    try {
+      await localWorkoutStorage.importData(data);
+    } catch {
+      // importData validates before writing anything, so existing data is
+      // untouched when this happens.
+      toast({
+        title: 'Restore failed',
+        description: 'That backup could not be read. Nothing was changed.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Backup restored', description: 'Reloading…' });
+    window.location.reload();
   };
 
   return (
@@ -52,15 +86,25 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           <DialogDescription>Manage app data and preferences.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <Button onClick={handleExport} className="w-full">Export Workouts</Button>
+          <Button onClick={handleExport} className="w-full">Export Backup</Button>
           <div>
-            <input id="import-file" type="file" accept=".csv" onChange={handleImport} className="hidden" />
+            <input
+              id="import-file"
+              type="file"
+              accept="application/json,.json"
+              onChange={handleFileChosen}
+              className="hidden"
+            />
             <label htmlFor="import-file">
               <Button asChild className="w-full cursor-pointer">
-                <span>Import Workouts</span>
+                <span>Restore From Backup</span>
               </Button>
             </label>
           </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            A backup holds every workout, template, exercise history entry and setting.
+            Restoring replaces everything currently on this device.
+          </p>
           <Button className="w-full" variant="secondary" onClick={() => setScheduleOpen(true)}>
             Customize Auto-Schedule
           </Button>
@@ -95,6 +139,25 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
         </DialogContent>
       </Dialog>
       <AutoScheduleModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} />
+
+      <AlertDialog
+        open={pendingImport !== null}
+        onOpenChange={isOpen => !isOpen && setPendingImport(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore this backup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This file contains {pendingImport?.summary}. Restoring it replaces every workout,
+              template and setting currently on this device. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmImport}>Restore</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

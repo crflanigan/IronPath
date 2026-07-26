@@ -77,6 +77,65 @@ const customTemplateSchema = z.object({
   includeInAutoSchedule: z.boolean().optional(),
 });
 
+const exerciseHistorySchema = z.record(
+  z.string(),
+  z.object({
+    sets: z.array(
+      z.object({
+        weight: z.number(),
+        reps: z.number(),
+        rest: z.string().optional(),
+      })
+    ),
+    date: z.string(),
+  })
+);
+
+/**
+ * Shape of an exported backup file.
+ *
+ * Only `workouts` and `preferences` are required, so a file written by an
+ * earlier build still restores — anything it omits is left untouched rather
+ * than reset.
+ */
+const backupSchema = z.object({
+  version: z.number().optional(),
+  exportedAt: z.string().optional(),
+  workouts: z.array(storedWorkoutSchema),
+  preferences: storedPreferencesSchema,
+  customTemplates: z.array(customTemplateSchema).optional(),
+  exerciseHistory: exerciseHistorySchema.optional(),
+  autoScheduleWorkouts: z.array(z.string()).optional(),
+  hiddenPresets: z.record(z.string(), z.boolean()).optional(),
+  presetPrompts: z.record(z.string(), z.boolean()).optional(),
+  streakDays: z.array(z.number().int().min(0).max(6)).optional(),
+  quarantined: z
+    .array(
+      z.object({
+        quarantinedAt: z.string(),
+        reason: z.string(),
+        record: z.unknown(),
+      })
+    )
+    .optional(),
+});
+
+const BACKUP_VERSION = 1;
+
+export interface IronPathBackup {
+  version: number;
+  exportedAt: string;
+  workouts: Workout[];
+  preferences: UserPreferences;
+  customTemplates: CustomWorkoutTemplate[];
+  exerciseHistory: Record<string, ExerciseHistoryEntry>;
+  autoScheduleWorkouts: string[];
+  hiddenPresets: Record<string, boolean>;
+  presetPrompts: Record<string, boolean>;
+  streakDays: number[];
+  quarantined: QuarantinedWorkout[];
+}
+
 export class LocalWorkoutStorage {
   private storageLimit = 5 * 1024 * 1024; // 5MB approximate
   private warningThreshold = 0.8;
@@ -678,27 +737,47 @@ export class LocalWorkoutStorage {
     return updated;
   }
 
-  async exportData(): Promise<{
-    workouts: Workout[];
-    preferences: UserPreferences;
-    customTemplates: CustomWorkoutTemplate[];
-    quarantined: QuarantinedWorkout[];
-  }> {
+  /**
+   * Everything needed to reconstruct this install elsewhere.
+   *
+   * "Backup" previously meant workouts, preferences and templates — which left
+   * out exercise history (what prefills every set), the auto-schedule
+   * rotation, hidden presets and the streak configuration. Restoring from that
+   * would have silently reset half the app.
+   */
+  async exportData(): Promise<IronPathBackup> {
     // `getWorkouts()` runs first so anything unparseable is set aside before
     // the quarantine is read — otherwise an export could miss a record that
     // this very call just rejected. Quarantined records ride along so a
     // recovery is possible from the exported file alone.
     const workouts = this.getWorkouts();
     return {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
       workouts,
       preferences: await this.getUserPreferences(),
       customTemplates: this.getCustomTemplatesInternal(),
+      exerciseHistory: this.getExerciseHistory(),
+      autoScheduleWorkouts: this.getAutoScheduleWorkouts(),
+      hiddenPresets: this.getHiddenPresets(),
+      presetPrompts: this.getPresetPromptPrefs(),
+      streakDays: this.getStreakDays(),
       quarantined: this.getQuarantinedWorkouts()
     };
   }
 
-  async importData(data: { workouts: Workout[]; preferences: UserPreferences; customTemplates?: CustomWorkoutTemplate[] }): Promise<void> {
-    const workouts = z.array(storedWorkoutSchema).parse(data.workouts).map((workout) => ({
+  /**
+   * Replace this install's data with the contents of a backup.
+   *
+   * Throws if the payload does not validate, before writing anything — a bad
+   * file must not leave storage half-replaced. Every field beyond workouts and
+   * preferences is optional, so a file produced by an older build still
+   * restores; anything it omits is simply left as-is.
+   */
+  async importData(data: unknown): Promise<void> {
+    const backup = backupSchema.parse(data);
+
+    const workouts = backup.workouts.map((workout) => ({
       ...workout,
       completed: Boolean(workout.completed),
       duration: workout.duration ?? null,
@@ -707,25 +786,47 @@ export class LocalWorkoutStorage {
       updatedAt: workout.updatedAt ?? new Date(),
     })) as Workout[];
 
-    const preferences = storedPreferencesSchema.parse(data.preferences);
     const normalizedPreferences: UserPreferences = {
-      id: preferences.id ?? 1,
-      darkMode: preferences.darkMode ?? false,
-      autoIncrement: preferences.autoIncrement ?? false,
-      notifications: preferences.notifications ?? true,
-      updatedAt: preferences.updatedAt ?? new Date(),
+      id: backup.preferences.id ?? 1,
+      darkMode: backup.preferences.darkMode ?? false,
+      autoIncrement: backup.preferences.autoIncrement ?? false,
+      notifications: backup.preferences.notifications ?? true,
+      updatedAt: backup.preferences.updatedAt ?? new Date(),
     };
 
+    // Validation is complete by this point, so the writes below cannot leave a
+    // partially-restored store behind.
     this.saveWorkouts(workouts);
     this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(normalizedPreferences));
 
-    if (data.customTemplates) {
-      const templates = z.array(customTemplateSchema).parse(data.customTemplates).map((template) => ({
-        ...template,
-        abs: template.abs ?? [],
-        includeInAutoSchedule: template.includeInAutoSchedule ?? false,
-      }));
-      this.saveCustomTemplates(templates);
+    if (backup.customTemplates) {
+      this.saveCustomTemplates(
+        backup.customTemplates.map((template) => ({
+          ...template,
+          abs: template.abs ?? [],
+          includeInAutoSchedule: template.includeInAutoSchedule ?? false,
+        }))
+      );
+    }
+    if (backup.exerciseHistory) {
+      this.saveExerciseHistory(backup.exerciseHistory);
+    }
+    if (backup.autoScheduleWorkouts) {
+      this.saveAutoScheduleWorkouts(backup.autoScheduleWorkouts);
+    }
+    if (backup.hiddenPresets) {
+      this.saveHiddenPresets(backup.hiddenPresets);
+    }
+    if (backup.presetPrompts) {
+      this.savePresetPromptPrefs(backup.presetPrompts);
+    }
+    if (backup.streakDays) {
+      this.saveStreakDays(backup.streakDays);
+    }
+    // Carried across so a record set aside on the old device is still
+    // recoverable on the new one rather than quietly disappearing in transit.
+    if (backup.quarantined) {
+      this.safeSetItem(STORAGE_KEYS.QUARANTINE, JSON.stringify(backup.quarantined));
     }
 
     // Update current ID to prevent conflicts

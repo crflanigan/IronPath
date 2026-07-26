@@ -3,6 +3,7 @@ import type { Workout, InsertWorkout, UserPreferences, Exercise } from '@shared/
 import { localWorkoutStorage, CustomWorkoutTemplate } from '@/lib/storage';
 import { workoutTemplates } from '@/lib/workout-data';
 import { formatLocalDate } from '@/lib/utils';
+import { backupFilename, downloadJson } from '@/lib/backup';
 
 const STORAGE_VERSION = "1.1.0";
 const VERSION_KEY = "ironpath_version";
@@ -147,16 +148,9 @@ export function useWorkoutStorage() {
   };
 
   const exportData = async () => {
-    const data = await localWorkoutStorage.exportData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ironpath-data-${formatLocalDate(new Date())}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Same file the Settings dialog writes, so either route produces something
+    // "Restore From Backup" accepts.
+    downloadJson(backupFilename(), await localWorkoutStorage.exportData());
   };
 
   const exportCSV = async () => {
