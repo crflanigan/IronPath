@@ -96,8 +96,12 @@ test('a new deploy reaches an already-installed app', async ({ page, context }) 
   // request either way — so assert on the content actually rendered.
   await context.route('**/', async route => {
     const response = await route.fetch();
+    // Matched by pattern, not by the literal title. Pinning the exact text
+    // meant this substitution silently no-op'd the moment the title changed
+    // for SEO, and the test only survived that because the assertion below is
+    // an exact match rather than /IronPath/.
     const body = (await response.text()).replace(
-      '<title>IronPath - Workout Tracker</title>',
+      /<title>[\s\S]*?<\/title>/,
       '<title>IronPath vNext</title>',
     );
     await route.fulfill({ response, body });
