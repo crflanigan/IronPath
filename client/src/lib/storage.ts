@@ -20,8 +20,20 @@ const STORAGE_KEYS = {
   AUTO_SCHEDULE_WORKOUTS: 'ironpath_auto_schedule_workouts',
   HIDDEN_PRESETS: 'ironpath_hidden_presets',
   PRESET_PROMPTS: 'ironpath_preset_prompts',
-  STREAK_DAYS: 'ironpath_streak_days'
+  STREAK_DAYS: 'ironpath_streak_days',
+  QUARANTINE: 'ironpath_quarantined_workouts'
 } as const;
+
+/** A stored record that could not be parsed, kept so it is not simply lost. */
+export interface QuarantinedWorkout {
+  quarantinedAt: string;
+  reason: string;
+  record: unknown;
+}
+
+// Enough to recover from a bad release without letting a pathological store
+// grow without bound.
+const QUARANTINE_LIMIT = 50;
 
 
 interface ExerciseHistoryEntry {
@@ -196,6 +208,64 @@ export class LocalWorkoutStorage {
     this.safeSetItem(STORAGE_KEYS.CURRENT_ID, id.toString());
   }
 
+  /**
+   * Fill in fields that postdate a stored record, so an older workout is not
+   * rejected for lacking something that did not exist when it was written.
+   *
+   * `equipment` became required on the exercise schema after these records
+   * were saved. Nothing reads it back off a stored workout — it drives the
+   * builder's filter, which works from the exercise library — so the neutral
+   * value keeps the record intact without inventing a fact about it.
+   */
+  private repairStoredWorkout(candidate: unknown): unknown {
+    if (!candidate || typeof candidate !== 'object') return candidate;
+
+    const record = candidate as { exercises?: unknown; abs?: unknown };
+    if (!Array.isArray(record.exercises)) return candidate;
+
+    return {
+      ...record,
+      abs: Array.isArray(record.abs) ? record.abs : [],
+      exercises: record.exercises.map(exercise => {
+        if (!exercise || typeof exercise !== 'object') return exercise;
+        const withEquipment = exercise as { equipment?: unknown };
+        if (withEquipment.equipment) return exercise;
+        return { ...withEquipment, equipment: 'both' };
+      }),
+    };
+  }
+
+  getQuarantinedWorkouts(): QuarantinedWorkout[] {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.QUARANTINE);
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Append newly-rejected records, ignoring ones already set aside. */
+  private quarantineWorkouts(records: QuarantinedWorkout[]): void {
+    const existing = this.getQuarantinedWorkouts();
+    const seen = new Set(existing.map(entry => JSON.stringify(entry.record)));
+    const additions = records.filter(entry => !seen.has(JSON.stringify(entry.record)));
+
+    // Reads happen constantly; only write when something is actually new.
+    if (additions.length === 0) return;
+
+    const merged = [...existing, ...additions].slice(-QUARANTINE_LIMIT);
+    this.safeSetItem(STORAGE_KEYS.QUARANTINE, JSON.stringify(merged));
+  }
+
+  /**
+   * Read the stored workouts.
+   *
+   * Anything that fails validation is set aside rather than dropped. This used
+   * to `continue` past a bad record, and since the next write persists
+   * whatever this returned, the record was then gone for good — no error, no
+   * trace. One required field added to the schema was enough to erase history.
+   */
   private getWorkouts(): Workout[] {
     const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
     let parsed: unknown = [];
@@ -209,9 +279,18 @@ export class LocalWorkoutStorage {
     if (!Array.isArray(parsed)) return [];
 
     const workouts: Workout[] = [];
+    const rejected: QuarantinedWorkout[] = [];
+
     for (const candidate of parsed) {
-      const validated = storedWorkoutSchema.safeParse(candidate);
+      const validated = storedWorkoutSchema.safeParse(this.repairStoredWorkout(candidate));
       if (!validated.success) {
+        rejected.push({
+          quarantinedAt: new Date().toISOString(),
+          reason: validated.error.issues
+            .map(issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+            .join('; '),
+          record: candidate,
+        });
         continue;
       }
 
@@ -224,6 +303,10 @@ export class LocalWorkoutStorage {
         createdAt: workout.createdAt ?? new Date(),
         updatedAt: workout.updatedAt ?? new Date(),
       } as Workout);
+    }
+
+    if (rejected.length > 0) {
+      this.quarantineWorkouts(rejected);
     }
 
     return workouts;
@@ -555,11 +638,22 @@ export class LocalWorkoutStorage {
     return updated;
   }
 
-  async exportData(): Promise<{ workouts: Workout[]; preferences: UserPreferences; customTemplates: CustomWorkoutTemplate[] }> {
+  async exportData(): Promise<{
+    workouts: Workout[];
+    preferences: UserPreferences;
+    customTemplates: CustomWorkoutTemplate[];
+    quarantined: QuarantinedWorkout[];
+  }> {
+    // `getWorkouts()` runs first so anything unparseable is set aside before
+    // the quarantine is read — otherwise an export could miss a record that
+    // this very call just rejected. Quarantined records ride along so a
+    // recovery is possible from the exported file alone.
+    const workouts = this.getWorkouts();
     return {
-      workouts: this.getWorkouts(),
+      workouts,
       preferences: await this.getUserPreferences(),
-      customTemplates: this.getCustomTemplatesInternal()
+      customTemplates: this.getCustomTemplatesInternal(),
+      quarantined: this.getQuarantinedWorkouts()
     };
   }
 
