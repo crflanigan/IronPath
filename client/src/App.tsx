@@ -59,7 +59,10 @@ function Header() {
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <SettingsDialog>
-              <Button variant="ghost" size="sm" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              {/* Named here because backup/restore lives behind this button and
+                  is otherwise unreachable to a screen reader or a test. The
+                  remaining icon-only buttons are handled in the a11y pass. */}
+              <Button aria-label="Settings" variant="ghost" size="sm" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                 <Settings className="h-4 w-4" />
               </Button>
             </SettingsDialog>

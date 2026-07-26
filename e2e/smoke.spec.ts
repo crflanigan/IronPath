@@ -72,8 +72,10 @@ test('a started workout appears on the calendar after navigating back', async ({
   await page.getByRole('button', { name: 'Calendar' }).click();
   await expect(page).toHaveURL(/\/$/);
 
-  // Today's cell carries the pending marker rather than the plain today marker.
-  await expect(page.getByText('🕒').first()).toBeVisible();
+  // The selected day now has a workout attached. Asserting on the 🕒 glyph
+  // would prove nothing — the status legend renders one unconditionally, so
+  // that assertion passed with no workout at all.
+  await expect(page.getByText('No custom workout scheduled for this date')).toHaveCount(0);
 });
 
 test('the workout page is reachable by deep link after a cold start', async ({ page }) => {
