@@ -325,26 +325,22 @@ export function CalendarPage() {
       />
 
 
-      {/* Workout Legend */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Workout Status</h3>
-          <div className="flex justify-center space-x-6">
-            <div className="flex items-center space-x-1">
-              <span className="text-green-600">✅</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Completed</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="text-orange-600">🕒</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Pending</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <span className="text-blue-600">📅</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Today</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Two states left to explain, so this is a line rather than a card. It
+          used to be a full bordered card teaching three, one of which ("Pending")
+          was on literally every day and so distinguished nothing. Shrinking it
+          pulls Start Today's Workout back above the fold. The Today swatch is a
+          teal square because that is exactly what the calendar draws — a legend
+          that shows the real mark beats one that describes it. */}
+      <div className="flex justify-center items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true">✅</span>
+          Completed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-3 w-3 rounded-sm bg-primary" />
+          Today
+        </span>
+      </div>
 
       {/* Selected Workout Details */}
       {selectedDate && (
@@ -383,7 +379,15 @@ export function CalendarPage() {
               </p>
             )}
 
-            <Button className="w-full" onClick={() => openTemplateSelector(selectedDate)}>
+            {/* Outlined, not filled. This and Start Today's Workout were two
+                identical teal slabs competing for the same attention, when one
+                is the 95% action and this is occasional. Same colour, less ink —
+                the hierarchy comes from turning this down, not from shouting. */}
+            <Button
+              className="w-full border-primary text-primary hover:bg-primary/10 hover:text-primary"
+              variant="outline"
+              onClick={() => openTemplateSelector(selectedDate)}
+            >
               Create or Edit Custom Workout
             </Button>
 

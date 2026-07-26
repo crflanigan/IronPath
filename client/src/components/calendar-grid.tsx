@@ -160,14 +160,6 @@ export function CalendarGrid({
             );
           }
 
-          const status = isCompleted
-            ? '✅'
-            : dayData.isToday
-              ? '📅'
-              : hasWorkout
-                ? '🕒'
-                : '';
-
           if (hasWorkout) {
             return (
               <Button
@@ -176,17 +168,32 @@ export function CalendarGrid({
                 className={cn(
                   sharedClasses,
                   'bg-white dark:bg-gray-800 border hover:shadow-md transition-shadow',
+                  // A completed day is washed green, not just checked, so a
+                  // month can be read at a glance instead of hunting for a
+                  // 12px glyph cell by cell.
+                  isCompleted &&
+                    'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700',
+                  // Selection must outrank the completed border, so it comes after.
                   isSelected
                     ? 'border-primary ring-2 ring-primary'
-                    : 'border-gray-200 dark:border-gray-700',
-                  dayData.isToday && !isSelected
-                    ? 'bg-primary text-white hover:bg-primary/90'
-                    : ''
+                    : !isCompleted && 'border-gray-200 dark:border-gray-700',
+                  // Today is filled whether or not it is selected. It used to
+                  // drop the fill the moment you selected it, which left the
+                  // 📅 glyph as its only marker — and that glyph is now gone.
+                  //
+                  // `dark:bg-primary` is load-bearing: the base classes carry
+                  // `dark:bg-gray-800`, and tailwind-merge keys variants
+                  // separately, so a bare `bg-primary` never collides with it
+                  // and loses the cascade. Without this, today is unmarked in
+                  // dark mode.
+                  dayData.isToday &&
+                    'bg-primary dark:bg-primary text-white hover:bg-primary/90',
                 )}
+                data-today={dayData.isToday || undefined}
                 onClick={() => onSelectDate(dayData.date)}
               >
                 <div className="text-base font-semibold leading-none">{dayData.day}</div>
-                {status && <div className="text-xs">{status}</div>}
+                {isCompleted && <div className="text-xs">✅</div>}
               </Button>
             );
           }
@@ -202,10 +209,10 @@ export function CalendarGrid({
                   : '',
                 isSelected && 'border-2 border-primary'
               )}
+              data-today={dayData.isToday || undefined}
               onClick={() => onSelectDate(dayData.date)}
             >
               <span className="text-base font-semibold leading-none">{dayData.day}</span>
-              {dayData.isToday && <div className="text-xs">📅</div>}
             </Button>
           );
         })}
