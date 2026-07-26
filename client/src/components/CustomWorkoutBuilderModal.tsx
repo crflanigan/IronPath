@@ -123,6 +123,7 @@ export function CustomWorkoutBuilderModal({
     'Biceps',
     'Triceps',
     'Forearms',
+    'Core',
     'Legs',
     'Thighs',
     'Hamstrings',
@@ -367,6 +368,9 @@ export function CustomWorkoutBuilderModal({
               const saved = localWorkoutStorage.addCustomExercise(created);
               setCustomExercises(localWorkoutStorage.getCustomExercises());
               setAddingExercise(false);
+              // Otherwise adding a machine while the filter reads "Weights"
+              // files it away out of sight and it looks like it failed to save.
+              setEquipmentFilter('both');
               // Tick it straight away — you added it because you want it.
               if (saved.block === 'main') {
                 setSelected(prev => (prev.size < 15 ? new Set(prev).add(saved.name) : prev));
@@ -432,7 +436,7 @@ export function CustomWorkoutBuilderModal({
           ))}
         </div>
         <div className="border rounded p-2">
-          <div className="font-medium mb-2">Add Core Exercises (Optional)</div>
+          <div className="font-medium mb-2">Add Warm-up Exercises (Optional)</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
             {availableAbs.map(abs => {
               const isLong = abs.name.length > 30;

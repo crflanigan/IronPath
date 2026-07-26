@@ -127,7 +127,6 @@ export function NewExerciseForm({
                   {r}
                 </option>
               ))}
-              <option value="Other">Other</option>
             </select>
           </label>
         </>
