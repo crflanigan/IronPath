@@ -79,6 +79,7 @@ export class LocalWorkoutStorage {
   private warned = false;
   private memoryStore: Record<string, string> = {};
   private storageFailed = false;
+  private cleaningUp = false;
 
   private safeGetItem(key: string): string | null {
     if (typeof localStorage === 'undefined' || this.storageFailed) {
@@ -154,10 +155,13 @@ export class LocalWorkoutStorage {
       err instanceof DOMException &&
       (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
     if (isQuota) {
-      this.cleanupOldWorkouts();
+      const removed = this.cleanupOldWorkouts();
       toast({
         title: 'Storage full',
-        description: 'Older workout data was removed to free space.',
+        description:
+          removed > 0
+            ? 'Older workout data was removed to free space.'
+            : 'Browser storage is full, but your workout history is not the cause. Nothing was removed.',
         variant: 'destructive',
       });
     } else {
@@ -174,30 +178,62 @@ export class LocalWorkoutStorage {
     return { used, limit: this.storageLimit, percent: used / this.storageLimit };
   }
 
-  private cleanupOldWorkouts() {
-    const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
-    if (!stored) return;
+  /**
+   * Drop the oldest workouts until storage is back under the threshold.
+   *
+   * Returns how many were removed, so callers can describe what actually
+   * happened instead of assuming.
+   */
+  private cleanupOldWorkouts(): number {
+    // This writes through safeSetItem, which re-runs checkQuota, which calls
+    // back here. When the overage is not the workout list that loop has no
+    // base case: it empties the history, keeps recursing on an empty array,
+    // and blows the stack. safeSetItem's own try/catch then swallows the
+    // RangeError and flips the store into memory-only mode — so the app looks
+    // completely normal and silently stops persisting until the next reload.
+    if (this.cleaningUp) return 0;
+    this.cleaningUp = true;
 
-    let workouts: Workout[] = [];
     try {
-      workouts = JSON.parse(stored);
-    } catch {
-      return;
-    }
+      const stored = this.safeGetItem(STORAGE_KEYS.WORKOUTS);
+      if (!stored) return 0;
 
-    workouts = workouts.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
-    const targetUsage = this.storageLimit * this.warningThreshold;
-
-    while (workouts.length > 0) {
-      const projectedWorkouts = JSON.stringify(workouts);
-      const projectedUsage = this.computeUsage() - stored.length + projectedWorkouts.length;
-      if (projectedUsage <= targetUsage) {
-        break;
+      let workouts: Workout[] = [];
+      try {
+        workouts = JSON.parse(stored);
+      } catch {
+        return 0;
       }
-      workouts.shift();
-    }
+      if (!Array.isArray(workouts)) return 0;
 
-    this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+      workouts = workouts.filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+      const originalCount = workouts.length;
+      const targetUsage = this.storageLimit * this.warningThreshold;
+      const usageElsewhere = this.computeUsage() - stored.length;
+
+      // If everything else on this origin already exceeds the target, no
+      // amount of trimming helps. Throwing away someone's training history to
+      // achieve nothing is worse than being over budget.
+      if (usageElsewhere > targetUsage) {
+        console.warn(
+          'IronPath: storage is over budget, but workout history is not the cause. Leaving it intact.'
+        );
+        return 0;
+      }
+
+      while (workouts.length > 0) {
+        if (usageElsewhere + JSON.stringify(workouts).length <= targetUsage) break;
+        workouts.shift();
+      }
+
+      const removed = originalCount - workouts.length;
+      if (removed > 0) {
+        this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+      }
+      return removed;
+    } finally {
+      this.cleaningUp = false;
+    }
   }
   private getCurrentId(): number {
     const stored = this.safeGetItem(STORAGE_KEYS.CURRENT_ID);
