@@ -1,5 +1,4 @@
 import { test, expect, type Page } from '@playwright/test';
-import { gotoSettled } from './helpers';
 
 /**
  * The journey that broke: build a custom workout, put it in the auto-schedule
@@ -77,7 +76,7 @@ async function persistAutoSchedule(page: Page) {
 }
 
 test('renaming a scheduled custom workout keeps it in the rotation', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
 
   await createCustomWorkout(page, 'E2E Original');
   await closeTemplateSelector(page);
@@ -98,7 +97,7 @@ test('renaming a scheduled custom workout keeps it in the rotation', async ({ pa
 });
 
 test('the stored rotation holds the new name, not the old one', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await createCustomWorkout(page, 'E2E Original');
   await closeTemplateSelector(page);
 
@@ -126,7 +125,7 @@ test('the stored rotation holds the new name, not the old one', async ({ page })
 });
 
 test('deleting the only scheduled workout leaves the calendar usable', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await createCustomWorkout(page, 'E2E Doomed');
 
   // Narrow the rotation to just this one template, then delete it.

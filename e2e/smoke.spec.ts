@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { gotoSettled, setNumericValue } from './helpers';
+import { setNumericValue } from './helpers';
 
 /**
  * Baseline smoke coverage: the paths that must never break, exercised against a
@@ -8,7 +8,7 @@ import { gotoSettled, setNumericValue } from './helpers';
  */
 
 test('the app shell loads and renders the calendar', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'IronPath' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Calendar' })).toBeVisible();
@@ -22,7 +22,7 @@ test('the app shell loads and renders the calendar', async ({ page }) => {
 });
 
 test("starting today's workout opens a workout with prefilled sets", async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await page.getByRole('button', { name: "Start Today's Workout" }).click();
 
   await expect(page).toHaveURL(/\/workout\/\d+$/);
@@ -35,7 +35,7 @@ test("starting today's workout opens a workout with prefilled sets", async ({ pa
 });
 
 test('logged weight survives a full page reload', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await page.getByRole('button', { name: "Start Today's Workout" }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
 
@@ -65,7 +65,7 @@ test('logged weight survives a full page reload', async ({ page }) => {
 });
 
 test('a started workout appears on the calendar after navigating back', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await page.getByRole('button', { name: "Start Today's Workout" }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
 
@@ -77,7 +77,7 @@ test('a started workout appears on the calendar after navigating back', async ({
 });
 
 test('the workout page is reachable by deep link after a cold start', async ({ page }) => {
-  await gotoSettled(page);
+  await page.goto('/');
   await page.getByRole('button', { name: "Start Today's Workout" }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
   const workoutUrl = page.url();
