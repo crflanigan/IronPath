@@ -8,9 +8,9 @@ import { test, expect, type Page } from '@playwright/test';
  * intercept the first click of every test. This file is the exception: it
  * clears that flag and exercises the path a genuinely new visitor takes.
  *
- * The load-bearing test here is the last one. A tour that traps someone in an
- * overlay, or that leaves the page padded after it closes, is worse than no
- * tour at all — this app gets used mid-workout.
+ * The load-bearing one is "leaves the page usable after it closes". A tour
+ * that traps someone in an overlay, or that leaves the page padded after it
+ * closes, is worse than no tour at all — this app gets used mid-workout.
  */
 
 /**
@@ -34,12 +34,12 @@ async function asNewVisitor(page: Page) {
 }
 
 test.describe('the first-run tour', () => {
-  test('greets a new visitor and walks three steps', async ({ page }) => {
+  test('greets a new visitor and walks every step', async ({ page }) => {
     await asNewVisitor(page);
 
     const tour = page.getByTestId('app-tour');
     await expect(tour).toBeVisible();
-    await expect(tour.getByText('Step 1 of 3')).toBeVisible();
+    await expect(tour.getByText('Step 1 of 4')).toBeVisible();
     await expect(tour.getByRole('heading', { name: 'Your month at a glance' })).toBeVisible();
 
     // Scoped to the tour: a bare "Next" also matches the calendar's
@@ -53,8 +53,35 @@ test.describe('the first-run tour', () => {
     // The step that exists because most users have no backup and no way back.
     await expect(tour).toContainText('only on this device');
 
+    // And the one that exists because "why isn't this in the app store" is
+    // the question its author keeps having to answer in person.
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await expect(tour.getByRole('heading', { name: 'Keep it on your home screen' })).toBeVisible();
+    await expect(tour).toContainText('not in an app store');
+    await expect(tour).toContainText(/Add to Home [Ss]creen|Install app|Install IronPath/);
+
     await tour.getByRole('button', { name: 'Got it' }).click();
     await expect(tour).toHaveCount(0);
+  });
+
+  test('drops the install step when already installed', async ({ page }) => {
+    await asNewVisitor(page);
+    await page.addInitScript(() => {
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (q: string) =>
+        q.includes('display-mode: standalone')
+          ? ({
+              matches: true, media: q, onchange: null,
+              addEventListener() {}, removeEventListener() {},
+              addListener() {}, removeListener() {},
+              dispatchEvent: () => false,
+            } as unknown as MediaQueryList)
+          : real(q);
+    });
+    await page.reload();
+
+    // Telling someone who already installed it how to install it is noise.
+    await expect(page.getByTestId('app-tour').getByText('Step 1 of 3')).toBeVisible();
   });
 
   test('keeps every highlight clear of its own panel', async ({ page }) => {
@@ -69,6 +96,8 @@ test.describe('the first-run tour', () => {
     // earlier version of this test only checked that the halo *moved* between
     // steps, which the broken code also did — so it caught nothing. What
     // matters is that the highlight is somewhere a person can actually see.
+    // Only the first three steps point at something; the install step
+    // deliberately has no target and dims the whole screen instead.
     for (let step = 1; step <= 3; step++) {
       await expect(halo).toBeVisible();
       await page.waitForTimeout(700); // smooth-scroll settle
@@ -100,6 +129,17 @@ test.describe('the first-run tour', () => {
     await page.reload();
     await expect(page.getByRole('button', { name: "Start Today's Workout" })).toBeVisible();
     await expect(page.getByTestId('app-tour')).toHaveCount(0);
+  });
+
+  test('Settings explains installing, permanently', async ({ page }) => {
+    // The durable answer, for someone who skipped the tour or is asked by a
+    // friend a week later. The tour is seen once; this never goes away.
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('Install IronPath', { exact: true })).toBeVisible();
+    await expect(dialog).toContainText(/Add to Home [Ss]creen|Install app/);
   });
 
   test('can be replayed from Settings', async ({ page }) => {
