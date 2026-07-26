@@ -350,6 +350,7 @@ export function CalendarPage() {
       <div className="grid grid-cols-3 gap-4">
         <button
           type="button"
+          aria-label={`Completed: ${stats.completedWorkouts} workouts`}
           onClick={() => setLocation('/history')}
           className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -358,6 +359,7 @@ export function CalendarPage() {
         </button>
         <button
           type="button"
+          aria-label={`Day Streak: ${stats.currentStreak}`}
           onClick={() => setStreakModalOpen(true)}
           className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -366,6 +368,7 @@ export function CalendarPage() {
         </button>
         <button
           type="button"
+          aria-label={`Top Streak: ${stats.topStreak}`}
           onClick={() => setLocation('/history')}
           className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >

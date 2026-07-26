@@ -55,7 +55,7 @@ function Header() {
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">IronPath</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <Button aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} variant="ghost" size="sm" onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <SettingsDialog>

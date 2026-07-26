@@ -291,6 +291,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       {/* Header */}
       <div className="flex items-center space-x-3">
         <Button
+          aria-label="Go back"
           variant="ghost"
           size="sm"
           onClick={onNavigateBack}
@@ -361,6 +362,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                             type="text"
                             inputMode="decimal"
                             pattern="[0-9]*"
+                            aria-label={`Reps for ${absExercise.name}`}
                             value={absExercise.reps}
                             onChange={(e) => {
                               const value = e.target.value.trim();
@@ -380,6 +382,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                         <>
                           <Input
                             type="text"
+                            aria-label={`Time for ${absExercise.name}`}
                             value={absExercise.time || ''}
                             onChange={(e) => handleAbsUpdate(index, 'time', e.target.value)}
                             className="w-16 text-sm"
@@ -391,6 +394,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Mark ${absExercise.name} ${absExercise.completed ? 'incomplete' : 'complete'}`}
                         onClick={() =>
                           handleAbsUpdate(index, 'completed', !absExercise.completed)
                         }
@@ -413,6 +417,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={`Mark cardio ${workout.cardio?.completed ? 'incomplete' : 'complete'}`}
                   onClick={() => handleCardioUpdate('completed', !workout.cardio?.completed)}
                   className={workout.cardio?.completed ? 'text-green-600' : 'text-gray-400'}
                 >
@@ -444,6 +449,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
                     <Input
                       type="text"
+                      aria-label="Cardio duration"
                       value={workout.cardio?.duration || ''}
                       onChange={(e) => handleCardioUpdate('duration', e.target.value)}
                       className="w-20 text-sm"
@@ -455,6 +461,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Distance:</label>
                     <Input
                       type="text"
+                      aria-label="Cardio distance"
                       value={workout.cardio?.distance || ''}
                       onChange={(e) => handleCardioUpdate('distance', e.target.value)}
                       className="w-20 text-sm"

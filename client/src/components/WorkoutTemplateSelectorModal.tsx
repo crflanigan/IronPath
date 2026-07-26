@@ -86,7 +86,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button aria-label={`Options for ${name}`} variant="ghost" size="icon">
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -116,6 +116,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
               Create Custom Workout
             </Button>
             <Button
+              aria-label="Create Custom Workout"
               variant="ghost"
               size="icon"
               onClick={() => {
@@ -143,7 +144,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button aria-label={`Options for ${t.name}`} variant="ghost" size="icon">
                         <Settings className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
