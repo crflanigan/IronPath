@@ -82,13 +82,23 @@ export function HistoryPage() {
       avgDuration,
       currentStreak,
       weightProgress,
-      completionRate: workouts.length > 0 ? Math.round((completed.length / workouts.length) * 100) : 0
+      // Both sides of this must respect the Week/Month/Year filter. It used
+      // to divide the windowed count by *every workout ever stored*, so the
+      // number fell the longer you had been training: 50 workouts, all of them
+      // completed, reported 20%.
+      completionRate:
+        filteredWorkouts.length > 0
+          ? Math.round((completed.length / filteredWorkouts.length) * 100)
+          : 0,
     };
   }, [filteredWorkouts, workouts]);
 
   const getWorkoutsByType = () => {
     const types: { [key: string]: number } = {};
-    filteredWorkouts.forEach(workout => {
+    // Completed only, to match the headline count above. Counting every
+    // workout here let History report "0 Workouts" and, on the same screen,
+    // "Back, Biceps & Legs — 1 workouts".
+    filteredWorkouts.filter(w => w.completed).forEach(workout => {
       types[workout.type] = (types[workout.type] || 0) + 1;
     });
     return Object.entries(types).sort((a, b) => b[1] - a[1]);
@@ -241,6 +251,11 @@ export function HistoryPage() {
           <div className="space-y-3">
             {filteredWorkouts
               .filter(w => w.completed)
+              // Newest first. Without the sort this sliced an ascending list
+              // and showed the five *oldest* — so the session you just
+              // finished was the one entry guaranteed not to appear in a card
+              // called Recent.
+              .sort((a, b) => b.date.localeCompare(a.date))
               .slice(0, 5)
               .map(workout => (
                 <div
