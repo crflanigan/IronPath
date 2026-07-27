@@ -99,3 +99,57 @@ test('leaving without changing anything writes nothing and says nothing', async 
   expect(after).toBe(before);
   await expect(page.getByText('Auto-saved')).toHaveCount(0);
 });
+
+test('the flush cannot undo a completed workout', async ({ page }) => {
+  // This exists because the flush is a *write* on the way out, and completing
+  // a workout also navigates away. If the ref the flush reads were stale, the
+  // save-on-exit would quietly overwrite `completed: true` with false and the
+  // session would stop counting — a regression introduced by the fix itself.
+  const today = new Date();
+  const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  await page.addInitScript(([d]) => {
+    const workout = {
+      id: 1,
+      date: d,
+      type: 'Chest Day',
+      exercises: [{
+        code: 'S24', machine: 'Adjustable Cable Crossover', region: 'Chest Pecs',
+        feel: 'Medium',
+        sets: [{ weight: 60, reps: 15, rest: '1:00', completed: true }],
+        bestWeight: 90, bestReps: 15, completed: true,
+      }],
+      abs: [],
+      cardio: { type: 'Treadmill', duration: '15:00', distance: '1', completed: true },
+      completed: false,
+      duration: null,
+    };
+    localStorage.setItem('ironpath_workouts', JSON.stringify([workout]));
+    localStorage.setItem('ironpath_current_id', '1');
+    localStorage.setItem('ironpath_tour_seen', '1');
+  }, [date]);
+
+  await page.goto('/workout/1');
+
+  // A workout seeded at 100% fires the celebration dialog on mount, which
+  // sits over the page. Worth noting in its own right: the celebration is
+  // reached without the workout being recorded as completed (#162).
+  const close = page.getByRole('button', { name: 'Close', exact: true });
+  if (await close.count()) {
+    await close.click();
+  }
+
+  await page.getByRole('button', { name: 'Complete Workout' }).click();
+
+  // It navigates back on a timer; wait for that, plus the flush behind it.
+  await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
+  await page.waitForTimeout(600);
+
+  const stored = await page.evaluate(() => {
+    const list = JSON.parse(localStorage.getItem('ironpath_workouts') ?? '[]');
+    return { completed: list[0]?.completed, duration: list[0]?.duration };
+  });
+
+  expect(stored.completed, 'the save-on-exit reverted the completion').toBe(true);
+  expect(stored.duration).not.toBeNull();
+});
