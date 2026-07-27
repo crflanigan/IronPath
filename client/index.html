@@ -15,6 +15,27 @@
     <meta name="description" content="A free workout tracker that works entirely offline. No account, no signup, no server — your training log stays on your phone. Plan a rotation, log every set, keep your history." />
     <link rel="canonical" href="https://ironpath.app/" />
     <meta name="theme-color" content="#14B8A6" />
+
+    <!--
+      Applies the saved theme before the first paint.
+
+      `useTheme` sets this class inside a `useEffect`, which cannot run until
+      the bundle has downloaded and executed — so until then `body` renders
+      `bg-background`, which is white. Every dark-mode user has been getting a
+      full-screen white flash on cold start. Synchronous and inline on purpose:
+      deferring it, or moving it to a file, reintroduces the flash it exists to
+      prevent.
+    -->
+    <script>
+      try {
+        var stored = localStorage.getItem('theme');
+        var dark = stored === 'dark' || (stored !== 'light' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) {
+        /* Private mode throws on localStorage; light is the safe default. */
+      }
+    </script>
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json" />
@@ -93,38 +114,40 @@
   </head>
   <body>
     <!--
-      React replaces everything inside #root on mount, so this is what the app
-      looks like for the ~100ms before the bundle runs — and, more to the point,
-      it is the only thing anything that does not execute JavaScript will ever
-      see. The app is entirely client-rendered, so until this existed the most
-      substantial text on the homepage was a code comment.
+      Empty on purpose. Content used to live here so that crawlers which do not
+      execute JavaScript had something to read, and it worked — but it also
+      painted, because it carries inline styles and therefore needs nothing to
+      render. On a cold start over a slow connection that is a full screen of
+      text before the app appears.
 
-      Styles are inline on purpose: the stylesheet is a separate bundle, so
-      classes would not be applied yet and this would flash unstyled.
-
-      It doubles as the no-JavaScript fallback, which is why it names the one
-      requirement and links somewhere useful.
+      It lives in the noscript block below instead. Agents that do not run
+      JavaScript still read it in the raw HTML, which is the entire audience it
+      was written for; Google renders JavaScript and sees the real app; and the
+      JSON-LD above carries the structured description regardless. Nobody with
+      JavaScript enabled ever sees it, which is the point.
     -->
-    <div id="root">
-      <main style="max-width:34rem;margin:0 auto;padding:3rem 1.5rem;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#0f172a;line-height:1.6">
+    <div id="root"></div>
+
+    <noscript>
+      <main style="max-width:34rem;margin:0 auto;padding:3rem 1.5rem;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.6">
         <h1 style="font-size:1.75rem;font-weight:700;margin:0 0 .5rem">IronPath</h1>
-        <p style="font-size:1.05rem;margin:0 0 1.5rem;color:#334155">
+        <p style="font-size:1.05rem;margin:0 0 1.5rem">
           A free workout tracker that works entirely offline. No account, no signup,
-          no server — your training log stays on your phone.
+          no server &mdash; your training log stays on your phone.
         </p>
-        <ul style="margin:0 0 1.5rem;padding-left:1.1rem;color:#334155">
+        <ul style="margin:0 0 1.5rem;padding-left:1.1rem">
           <li>Plan a rotation on a calendar, or let it schedule itself</li>
           <li>Log weight, reps and rest set by set, prefilled from last time</li>
           <li>Build custom workouts and add your own exercises</li>
           <li>Works with no signal at all, and installs like an app</li>
           <li>Export a full backup whenever you want</li>
         </ul>
-        <p style="font-size:.9rem;color:#64748b;margin:0">
-          IronPath needs JavaScript to run. It is free and open source —
-          <a href="https://github.com/crflanigan/IronPath" style="color:#0d9488">source on GitHub</a>.
+        <p style="font-size:.9rem">
+          IronPath needs JavaScript to run. It is free and open source &mdash;
+          <a href="https://github.com/crflanigan/IronPath">source on GitHub</a>.
         </p>
       </main>
-    </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
     
     <!--

@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Seeded from the class the inline script in index.html already applied
+  // before first paint. Starting at 'light' regardless meant the toggle showed
+  // the wrong icon until the effect below ran.
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('dark')
+      ? 'dark'
+      : 'light',
+  );
 
   useEffect(() => {
     // Check localStorage and system preference

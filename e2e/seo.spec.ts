@@ -16,13 +16,31 @@ test.describe('the crawlable surface', () => {
   test('the homepage HTML describes the app without running JavaScript', async ({ request }) => {
     const html = await (await request.get('/')).text();
 
-    // Content, not markup: an empty #root would satisfy a tag-shaped assertion.
+    // Content, not markup. What matters is that the description is present in
+    // the raw HTML, which is all a non-JS agent ever sees.
     expect(html).toContain('No account, no signup');
     expect(html).toMatch(/works entirely offline/i);
     expect(html).toContain('Log weight, reps and rest set by set');
 
-    // The old failure mode, asserted directly.
-    expect(html).not.toMatch(/<div id="root">\s*<\/div>/);
+    // It lives in <noscript> rather than in #root. An earlier version put it
+    // in #root, where crawlers read it — and so did users, as a full screen of
+    // text during a cold start, because inline styles need nothing to paint.
+    const noscript = html.match(/<noscript>([\s\S]*?)<\/noscript>/);
+    expect(noscript, 'no <noscript> fallback found').not.toBeNull();
+    expect(noscript![1]).toContain('No account, no signup');
+  });
+
+  test('nothing visible paints before the app does', async ({ page }) => {
+    // The regression that prompted this: dark text on a white page, full
+    // screen, for as long as the bundle took to arrive.
+    await page.goto('/', { waitUntil: 'commit' });
+
+    const strayText = await page.evaluate(() => {
+      const root = document.getElementById('root');
+      return (root?.textContent ?? '').trim();
+    });
+
+    expect(strayText, 'markup outside the app is painting on load').toBe('');
   });
 
   test('structured data is present and parses', async ({ request }) => {
