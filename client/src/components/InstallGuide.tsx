@@ -7,6 +7,7 @@ import {
   promptInstall,
   subscribeToInstallability,
 } from '@/lib/install';
+import { iosBrowser } from '@/lib/onboarding';
 
 /**
  * How to install IronPath, wherever that question gets asked.
@@ -28,15 +29,37 @@ export function InstallGuide({ onInstalled }: { onInstalled?: () => void }) {
   if (route === 'none') return null;
 
   if (route === 'ios') {
+    /*
+     * Named the browser you are actually in, or named none at all.
+     *
+     * This used to say "in Safari's toolbar" to every iOS visitor, which is
+     * an instruction a Chrome user cannot follow without leaving the page
+     * first. Chrome, Firefox and Edge on iOS all have the same Share sheet
+     * and most builds offer Add to Home Screen from it — so the honest
+     * advice is to try the browser in hand, with Safari named only as the
+     * fallback that is always there.
+     */
+    const inSafari = iosBrowser() === 'safari';
+
     return (
-      <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-        Tap
-        {/* The one thing people genuinely cannot find, so it is drawn rather
-            than described. */}
-        <Share className="mx-1 inline h-4 w-4 align-text-bottom" aria-label="the Share button" />
-        in Safari&rsquo;s toolbar, then <strong>Add to Home Screen</strong>. It
-        opens full screen, with no address bar, and works with no signal.
-      </p>
+      <div className="space-y-2">
+        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+          Tap
+          {/* The one thing people genuinely cannot find, so it is drawn
+              rather than described. */}
+          <Share className="mx-1 inline h-4 w-4 align-text-bottom" aria-label="the Share button" />
+          {inSafari ? ' in the toolbar' : ' in this browser'}, then{' '}
+          <strong>Add to Home Screen</strong>. It opens full screen, with no
+          address bar, and works with no signal.
+        </p>
+        {!inSafari && (
+          <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            No <strong>Add to Home Screen</strong> in that menu? Open{' '}
+            ironpath.app in Safari — iOS only lets Safari do it in some
+            versions.
+          </p>
+        )}
+      </div>
     );
   }
 
