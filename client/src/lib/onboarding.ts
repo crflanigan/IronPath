@@ -82,6 +82,30 @@ export function isStandalone(): boolean {
 }
 
 /**
+ * Which browser this is, on iOS.
+ *
+ * Every iOS browser is WebKit underneath, and every one of them reports
+ * `Safari` in its user agent — so the alternatives have to be ruled out
+ * *before* concluding Safari, not after.
+ *
+ * This exists because the install copy used to say "tap Share in Safari's
+ * toolbar" to everyone on iOS, including people reading it in Chrome, which
+ * is an instruction you cannot follow without first leaving the page.
+ */
+export type IOSBrowser = 'safari' | 'other';
+
+export function iosBrowser(): IOSBrowser {
+  try {
+    const ua = navigator.userAgent;
+    // Chrome, Firefox, Edge and Opera on iOS, respectively.
+    if (/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return 'other';
+    return 'safari';
+  } catch {
+    return 'other';
+  }
+}
+
+/**
  * iOS offers no install API at all — `beforeinstallprompt` does not exist
  * there — so the only thing available is telling people where the button is.
  * Every iOS browser is WebKit underneath and shares the same Share-sheet flow.

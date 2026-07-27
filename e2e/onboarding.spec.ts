@@ -207,3 +207,57 @@ test.describe('the install prompt', () => {
     await expect(page.getByTestId('install-prompt')).toHaveCount(0);
   });
 });
+
+/**
+ * iOS install copy.
+ *
+ * The instructions used to name Safari for every iOS visitor, including
+ * someone reading them in Chrome — an instruction you cannot follow without
+ * leaving the page first. Both user agents below contain the token `Safari`,
+ * which is why detection has to rule out the alternatives before concluding
+ * Safari rather than the other way round.
+ */
+const IOS_SAFARI =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+  '(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+
+const IOS_CHROME =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 ' +
+  '(KHTML, like Gecko) CriOS/120.0.6099.119 Mobile/15E148 Safari/604.1';
+
+async function openInstallSection(page: Page) {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  return page.getByRole('dialog');
+}
+
+test.describe('install instructions on iOS Safari', () => {
+  test.use({ userAgent: IOS_SAFARI });
+
+  test('point at the toolbar, and offer no detour', async ({ page }) => {
+    const dialog = await openInstallSection(page);
+
+    await expect(dialog).toContainText('Add to Home Screen');
+    await expect(dialog).toContainText('in the toolbar');
+    // Already in Safari — sending them to Safari would be nonsense.
+    await expect(dialog).not.toContainText('Open ironpath.app in Safari');
+  });
+});
+
+test.describe('install instructions on iOS Chrome', () => {
+  test.use({ userAgent: IOS_CHROME });
+
+  test('describe the browser in hand, with Safari only as a fallback', async ({ page }) => {
+    const dialog = await openInstallSection(page);
+
+    await expect(dialog).toContainText('in this browser');
+    await expect(dialog).toContainText('Add to Home Screen');
+
+    // The actual complaint: being told to use Safari while holding Chrome.
+    await expect(dialog).not.toContainText("in Safari's toolbar");
+    await expect(dialog).not.toContainText('in Safari’s toolbar');
+
+    // Safari is still mentioned, but as the fallback rather than the first move.
+    await expect(dialog).toContainText('No Add to Home Screen in that menu?');
+  });
+});
