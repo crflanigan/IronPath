@@ -75,7 +75,12 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     autoSaveEnabledRef.current = autoSaveEnabled;
   }, [autoSaveEnabled]);
 
-  const handleSave = useCallback(async () => {
+  /**
+   * `silent` is for the flush paths below — leaving the page or backgrounding
+   * the app. Those save on the way out, and a toast that lands on the screen
+   * you just navigated to is noise about something the user did not ask for.
+   */
+  const handleSave = useCallback(async ({ silent = false } = {}) => {
     const currentWorkout = workoutRef.current;
     if (!currentWorkout?.id) return;
 
@@ -94,7 +99,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       lastSavedRef.current = serialized;
       setLastSavedAt(new Date());
 
-      if (autoSaveEnabledRef.current) {
+      if (autoSaveEnabledRef.current && !silent) {
         if (toastIdRef.current) {
           dismiss(toastIdRef.current);
         }
@@ -121,6 +126,48 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const timeoutId = setTimeout(handleSave, 2000);
     return () => clearTimeout(timeoutId);
   }, [workout, autoSaveEnabled, handleSave]);
+
+  /*
+   * Save on the way out.
+   *
+   * Autosave is a trailing 2s debounce and the effect above *cancels* it on
+   * cleanup — which is right while the timer is merely being restarted by the
+   * next keystroke, and wrong when the component is going away for good. Log a
+   * set and leave within two seconds and the write never happened: measured at
+   * 700ms after an edit the value was gone, at 2500ms it was saved.
+   *
+   * `pagehide` and `visibilitychange` cover the phone being locked or the app
+   * being switched away from, which on a phone in a gym is the single most
+   * common way a workout screen stops being looked at. Neither was handled
+   * anywhere before this — an earlier check of mine claimed otherwise and was
+   * measuring the debounce firing on its own.
+   *
+   * `handleSave` returns early when the serialised workout matches the last
+   * write, so calling it on every one of these is a no-op when nothing changed.
+   */
+  const flushRef = useRef(handleSave);
+  useEffect(() => {
+    flushRef.current = handleSave;
+  }, [handleSave]);
+
+  useEffect(() => {
+    const flush = () => {
+      void flushRef.current({ silent: true });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibility);
+      // Unmounting: navigating away, in-app back, or the route changing.
+      flush();
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -509,7 +556,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       {/* Action Buttons */}
       <div className="space-y-3" ref={completeRef}>
         <Button
-          onClick={handleSave}
+          onClick={() => handleSave()}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
         >
           <Save className="h-4 w-4 mr-2" />
