@@ -113,6 +113,18 @@ export function AppTour({ onClose }: { onClose: () => void }) {
     setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
   }, [step.target]);
 
+  /*
+   * Where the page was before the tour touched it.
+   *
+   * Captured in a layout effect declared *ahead* of the one that scrolls,
+   * because effects run in declaration order and a plain `useEffect` would
+   * read the position after the first step had already moved it.
+   */
+  const scrollOnOpen = useRef(0);
+  useLayoutEffect(() => {
+    scrollOnOpen.current = window.scrollY;
+  }, []);
+
   // Bring the target into the part of the screen the panel is not covering.
   //
   // `scrollIntoView({ block: 'center' })` is the obvious approach and it is
@@ -139,18 +151,41 @@ export function AppTour({ onClose }: { onClose: () => void }) {
       const visibleHeight = Math.max(window.innerHeight - panelHeight, 120);
       const box = el.getBoundingClientRect();
       const delta = box.top + box.height / 2 - visibleHeight / 2;
-      window.scrollBy({ top: delta, behavior: 'smooth' });
+      // Instant, not smooth. A smooth scroll is an animation still in flight
+      // when someone taps Skip a moment later, and it lands *after* the
+      // restore below has run — so a quick dismissal stranded the page
+      // part-scrolled with the header off the top. Instant also makes the
+      // halo measurement deterministic instead of racing a settle timer.
+      window.scrollBy({ top: delta });
     }
 
-    // The scroll listener keeps the halo tracking during the smooth scroll;
-    // this is the settle-time backstop.
-    const timer = window.setTimeout(measure, 400);
+    // The scroll is instant, so the target is already in place; one frame is
+    // enough for layout to settle before measuring.
+    const frame = window.requestAnimationFrame(measure);
 
     return () => {
-      window.clearTimeout(timer);
+      window.cancelAnimationFrame(frame);
       document.body.style.paddingBottom = previousPadding;
     };
   }, [step.target, measure]);
+
+  /*
+   * Put the page back where it was found.
+   *
+   * The tour scrolls to bring each target clear of its panel and used to
+   * abandon the page wherever the last step dragged it. Dismissing part-way
+   * through left the header scrolled off the top, while the body padding
+   * lifting on unmount shrank the content underneath — dead space below.
+   *
+   * A `useEffect` on purpose: its cleanup runs after every layout-effect
+   * cleanup, so the padding is already gone and the page is back to its real
+   * height before the scroll position is set.
+   */
+  useEffect(() => {
+    return () => {
+      window.scrollTo({ top: scrollOnOpen.current, behavior: 'auto' });
+    };
+  }, []);
 
   useEffect(() => {
     window.addEventListener('resize', measure);
