@@ -30,7 +30,11 @@ export const workouts = pgTable("workouts", {
   abs: jsonb("abs").notNull().$type<z.infer<typeof absExerciseSchema>[]>(),
   cardio: jsonb("cardio").$type<z.infer<typeof cardioSchema>>(),
   completed: boolean("completed").default(false),
-  duration: integer("duration"), // Workout duration in minutes
+  duration: integer("duration"), // Workout duration in minutes, measured
+  // Set the first time anything in the workout changes, which is when someone
+  // actually started training — not when the record was created, since a
+  // workout can be scheduled on the calendar hours before it is done.
+  startedAt: timestamp("started_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });

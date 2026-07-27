@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
-import { parseISODate, minutesFromDuration } from '@/lib/utils';
+import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
@@ -21,6 +21,12 @@ import {
   AlertDialogFooter,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+
+/**
+ * Above this, an elapsed time is measuring a forgotten tab rather than a
+ * session, so nothing is recorded.
+ */
+const MAX_PLAUSIBLE_MINUTES = 4 * 60;
 
 const successMessages = [
   { title: '🎉 Workout Complete!', description: 'You crushed it today.' },
@@ -87,6 +93,11 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const serialized = JSON.stringify(currentWorkout);
     if (serialized === lastSavedRef.current) return;
 
+    // Reaching here means something actually changed, which is the honest
+    // moment a workout started — not when the record was created, since the
+    // calendar can create one hours before anybody trains.
+    const startedAt = currentWorkout.startedAt ?? new Date();
+
     try {
       await updateWorkout(currentWorkout.id, {
         exercises: currentWorkout.exercises,
@@ -94,6 +105,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         cardio: currentWorkout.cardio,
         completed: currentWorkout.completed,
         duration: currentWorkout.duration,
+        startedAt,
       });
 
       lastSavedRef.current = serialized;
@@ -279,13 +291,27 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     }
   };
 
-  const calculateWorkoutDuration = () => {
-    // Simple duration calculation based on estimated time
-    const exerciseTime = workout.exercises.length * 5; // 5 minutes per exercise
-    const absTime = workout.abs.length * 2; // 2 minutes per ab exercise
-    const entered = minutesFromDuration(workout.cardio?.duration);
-    const cardioTime = entered && entered > 15 ? Math.round(entered) : 15;
-    return exerciseTime + absTime + cardioTime;
+  /**
+   * How long the workout actually took.
+   *
+   * This used to be `exercises * 5 + abs * 2 + cardio`, which for the default
+   * workout is always exactly 82 minutes however long you were in the gym. It
+   * fed Avg Duration on History and both exports, so a fabricated number was
+   * sitting in backups looking like a measurement.
+   *
+   * Returns null rather than a guess when there is nothing to measure, or when
+   * the result is implausible. Above the cap it is not a workout, it is a tab
+   * left open — and no number is better than a wrong one.
+   */
+  const calculateWorkoutDuration = (): number | null => {
+    const startedAt = workout.startedAt ? new Date(workout.startedAt) : null;
+    if (!startedAt || Number.isNaN(startedAt.getTime())) return null;
+
+    const minutes = Math.round((Date.now() - startedAt.getTime()) / 60_000);
+    if (minutes < 0 || minutes > MAX_PLAUSIBLE_MINUTES) return null;
+
+    // A workout logged in seconds is still a workout; do not report zero.
+    return Math.max(minutes, 1);
   };
 
   const getProgressStats = () => {

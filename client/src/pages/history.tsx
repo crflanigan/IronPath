@@ -69,8 +69,14 @@ export function HistoryPage() {
   const stats = useMemo(() => {
     const completed = filteredWorkouts.filter(w => w.completed);
     const totalWorkouts = completed.length;
-    const totalDuration = completed.reduce((sum, w) => sum + (w.duration || 0), 0);
-    const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
+    // Only workouts that were actually timed. Before durations were measured
+    // they were computed as `exercises * 5 + abs * 2 + cardio` — always 82
+    // minutes for the default workout — and averaging those together with real
+    // ones would produce a number that is neither. `startedAt` is what marks a
+    // duration as measured.
+    const timed = completed.filter(w => w.startedAt && typeof w.duration === 'number');
+    const totalDuration = timed.reduce((sum, w) => sum + (w.duration ?? 0), 0);
+    const avgDuration = timed.length > 0 ? Math.round(totalDuration / timed.length) : 0;
 
     const streakDays = localWorkoutStorage.getStreakDays();
     const currentStreak = calculateDayStreak(workouts, streakDays);

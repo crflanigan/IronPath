@@ -151,5 +151,9 @@ test('the flush cannot undo a completed workout', async ({ page }) => {
   });
 
   expect(stored.completed, 'the save-on-exit reverted the completion').toBe(true);
-  expect(stored.duration).not.toBeNull();
+  // This fixture has no `startedAt`, so there is nothing to measure and no
+  // duration is the right answer. It used to assert a number here, which was
+  // only ever the fabricated `exercises * 5 + abs * 2 + cardio`. Measured
+  // durations are covered in workout-duration.spec.ts.
+  expect(stored.duration).toBeNull();
 });
