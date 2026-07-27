@@ -121,6 +121,39 @@ test.describe('the first-run tour', () => {
     }
   });
 
+  test('puts the page back where it found it, whenever you leave', async ({ page }) => {
+    // Reported from real use: dismissing part-way through left the header
+    // scrolled off the top with dead space below. The tour scrolls to bring
+    // each target clear of its panel and used to abandon the page there,
+    // while the body padding lifting on unmount shrank the content underneath.
+    for (const stepsToAdvance of [0, 1, 2]) {
+      await asNewVisitor(page);
+      const tour = page.getByTestId('app-tour');
+
+      for (let i = 0; i < stepsToAdvance; i++) {
+        await tour.getByRole('button', { name: 'Next' }).click();
+        await page.waitForTimeout(700);
+      }
+      await tour.getByRole('button', { name: 'Skip' }).click();
+      await expect(tour).toHaveCount(0);
+      await page.waitForTimeout(300);
+
+      const state = await page.evaluate(() => ({
+        scrollY: Math.round(window.scrollY),
+        headerBottom:
+          document.querySelector('header')?.getBoundingClientRect().bottom ?? -1,
+        padding: document.body.style.paddingBottom,
+      }));
+
+      expect(state.scrollY, `dismissed after ${stepsToAdvance} steps`).toBe(0);
+      expect(
+        state.headerBottom,
+        `header scrolled off after dismissing at step ${stepsToAdvance + 1}`,
+      ).toBeGreaterThan(0);
+      expect(state.padding === '' || state.padding === '0px').toBe(true);
+    }
+  });
+
   test('does not come back on the next visit', async ({ page }) => {
     await asNewVisitor(page);
     await page.getByTestId('app-tour').getByRole('button', { name: 'Skip' }).click();
