@@ -328,7 +328,29 @@ export function CustomWorkoutBuilderModal({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+        {/*
+          * The scroll lives on the inner div, not on DialogContent.
+          *
+          * DialogContent is `position: fixed` with a `translate(-50%, -50%)`,
+          * and an `overflow-y-auto` element in that configuration is where iOS
+          * Safari's touch scrolling has long been unreliable — Radix's
+          * scroll-locking has to decide whether a touchmove belongs to an
+          * allowed scroller, and the dialog being both the boundary and the
+          * scroller is the ambiguous case. Reported as "the builder does not
+          * scroll at all" on a phone, while a wheel and a synthetic touch drag
+          * both scroll it fine in Chromium — so this removes the structure
+          * rather than chasing a reproduction that does not happen here.
+          *
+          * `overflow-hidden` on the parent keeps the child clipped to the
+          * dialog's rounded corners; `overscroll-contain` stops a flick at the
+          * end of the list from scrolling the page behind it.
+          */}
+        <DialogContent className="max-w-2xl overflow-hidden p-0">
+          {/* `grid gap-4` reproduces the spacing DialogContent used to apply
+              to these children directly; several of them carry negative top
+              margins that assume it, and without it the header and the filter
+              row overlap. */}
+          <div className="grid max-h-[90vh] gap-4 overflow-y-auto overscroll-contain p-6">
           <ErrorBoundary>
         <DialogHeader className="space-y-1">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
@@ -531,6 +553,7 @@ export function CustomWorkoutBuilderModal({
             />
           )}
           </ErrorBoundary>
+          </div>
       </DialogContent>
     </Dialog>
     <ExerciseImageDialog

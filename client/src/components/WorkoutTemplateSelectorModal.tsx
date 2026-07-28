@@ -72,7 +72,21 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="space-y-4">
+      {/*
+        * Scrolls on an inner element, like the builder.
+        *
+        * This dialog had no height cap and no overflow at all: with eight
+        * custom workouts it measured 1122px in an 839px viewport, hanging
+        * 143px off both the top and the bottom with nothing to scroll —
+        * which is why the fix was to delete workouts until the list fit.
+        * Adding a tour panel at the bottom then put "Got it" off screen.
+        *
+        * The scroll is on the inner div rather than DialogContent because
+        * DialogContent is `position: fixed` with a transform, which is the
+        * configuration iOS Safari handles worst.
+        */}
+      <DialogContent className="overflow-hidden p-0">
+        <div className="max-h-[85vh] space-y-4 overflow-y-auto overscroll-contain p-6">
         <DialogHeader>
           <DialogTitle>Select Workout Template</DialogTitle>
           <DialogDescription>
@@ -180,7 +194,6 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
         </div>
         {showTour && (
           <ModalTour
-            sticky={false}
             steps={TEMPLATE_STEPS}
             onDone={() => {
               markTemplateTourSeen();
@@ -188,6 +201,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             }}
           />
         )}
+        </div>
       </DialogContent>
       <AlertDialog
         open={pendingDeleteId !== null}
