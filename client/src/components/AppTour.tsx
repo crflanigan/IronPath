@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { isStandalone, markTourSeen } from '@/lib/onboarding';
 import { InstallGuide } from '@/components/InstallGuide';
+import { TourPanel } from '@/components/TourPanel';
 
 /**
  * The first-run tour: three steps, plus an install step for anyone not
@@ -241,48 +241,19 @@ export function AppTour({ onClose }: { onClose: () => void }) {
         <div className="absolute inset-0 bg-black/65" />
       )}
 
-      <div
+      <TourPanel
         ref={panelRef}
-        tabIndex={-1}
-        data-testid="app-tour-panel"
-        className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-5 shadow-2xl outline-none dark:bg-gray-800"
+        stepIndex={index}
+        stepCount={steps.length}
+        title={step.title}
+        body={step.body}
+        onSkip={finish}
+        onBack={index > 0 ? () => setIndex(i => i - 1) : undefined}
+        onNext={() => (isLast ? finish() : setIndex(i => i + 1))}
+        isLast={isLast}
       >
-        <div className="mx-auto max-w-md space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            Step {index + 1} of {steps.length}
-          </p>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {step.title}
-          </h2>
-          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-            {step.body}
-          </p>
-          {step.install && <InstallGuide />}
-
-          <div className="flex items-center justify-between pt-1">
-            <Button variant="ghost" size="sm" onClick={finish}>
-              Skip
-            </Button>
-            <div className="flex items-center gap-2">
-              {index > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIndex(i => i - 1)}
-                >
-                  Back
-                </Button>
-              )}
-              <Button
-                size="sm"
-                onClick={() => (isLast ? finish() : setIndex(i => i + 1))}
-              >
-                {isLast ? 'Got it' : 'Next'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+        {step.install && <InstallGuide />}
+      </TourPanel>
     </div>
   );
 }

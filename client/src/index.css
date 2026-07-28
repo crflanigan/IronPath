@@ -163,3 +163,26 @@
     @apply min-w-0 flex-shrink;
   }
 }
+
+/*
+ * The element the builder tour is currently pointing at.
+ *
+ * An outline rather than a full-screen spotlight overlay. The builder is a
+ * Radix dialog that is both transformed and its own scroll container, and a
+ * fixed-position overlay inside it resolves against the dialog rather than the
+ * viewport *and* scrolls with the content — correcting for that changes the
+ * container's scroll geometry, so it chases itself. Portalling out escapes
+ * both, but Radix marks every other body child aria-hidden and the tour leaves
+ * the accessibility tree entirely.
+ *
+ * Marking the target directly sidesteps all of it, and Radix already dims
+ * everything outside the dialog.
+ */
+[data-tour-active='true'] {
+  outline: 2px solid hsl(178, 84%, 41%);
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+  /* Enough to clear the sticky tour panel beneath it, so `block: 'end'`
+     parks any target — short row or tall block — just above the panel. */
+  scroll-margin-bottom: 17rem;
+}
