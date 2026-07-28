@@ -82,6 +82,7 @@ const storedWorkoutSchema = z.object({
   cardio: cardioSchema.optional().nullable(),
   completed: z.boolean().nullable().optional(),
   duration: z.number().int().nullable().optional(),
+  startedAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });

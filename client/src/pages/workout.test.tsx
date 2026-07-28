@@ -56,6 +56,7 @@ const baseWorkout: Workout = {
   cardio: { type: 'Treadmill', duration: '', distance: '', completed: false },
   completed: false,
   duration: null,
+  startedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
