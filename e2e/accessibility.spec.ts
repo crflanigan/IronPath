@@ -60,7 +60,7 @@ test('the custom workout builder names every control', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
   await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
-  await expect(page.getByText('Select up to 15 exercises')).toBeVisible();
+  await expect(page.getByTestId('custom-workout-builder')).toBeVisible();
   expect(await unnamedControls(page)).toEqual([]);
 });
 

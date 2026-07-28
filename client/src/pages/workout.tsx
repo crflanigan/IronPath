@@ -434,10 +434,14 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-900 dark:text-white">Warmup</h3>
 
-          {/* Abs Section */}
+          {/* Core Section. Hidden when empty, which a cardio-only workout is:
+              an empty headed card reads as something failing to load. */}
+          {workout.abs.length > 0 && (
           <Card>
             <CardContent className="p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Abs Block</h3>
+              {/* "Abs Block" until core became its own muscle group and the
+                  section stopped being only abs. */}
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Core Block</h3>
               <div className="space-y-3">
                 {workout.abs.map((absExercise, index) => (
                   <div key={index} className="flex items-center justify-between">
@@ -497,6 +501,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Cardio Section */}
           <Card>
@@ -564,7 +569,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </div>
       )}
 
-      {/* Main Workout */}
+      {/* Main Workout. A cardio-only workout has none, and a bare heading over
+          nothing looks like a rendering failure rather than an empty section. */}
+      {workout.exercises.length > 0 && (
       <div className="space-y-4">
         <h3 className="font-semibold text-gray-900 dark:text-white">Main Workout</h3>
 
@@ -578,6 +585,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           </ErrorBoundary>
         ))}
       </div>
+      )}
 
       {/* Action Buttons */}
       <div className="space-y-3" ref={completeRef}>

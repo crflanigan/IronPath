@@ -10,7 +10,7 @@ import { test, expect, type Page } from '@playwright/test';
 async function openBuilder(page: Page) {
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
   await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
-  const builder = page.getByRole('dialog').filter({ hasText: 'Select up to 15 exercises' });
+  const builder = page.getByTestId('custom-workout-builder');
   await expect(builder).toBeVisible();
   await builder.getByRole('checkbox').first().click();
   return builder;
@@ -61,7 +61,7 @@ test('renaming an existing template to its own name is still allowed', async ({ 
   await row.getByRole('button', { name: /Options for/ }).click();
   await page.getByRole('menuitem', { name: 'Edit workout' }).click();
 
-  const editor = page.getByRole('dialog').filter({ hasText: 'Select up to 15 exercises' });
+  const editor = page.getByTestId('custom-workout-builder');
   await expect(editor).toBeVisible();
   // Unchanged name must not be reported as a duplicate of itself.
   await expect(editor.getByText('must be unique')).toHaveCount(0);
