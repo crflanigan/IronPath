@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { TourPanel } from '@/components/TourPanel';
 
 /**
@@ -25,6 +25,22 @@ import { TourPanel } from '@/components/TourPanel';
  * index.css) and the panel sticks to the bottom of the dialog's own scroll
  * flow. Radix already dims everything outside the dialog, so nothing is lost.
  */
+
+/** The nearest ancestor that actually scrolls, or null if none does. */
+function scrollParent(el: Element): HTMLElement | null {
+  let node = el.parentElement;
+  while (node) {
+    const { overflowY } = getComputedStyle(node);
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      node.scrollHeight > node.clientHeight
+    ) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
 
 export interface ModalTourStep {
   /** Matches a `data-builder-tour` attribute inside the dialog. */
@@ -90,6 +106,34 @@ export function ModalTour({
   const finish = useCallback(() => {
     onDone();
   }, [onDone]);
+
+  /*
+   * Hand the dialog back scrolled where it was found.
+   *
+   * The last step scrolls to the very bottom, and without this the builder is
+   * left there — staring at Save on a workout with nothing selected yet, three
+   * screens below the exercises you are meant to pick first. Exactly the
+   * stranding the welcome tour had, which is what PR #158 was about; the
+   * behaviour did not survive the rewrite to outlines.
+   *
+   * Captured in a layout effect declared ahead of the one that scrolls, since
+   * effects run in declaration order.
+   */
+  const restore = useRef<{ el: HTMLElement; top: number } | null>(null);
+  useLayoutEffect(() => {
+    // This tour's own first target, not any `[data-builder-tour]` on the page:
+    // the template picker stays mounted behind the builder, so a bare
+    // attribute selector finds *its* element, in a dialog that does not
+    // scroll — and the container captured here would be the wrong one, or
+    // none at all.
+    const first = document.querySelector(`[data-builder-tour="${steps[0].target}"]`);
+    const container = first ? scrollParent(first) : null;
+    if (container) restore.current = { el: container, top: container.scrollTop };
+    return () => {
+      if (restore.current) restore.current.el.scrollTop = restore.current.top;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- capture once, on mount
+  }, []);
 
   // Outline the current target and bring it into view. The attribute is
   // removed on the way out so no element is left permanently ringed.

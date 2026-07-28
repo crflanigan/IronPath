@@ -127,6 +127,44 @@ test.describe('the builder tour', () => {
     await expect(page.getByTestId('modal-tour')).toHaveCount(0);
   });
 
+  test('hands the builder back scrolled where it was found', async ({ page }) => {
+    await openBuilder(page);
+    const tour = page.getByTestId('modal-tour');
+
+    const readScroll = () =>
+      page.evaluate(() => {
+        // Scoped to the builder's own target: the template picker is still
+        // mounted behind it and a bare attribute selector finds that first.
+        const el = document.querySelector('[data-builder-tour="exercise-row"]');
+        let n = el?.parentElement ?? null;
+        while (n) {
+          const o = getComputedStyle(n).overflowY;
+          if ((o === 'auto' || o === 'scroll') && n.scrollHeight > n.clientHeight) {
+            return n.scrollTop;
+          }
+          n = n.parentElement;
+        }
+        return -1;
+      });
+
+    const before = await readScroll();
+
+    // The last step scrolls to the very bottom.
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await page.waitForTimeout(400);
+    const atLastStep = await readScroll();
+    expect(atLastStep, 'the last step did not scroll anywhere').toBeGreaterThan(before);
+
+    await tour.getByRole('button', { name: 'Got it' }).click();
+    await expect(tour).toHaveCount(0);
+    await page.waitForTimeout(300);
+
+    // Otherwise you are left staring at Save, three screens below the
+    // exercises you have not picked yet.
+    expect(await readScroll(), 'the builder was left where the tour ended').toBe(before);
+  });
+
   test('leaves the builder usable', async ({ page }) => {
     await openBuilder(page);
     const tour = page.getByTestId('modal-tour');
