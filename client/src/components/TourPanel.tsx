@@ -42,17 +42,26 @@ export const TourPanel = forwardRef<HTMLDivElement, TourPanelProps>(function Tou
       }
     >
       <div className="mx-auto max-w-md space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          Step {stepIndex + 1} of {stepCount}
-        </p>
+        {stepCount > 1 && (
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Step {stepIndex + 1} of {stepCount}
+          </p>
+        )}
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
         <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{body}</p>
         {children}
 
         <div className="flex items-center justify-between pt-1">
-          <Button variant="ghost" size="sm" onClick={onSkip}>
-            Skip
-          </Button>
+          {/* On a one-step tour, Skip and Got it are the same action, and
+              offering both invites a moment's thought about a difference that
+              does not exist. */}
+          {stepCount > 1 ? (
+            <Button variant="ghost" size="sm" onClick={onSkip}>
+              Skip
+            </Button>
+          ) : (
+            <span />
+          )}
           <div className="flex items-center gap-2">
             {onBack && (
               <Button variant="outline" size="sm" onClick={onBack}>

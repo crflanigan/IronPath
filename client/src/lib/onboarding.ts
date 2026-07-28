@@ -13,6 +13,7 @@ const KEYS = {
   VISITS: 'ironpath_visits',
   INSTALL_DISMISSED: 'ironpath_install_dismissed',
   BUILDER_TOUR_SEEN: 'ironpath_builder_tour_seen',
+  TEMPLATE_TOUR_SEEN: 'ironpath_template_tour_seen',
 } as const;
 
 function read(key: string): string | null {
@@ -48,6 +49,14 @@ export function markBuilderTourSeen(): void {
   write(KEYS.BUILDER_TOUR_SEEN, '1');
 }
 
+export function hasSeenTemplateTour(): boolean {
+  return read(KEYS.TEMPLATE_TOUR_SEEN) === '1';
+}
+
+export function markTemplateTourSeen(): void {
+  write(KEYS.TEMPLATE_TOUR_SEEN, '1');
+}
+
 /**
  * Used by the Replay tour button in Settings.
  *
@@ -59,6 +68,7 @@ export function resetTour(): void {
   try {
     localStorage.removeItem(KEYS.TOUR_SEEN);
     localStorage.removeItem(KEYS.BUILDER_TOUR_SEEN);
+    localStorage.removeItem(KEYS.TEMPLATE_TOUR_SEEN);
   } catch {
     // Nothing to do; the button simply will not have taken effect.
   }

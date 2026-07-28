@@ -16,16 +16,47 @@ import { test, expect, type Page } from '@playwright/test';
 async function openBuilder(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+  // The picker now has a one-step tour of its own; get past it first.
+  const picker = page.getByTestId('modal-tour');
+  if (await picker.count()) {
+    await picker.getByRole('button', { name: 'Got it' }).click();
+  }
   // `.first()` because the gear beside the row carries the same accessible
   // name — the collision every spec that opens this modal has to handle.
   await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
 }
 
+test('the picker explains itself before the builder is even open', async ({ page }) => {
+  // The tour used to start one screen later — past the button the person had
+  // just pressed, on a screen nothing had explained.
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+
+  const tour = page.getByTestId('modal-tour');
+  await expect(tour).toBeVisible();
+  await expect(tour.getByRole('heading', { name: 'Start from a preset, or from scratch' })).toBeVisible();
+  // A single step should not be labelled "Step 1 of 1".
+  await expect(tour.getByText(/^Step \d+ of \d+$/)).toHaveCount(0);
+
+  await expect(page.locator('[data-tour-active="true"]')).toHaveAttribute(
+    'data-builder-tour',
+    'create-custom',
+  );
+
+  await tour.getByRole('button', { name: 'Got it' }).click();
+  await expect(tour).toHaveCount(0);
+
+  // And it does not come back.
+  await page.reload();
+  await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+  await expect(page.getByTestId('modal-tour')).toHaveCount(0);
+});
+
 test.describe('the builder tour', () => {
   test('greets a first-time builder and walks three steps', async ({ page }) => {
     await openBuilder(page);
 
-    const tour = page.getByTestId('builder-tour');
+    const tour = page.getByTestId('modal-tour');
     await expect(tour).toBeVisible();
     await expect(tour.getByText('Step 1 of 3')).toBeVisible();
     await expect(tour.getByRole('heading', { name: 'Pick your exercises' })).toBeVisible();
@@ -74,31 +105,31 @@ test.describe('the builder tour', () => {
       ).toBeGreaterThanOrEqual(required);
 
       if (step < 3) {
-        await page.getByTestId('builder-tour').getByRole('button', { name: 'Next' }).click();
+        await page.getByTestId('modal-tour').getByRole('button', { name: 'Next' }).click();
       }
     }
   });
 
   test('no element is left outlined once the tour closes', async ({ page }) => {
     await openBuilder(page);
-    await page.getByTestId('builder-tour').getByRole('button', { name: 'Skip' }).click();
-    await expect(page.getByTestId('builder-tour')).toHaveCount(0);
+    await page.getByTestId('modal-tour').getByRole('button', { name: 'Skip' }).click();
+    await expect(page.getByTestId('modal-tour')).toHaveCount(0);
     await expect(page.locator('[data-tour-active="true"]')).toHaveCount(0);
   });
 
   test('does not reappear the next time the builder is opened', async ({ page }) => {
     await openBuilder(page);
-    await page.getByTestId('builder-tour').getByRole('button', { name: 'Skip' }).click();
-    await expect(page.getByTestId('builder-tour')).toHaveCount(0);
+    await page.getByTestId('modal-tour').getByRole('button', { name: 'Skip' }).click();
+    await expect(page.getByTestId('modal-tour')).toHaveCount(0);
 
     await page.reload();
     await openBuilder(page);
-    await expect(page.getByTestId('builder-tour')).toHaveCount(0);
+    await expect(page.getByTestId('modal-tour')).toHaveCount(0);
   });
 
   test('leaves the builder usable', async ({ page }) => {
     await openBuilder(page);
-    const tour = page.getByTestId('builder-tour');
+    const tour = page.getByTestId('modal-tour');
 
     // Walk to the last step, which scrolls the dialog to the very bottom.
     await tour.getByRole('button', { name: 'Next' }).click();
@@ -124,14 +155,14 @@ test.describe('the builder tour', () => {
      * recorded here rather than dressed up as coverage it does not provide.
      */
     await openBuilder(page);
-    await expect(page.getByTestId('builder-tour')).toBeVisible();
+    await expect(page.getByTestId('modal-tour')).toBeVisible();
     // Let focus settle. Pressing immediately, Radix does not act on the key
     // at all and the test passes whether or not the tour swallows it — which
     // is to say it proves nothing without this wait.
     await page.waitForTimeout(600);
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('builder-tour')).toHaveCount(0);
+    await expect(page.getByTestId('modal-tour')).toHaveCount(0);
     // The builder itself must survive. Radix closes a dialog on Escape, so
     // without the tour swallowing the key, dismissing the tour would throw
     // away the half-built workout underneath it.

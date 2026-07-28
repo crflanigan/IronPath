@@ -18,8 +18,8 @@ import { hasExerciseImage } from '@/lib/exercise-images';
 import { NewExerciseForm } from './NewExerciseForm';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
-import { BuilderTour } from './BuilderTour';
-import { hasSeenBuilderTour } from '@/lib/onboarding';
+import { ModalTour, BUILDER_STEPS } from './ModalTour';
+import { hasSeenBuilderTour, markBuilderTourSeen } from '@/lib/onboarding';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from './ErrorBoundary';
 import {
@@ -521,7 +521,15 @@ export function CustomWorkoutBuilderModal({
             {template ? 'Update Workout' : 'Save Workout'}
           </Button>
         </div>
-          {showTour && <BuilderTour onClose={() => setShowTour(false)} />}
+          {showTour && (
+            <ModalTour
+              steps={BUILDER_STEPS}
+              onDone={() => {
+                markBuilderTourSeen();
+                setShowTour(false);
+              }}
+            />
+          )}
           </ErrorBoundary>
       </DialogContent>
     </Dialog>

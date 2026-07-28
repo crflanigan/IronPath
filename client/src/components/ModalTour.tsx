@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TourPanel } from '@/components/TourPanel';
-import { markBuilderTourSeen } from '@/lib/onboarding';
 
 /**
  * A three-step tour of the custom workout builder, shown the first time it is
@@ -27,13 +26,14 @@ import { markBuilderTourSeen } from '@/lib/onboarding';
  * flow. Radix already dims everything outside the dialog, so nothing is lost.
  */
 
-interface Step {
+export interface ModalTourStep {
+  /** Matches a `data-builder-tour` attribute inside the dialog. */
   target: string;
   title: string;
   body: string;
 }
 
-const STEPS: Step[] = [
+export const BUILDER_STEPS: ModalTourStep[] = [
   {
     target: 'exercise-row',
     title: 'Pick your exercises',
@@ -51,17 +51,45 @@ const STEPS: Step[] = [
   },
 ];
 
-export function BuilderTour({ onClose }: { onClose: () => void }) {
+/**
+ * Steps shown on the template picker, before the builder is even open.
+ *
+ * That screen is the first thing you land on after tapping "Create or Edit
+ * Custom Workout", and nothing on it explains what it is for — the tour used
+ * to start one screen later, past the button the person actually pressed.
+ */
+export const TEMPLATE_STEPS: ModalTourStep[] = [
+  {
+    target: 'create-custom',
+    title: 'Start from a preset, or from scratch',
+    body: 'The list above holds ready-made workouts you can drop onto any day. Create Custom Workout builds your own instead, choosing exercises yourself.',
+  },
+];
+
+export function ModalTour({
+  steps,
+  onDone,
+  sticky = true,
+}: {
+  steps: ModalTourStep[];
+  onDone: () => void;
+  /**
+   * Pin the panel to the bottom of a scrolling dialog. The builder is tall and
+   * scrolls, so its panel has to stay put; the template picker is short and has
+   * no scroll container at all, where `position: sticky` has nothing to stick
+   * to and ends up overlaying the list instead of sitting under it.
+   */
+  sticky?: boolean;
+}) {
   const [index, setIndex] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const step = STEPS[index];
-  const isLast = index === STEPS.length - 1;
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
 
   const finish = useCallback(() => {
-    markBuilderTourSeen();
-    onClose();
-  }, [onClose]);
+    onDone();
+  }, [onDone]);
 
   // Outline the current target and bring it into view. The attribute is
   // removed on the way out so no element is left permanently ringed.
@@ -104,12 +132,23 @@ export function BuilderTour({ onClose }: { onClose: () => void }) {
   }, [finish]);
 
   return (
-    <div data-testid="builder-tour" className="contents">
+    <div data-testid="modal-tour" className="contents">
       <TourPanel
       ref={panelRef}
-      className="sticky bottom-0 z-10 -mx-6 -mb-6 rounded-t-2xl border-t bg-white p-5 shadow-2xl outline-none dark:bg-gray-800"
+      /*
+       * `-bottom-6` and `-mx-6` reach over DialogContent's `p-6`, so the panel
+       * meets the dialog's edges instead of leaving a strip of scrolling
+       * content visible beneath it. The bottom corners match the dialog's own
+       * `sm:rounded-lg`; square ones against a rounded dialog read as a
+       * mistake.
+       */
+      className={
+        sticky
+          ? 'sticky -bottom-6 z-10 -mx-6 -mb-6 rounded-t-2xl bg-white p-5 shadow-2xl outline-none sm:rounded-b-lg dark:bg-gray-800'
+          : '-mx-6 -mb-6 rounded-b-lg border-t bg-gray-50 p-5 outline-none dark:bg-gray-900/40'
+      }
       stepIndex={index}
-      stepCount={STEPS.length}
+      stepCount={steps.length}
       title={step.title}
       body={step.body}
       onSkip={finish}
