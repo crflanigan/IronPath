@@ -18,6 +18,8 @@ import { hasExerciseImage } from '@/lib/exercise-images';
 import { NewExerciseForm } from './NewExerciseForm';
 import { useViewStack } from './view-stack-provider';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
+import { ModalTour, BUILDER_STEPS } from './ModalTour';
+import { hasSeenBuilderTour, markBuilderTourSeen } from '@/lib/onboarding';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from './ErrorBoundary';
 import {
@@ -85,6 +87,9 @@ export function CustomWorkoutBuilderModal({
   const [previewExercise, setPreviewExercise] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [equipmentFilter, setEquipmentFilter] = useState<'freeweight' | 'machine' | 'both'>('both');
+  // Read once per mount. Finishing the tour writes the flag, and re-reading it
+  // would tear the overlay down mid-transition.
+  const [showTour, setShowTour] = useState(() => !hasSeenBuilderTour());
   const [customExercises, setCustomExercises] = useState<CustomExercise[]>([]);
   const [addingExercise, setAddingExercise] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<CustomExercise | null>(null);
@@ -343,6 +348,7 @@ export function CustomWorkoutBuilderModal({
             size="sm"
             className="min-w-0 shrink"
             onClick={() => setAddingExercise(v => !v)}
+            data-builder-tour="new-exercise"
           >
             <span className="truncate">+ New exercise</span>
           </Button>
@@ -382,16 +388,20 @@ export function CustomWorkoutBuilderModal({
         )}
         
         <div className="space-y-4 -mt-2">
-          {orderedGroups.map(([region, exercises]) => (
+          {orderedGroups.map(([region, exercises], groupIndex) => (
             <div key={region} className="border rounded p-2">
               <div className="font-medium mb-2">{region}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                {exercises.map(ex => {
+                {exercises.map((ex, exerciseIndex) => {
                   const isLong = ex.machine.length > 30;
                   return (
                     <div
                       key={ex.machine}
                       className={cn(isLong && 'sm:col-span-2')}
+                      // One stable target for the builder tour to point at.
+                      data-builder-tour={
+                        groupIndex === 0 && exerciseIndex === 0 ? 'exercise-row' : undefined
+                      }
                     >
                       <div className="flex items-center gap-1">
                         <div className="flex items-center gap-2 min-w-0">
@@ -483,7 +493,7 @@ export function CustomWorkoutBuilderModal({
           </div>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-4" data-builder-tour="name-and-save">
           {warning12 && (
             <p className="text-yellow-600 text-sm">⚠️ That's a big session — are you training or moving in?</p>
           )}
@@ -511,6 +521,15 @@ export function CustomWorkoutBuilderModal({
             {template ? 'Update Workout' : 'Save Workout'}
           </Button>
         </div>
+          {showTour && (
+            <ModalTour
+              steps={BUILDER_STEPS}
+              onDone={() => {
+                markBuilderTourSeen();
+                setShowTour(false);
+              }}
+            />
+          )}
           </ErrorBoundary>
       </DialogContent>
     </Dialog>

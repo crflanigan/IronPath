@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
+import { ModalTour, TEMPLATE_STEPS } from './ModalTour';
+import { hasSeenTemplateTour, markTemplateTourSeen } from '@/lib/onboarding';
 
 interface WorkoutTemplateSelectorModalProps {
   open: boolean;
@@ -43,6 +45,9 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
   const { pushView } = useViewStack();
   const [hiddenPresets, setHiddenPresets] = useState<Record<string, boolean>>({});
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  // Read once per mount; finishing writes the flag and re-reading would tear
+  // the panel down mid-transition.
+  const [showTour, setShowTour] = useState(() => !hasSeenTemplateTour());
 
   useEffect(() => {
     if (open) {
@@ -108,6 +113,7 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             <Button
               variant="outline"
               className="flex-1 justify-start"
+              data-builder-tour="create-custom"
               onClick={() => {
                 onCreateCustom();
                 pushView('customWorkoutBuilder');
@@ -172,6 +178,16 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           )}
 
         </div>
+        {showTour && (
+          <ModalTour
+            sticky={false}
+            steps={TEMPLATE_STEPS}
+            onDone={() => {
+              markTemplateTourSeen();
+              setShowTour(false);
+            }}
+          />
+        )}
       </DialogContent>
       <AlertDialog
         open={pendingDeleteId !== null}
