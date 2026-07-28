@@ -99,7 +99,12 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="space-y-4">
+        {/* Same shape as the two workout dialogs: capped height, scrolling on
+            an inner element rather than on the transformed DialogContent. This
+            one had grown past the screen too — measured 868px against an 839px
+            viewport, hanging off both ends with nothing to scroll. */}
+        <DialogContent className="overflow-hidden p-0">
+        <div className="max-h-[85vh] space-y-4 overflow-y-auto overscroll-contain p-6">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Manage app data and preferences.</DialogDescription>
@@ -173,6 +178,7 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           IronPath v{__APP_VERSION__}<br />
           Created by Casey Flanigan<br />
           This is an open source project which can be found here: https://github.com/crflanigan/IronPath
+        </div>
         </div>
         </DialogContent>
       </Dialog>
