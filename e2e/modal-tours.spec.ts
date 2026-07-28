@@ -322,3 +322,74 @@ test('the picker stays on screen and scrollable with a long list', async ({ page
   await last.scrollIntoViewIfNeeded();
   await expect(last, 'the bottom of the list cannot be reached').toBeVisible();
 });
+
+/**
+ * Every dialog must fit the screen and be scrollable when it cannot.
+ *
+ * Three separate dialogs had grown past the viewport with no overflow at all —
+ * the picker (1122px in an 839px screen with eight custom workouts), the
+ * builder, and Settings. Each hung off both the top and the bottom with
+ * nothing to scroll.
+ *
+ * Also asserts the corners are actually rounded. shadcn's DialogContent ships
+ * `sm:rounded-lg`, which does nothing below 640px — so on a phone these
+ * floated as square-cornered panels, and a "fix" that matched them with
+ * `sm:rounded-b-lg` was equally inert.
+ */
+test('dialogs fit the screen, scroll when tall, and have rounded corners', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('ironpath_tour_seen', '1');
+    localStorage.setItem('ironpath_template_tour_seen', '1');
+    localStorage.setItem('ironpath_builder_tour_seen', '1');
+    localStorage.setItem(
+      'ironpath_custom_templates',
+      JSON.stringify(
+        Array.from({ length: 8 }, (_, i) => ({
+          id: i + 1, name: `Workout ${i}`, exercises: [], abs: [],
+        })),
+      ),
+    );
+  });
+
+  const inspect = () =>
+    page.evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+      const box = dialog.getBoundingClientRect();
+      let scroller: HTMLElement | null = null;
+      dialog.querySelectorAll('*').forEach(n => {
+        const el = n as HTMLElement;
+        const o = getComputedStyle(el).overflowY;
+        if (!scroller && (o === 'auto' || o === 'scroll')) scroller = el;
+      });
+      return {
+        fits: box.top >= -1 && box.bottom <= window.innerHeight + 1,
+        radius: parseFloat(getComputedStyle(dialog).borderBottomLeftRadius),
+        dialogOverflow: getComputedStyle(dialog).overflowY,
+        hasInnerScroller: !!scroller,
+      };
+    });
+
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Settings' }).click();
+  let d = await inspect();
+  expect(d.fits, 'Settings hangs off the screen').toBe(true);
+  expect(d.radius, 'Settings has square corners on a phone').toBeGreaterThan(0);
+  expect(d.hasInnerScroller, 'Settings cannot scroll').toBe(true);
+  expect(d.dialogOverflow).not.toBe('auto');
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+  d = await inspect();
+  expect(d.fits, 'the template picker hangs off the screen').toBe(true);
+  expect(d.radius, 'the picker has square corners on a phone').toBeGreaterThan(0);
+  expect(d.hasInnerScroller, 'the picker cannot scroll').toBe(true);
+  expect(d.dialogOverflow).not.toBe('auto');
+
+  await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
+  await expect(page.getByLabel('Workout name')).toBeVisible();
+  d = await inspect();
+  expect(d.fits, 'the builder hangs off the screen').toBe(true);
+  expect(d.radius, 'the builder has square corners on a phone').toBeGreaterThan(0);
+  expect(d.dialogOverflow).not.toBe('auto');
+});
