@@ -63,7 +63,11 @@ export const BUILDER_STEPS: ModalTourStep[] = [
   {
     target: 'name-and-save',
     title: 'Name it, then save',
-    body: 'The name and Save sit below every exercise. Once saved you can put the workout on any day, or add it to your rotation.',
+    // The cardio-only case lives here rather than in step one because this
+    // step scrolls to Save — so it is read at the moment the button is in
+    // front of you, not before it means anything. Otherwise it is something
+    // you only notice after scrolling past every exercise to the bottom.
+    body: 'The name and Save sit below every exercise. Leave everything unticked and you get a cardio-only workout — useful for a run or a walk. Once saved you can put it on any day, or add it to your rotation.',
   },
 ];
 

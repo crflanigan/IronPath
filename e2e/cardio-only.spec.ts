@@ -84,3 +84,24 @@ test('the core block is not called Abs', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Core Block' })).toBeVisible();
   await expect(page.getByText('Abs Block')).toHaveCount(0);
 });
+
+test('the builder tour says a cardio-only workout is possible', async ({ page }) => {
+  // Otherwise it is only discoverable by scrolling past every exercise and
+  // noticing Save is enabled with nothing ticked. This step is the right home
+  // for it because the tour scrolls to Save as it shows it.
+  await page.addInitScript(() => {
+    localStorage.setItem('ironpath_tour_seen', '1');
+    localStorage.setItem('ironpath_template_tour_seen', '1');
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+  await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
+
+  const tour = page.getByTestId('modal-tour');
+  await expect(tour).toBeVisible();
+  await tour.getByRole('button', { name: 'Next' }).click();
+  await tour.getByRole('button', { name: 'Next' }).click();
+
+  await expect(tour.getByRole('heading', { name: 'Name it, then save' })).toBeVisible();
+  await expect(tour, 'the tour never mentions cardio-only workouts').toContainText('cardio-only');
+});
