@@ -7,7 +7,7 @@ import { test, expect, type Page } from '@playwright/test';
  */
 
 function builder(page: Page) {
-  return page.getByRole('dialog').filter({ hasText: 'Select up to 15 exercises' });
+  return page.getByTestId('custom-workout-builder');
 }
 
 async function openBuilder(page: Page) {

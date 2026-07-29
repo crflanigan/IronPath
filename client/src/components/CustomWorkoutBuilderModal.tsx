@@ -241,7 +241,11 @@ export function CustomWorkoutBuilderModal({
   const isDuplicate = clashesWithTemplate || clashesWithPreset;
 
   const handleSave = () => {
-    if (name.trim() === '' || selected.size === 0 || isDuplicate) return;
+    // No exercise requirement: a workout can legitimately be cardio only —
+    // an hour of walking or running is a session. Every workout gets a cardio
+    // block attached regardless, so an empty selection still produces
+    // something to complete.
+    if (name.trim() === '' || isDuplicate) return;
     const exercises: Exercise[] = [];
     Array.from(selected).forEach(m => {
       const info = availableExercises.find(e => e.machine === m);
@@ -345,7 +349,7 @@ export function CustomWorkoutBuilderModal({
           * dialog's rounded corners; `overscroll-contain` stops a flick at the
           * end of the list from scrolling the page behind it.
           */}
-        <DialogContent className="max-w-2xl overflow-hidden p-0">
+        <DialogContent className="max-w-2xl overflow-hidden p-0" data-testid="custom-workout-builder">
           {/* `grid gap-4` reproduces the spacing DialogContent used to apply
               to these children directly; several of them carry negative top
               margins that assume it, and without it the header and the filter
@@ -354,7 +358,7 @@ export function CustomWorkoutBuilderModal({
           <ErrorBoundary>
         <DialogHeader className="space-y-1">
           <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
-          <DialogDescription className="text-left">Select up to 15 exercises and name your workout.</DialogDescription>
+          <DialogDescription className="text-left">Name your workout and pick up to 15 exercises — or none, for a cardio-only session.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap an exercise name to preview it.</p>
         </DialogHeader>
         
@@ -522,6 +526,11 @@ export function CustomWorkoutBuilderModal({
           {warning15 && (
             <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn't effective. Consider splitting it up.</p>
           )}
+          {selected.size === 0 && selectedAbs.size === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nothing selected — this saves as a cardio-only workout.
+            </p>
+          )}
           <Input aria-label="Workout name" placeholder="Workout name" value={name} onChange={e => setName(e.target.value)} />
           <label className="flex items-center space-x-2 text-sm">
             <Checkbox
@@ -539,7 +548,7 @@ export function CustomWorkoutBuilderModal({
           {clashesWithTemplate && (
             <p className="text-red-600 text-sm">Workout name must be unique</p>
           )}
-          <Button onClick={handleSave} disabled={name.trim() === '' || selected.size === 0 || isDuplicate}>
+          <Button onClick={handleSave} disabled={name.trim() === '' || isDuplicate}>
             {template ? 'Update Workout' : 'Save Workout'}
           </Button>
         </div>

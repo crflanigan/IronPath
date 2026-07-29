@@ -32,7 +32,7 @@ async function settledBox(locator: Locator) {
 async function openBuilder(page: Page) {
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
   await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
-  await expect(page.getByText('Select up to 15 exercises')).toBeVisible();
+  await expect(page.getByTestId('custom-workout-builder')).toBeVisible();
 }
 
 for (const width of WIDTHS) {

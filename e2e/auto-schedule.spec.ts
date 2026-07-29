@@ -12,7 +12,7 @@ import { test, expect, type Page } from '@playwright/test';
  * dialogs on that phrase matches the selector too once it reopens.
  */
 function builderDialog(page: Page) {
-  return page.getByRole('dialog').filter({ hasText: 'Select up to 15 exercises' });
+  return page.getByTestId('custom-workout-builder');
 }
 
 /**
