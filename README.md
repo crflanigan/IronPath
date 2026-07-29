@@ -106,7 +106,8 @@ PRs welcome. Please open an issue before large changes. CI must be green.
 
 ## 🔒 License
 
-AGPLv3
+[AGPLv3](LICENSE). Use it, fork it, run it — but if you host a modified version
+for other people, publish your changes.
 
 ---
 
