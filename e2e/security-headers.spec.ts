@@ -39,7 +39,6 @@ test('the app boots and works under its own Content-Security-Policy', async ({ p
   await page.addInitScript(() => localStorage.setItem('ironpath_tour_seen', '1'));
   await page.goto('/');
 
-  // The whole loop, under the policy: calendar, a workout, logging, saving.
   await expect(page.getByRole('button', { name: "Start Today's Workout" })).toBeVisible();
   await page.getByRole('button', { name: "Start Today's Workout" }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
@@ -49,6 +48,14 @@ test('the app boots and works under its own Content-Security-Policy', async ({ p
 
   const saved = await page.evaluate(() => (localStorage.getItem('ironpath_workouts') ?? '').length > 2);
   expect(saved, 'nothing was saved under the CSP').toBe(true);
+
+  // Export a backup. The other place this app builds a `blob:` URL, and the
+  // one a CSP is most likely to break without any visible error.
+  await page.getByRole('button', { name: 'Go back' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export Backup' }).click();
+  expect((await download).suggestedFilename(), 'backup export blocked').toMatch(/\.json$/);
 
   expect(violations, `the CSP blocked something the app needs:\n${violations.join('\n')}`).toEqual([]);
 });
@@ -71,4 +78,61 @@ test('the other headers are present and sane', async () => {
   // Privacy-positioned app: clicking out should not leak the full URL.
   expect(headerValue('Referrer-Policy')).toMatch(/strict-origin|no-referrer/);
   expect(headerValue('Permissions-Policy')).toContain('geolocation=()');
+});
+
+test('the celebration still fires under the CSP', async ({ page }) => {
+  /*
+   * This exists because it did not. canvas-confetti spawns its worker from a
+   * `blob:` URL, `worker-src 'self'` blocked it, and the celebration silently
+   * stopped firing — no error, no broken layout, just nothing. The first
+   * version of the test above logged a set and never finished a workout, so it
+   * never reached this path and the policy shipped broken.
+   */
+  const csp = headerValue('Content-Security-Policy');
+  const blocked: string[] = [];
+  page.on('console', m => {
+    if (/Refused to|violates the following Content Security Policy/i.test(m.text())) {
+      blocked.push(m.text());
+    }
+  });
+
+  await page.route('**/*', async route => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: { ...response.headers(), 'content-security-policy': csp },
+    });
+  });
+
+  const d = new Date();
+  const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  await page.addInitScript(([dt]) => {
+    localStorage.setItem('ironpath_tour_seen', '1');
+    localStorage.setItem('ironpath_current_id', '1');
+    localStorage.setItem('ironpath_workouts', JSON.stringify([{
+      id: 1, date: dt, type: 'Chest Day',
+      exercises: [{
+        code: 'S24', machine: 'Adjustable Cable Crossover', region: 'Chest Pecs',
+        feel: 'Medium', sets: [{ weight: 60, reps: 15, rest: '1:00', completed: true }],
+        bestWeight: 90, bestReps: 15, completed: true,
+      }],
+      abs: [],
+      cardio: { type: 'Treadmill', duration: '15:00', distance: '1', completed: true },
+      completed: false, duration: null, startedAt: null,
+    }]));
+  }, [date]);
+
+  // Opening a workout already at 100% fires the celebration on mount.
+  await page.goto('/workout/1');
+  // `alertdialog`, not `dialog` — the celebration is a Radix AlertDialog, and
+  // `getByRole('dialog')` does not match it. The message is one of ten chosen
+  // at random, so the role is the stable thing to assert on.
+  await expect(page.getByRole('alertdialog'), 'the celebration never appeared')
+    .toBeVisible({ timeout: 10000 });
+  await page.waitForTimeout(1200);
+
+  expect(
+    blocked.filter(b => /worker|blob/i.test(b)),
+    'the CSP blocked the confetti worker — the celebration will not fire',
+  ).toEqual([]);
 });
