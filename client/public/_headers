@@ -1,0 +1,23 @@
+/*
+  # No third-party resources are loaded anywhere in this app — verified against
+  # the built bundle — so `default-src 'self'` costs nothing and buys a lot.
+  #
+  # `connect-src 'self'` is the interesting one: it makes "your training data
+  # never leaves your device" enforceable by the browser rather than a promise
+  # in the README. Injected code cannot post it anywhere.
+  #
+  # `worker-src` allows `blob:` because canvas-confetti spawns its worker from
+  # an object URL. Without it the celebration silently does not fire — no
+  # error a user would see, just no confetti. Found in review, not by a test:
+  # the first version of that test logged a set but never finished a workout,
+  # so it never reached the code path.
+  #
+  # `'unsafe-inline'` is required for scripts: index.html carries the
+  # pre-paint theme script and the service worker registration inline, both
+  # deliberately (they exist to run before anything else). Hashing them would
+  # mean this file silently going stale every time either changes, which is a
+  # worse failure than the one it prevents.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()

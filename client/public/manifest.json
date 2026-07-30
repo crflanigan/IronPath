@@ -1,7 +1,7 @@
 {
-  "name": "IronPath - Workout Tracker",
+  "name": "IronPath \u2014 Offline Workout Tracker",
   "short_name": "IronPath",
-  "description": "A progressive web app for tracking workouts with offline capabilities, calendar-based scheduling, and detailed exercise logging.",
+  "description": "A free workout tracker that works entirely offline. No account, no signup, no server \u2014 your training log stays on your phone.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -22,7 +22,11 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["health", "fitness", "lifestyle"],
+  "categories": [
+    "health",
+    "fitness",
+    "lifestyle"
+  ],
   "lang": "en-US",
   "dir": "ltr",
   "shortcuts": [
