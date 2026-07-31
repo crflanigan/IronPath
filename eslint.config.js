@@ -54,31 +54,28 @@ export default tseslint.config(
     },
   },
 
-  // `shared/schema.ts` imports drizzle-orm/pg-core to describe Postgres tables
-  // nothing queries. The client uses it for *types only*; importing a value from
-  // there drags the whole Postgres query builder into the browser bundle, which
-  // is how ~19KB of it shipped once already. Runtime validators live in
-  // `shared/workout-schemas.ts`, which has no database import.
+  // `shared/schema.ts` used to import drizzle-orm/pg-core to describe Postgres
+  // tables nothing queried, so importing a *value* from it dragged the whole
+  // query builder into the browser bundle — which is how ~19KB of it shipped
+  // once already. Drizzle is gone and that module is now zod and nothing else,
+  // so importing values from it is fine and the old restriction is lifted.
   //
-  // bundle-boundaries.test.ts asserts this against the built output. This rule
-  // is the same check at edit time, where it is cheaper to act on.
+  // The ban on database packages stays. Nothing in this app talks to a
+  // database, and the way the last 19KB arrived was a type-level convenience
+  // that quietly became a runtime import.
+  //
+  // bundle-boundaries.test.ts asserts the wider rule — that `shared/` imports
+  // nothing but zod. This is the same check at edit time, where it is cheaper
+  // to act on.
   {
-    files: ['client/**/*.{ts,tsx}'],
+    files: ['client/**/*.{ts,tsx}', 'shared/**/*.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',
         {
-          paths: [
-            {
-              name: '@shared/schema',
-              allowTypeImports: true,
-              message:
-                'Import types only (`import type`). For runtime validators use @shared/workout-schemas — @shared/schema pulls drizzle-orm into the browser bundle.',
-            },
-          ],
           patterns: [
             {
-              group: ['drizzle-orm', 'drizzle-orm/*', 'drizzle-zod'],
+              group: ['drizzle-orm', 'drizzle-orm/*', 'drizzle-zod', 'drizzle-kit'],
               message: 'Database code must not reach the client bundle.',
             },
           ],
