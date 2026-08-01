@@ -41,16 +41,17 @@ client/          React + TypeScript app — this is the whole product
   public/        PWA manifest, service worker, exercise photos
   src/lib/       storage, workout data, streaks, image manifest
   src/pages/     calendar, workout, history
-shared/          types and zod schemas used by client and server
-server/          Express host for local development (see below)
+shared/          zod schemas and the types inferred from them
 e2e/             Playwright end-to-end tests
 ```
 
-Two things surprise people reading this repo, so they're worth stating plainly:
+That really is all of it. **There is no server and no build step beyond `vite build`.** The deployed site is static files on a CDN; nothing runs server-side, and there is nothing to deploy but a folder.
 
-**`server/` has no API.** It exists to serve the client — Vite middleware in development, static files in production. It registers zero routes. The deployed site is static; nothing runs server-side.
+One thing worth stating plainly, because it is easy to get wrong when editing:
 
-**`shared/schema.ts` defines Postgres tables that nothing queries.** They're there as the single definition of the `Workout` and `UserPreferences` shapes, which the client uses as *types only*. The runtime validators live in `shared/workout-schemas.ts`, deliberately free of any database import, so none of that code reaches the browser bundle. Two things hold that line: a lint rule that rejects value imports at edit time, and a test that greps the built bundle for Drizzle. It shipped ~19KB of a Postgres query builder to phones once already.
+**`shared/schema.ts` is not what validates your data.** It holds the shapes — zod schemas for `Exercise`, `ExerciseSet`, `AbsExercise` and `Cardio`, and plain interfaces for `Workout` and `UserPreferences`. The actual validator for a stored workout is `storedWorkoutSchema` in `client/src/lib/storage.ts`, and it is deliberately different: `localStorage` holds JSON, so it coerces date strings back into `Date` objects and is stricter about ids and dates than the bare shape.
+
+Whatever `shared/` imports ships to every visitor, so it imports zod and nothing else. A lint rule and a unit test both hold that line — a Postgres query builder reached phones through this module once already.
 
 ---
 
@@ -60,7 +61,7 @@ Requires Node 20+.
 
 ```bash
 npm install
-npm run dev          # http://localhost:5000
+npm run dev          # http://localhost:5173
 ```
 
 Other scripts:
