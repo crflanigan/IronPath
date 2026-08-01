@@ -189,6 +189,24 @@ export class StorageWriteError extends Error {
   }
 }
 
+/**
+ * Thrown when the stored workout has moved on since this tab last saw it.
+ *
+ * Every save serialises the whole workout — including the exercises array this
+ * tab loaded. Two tabs open on the same workout each wrote their own complete
+ * copy, so the later write erased the earlier one's sets, and both screens
+ * carried on showing numbers that were no longer on disk. The loss was
+ * invisible until a reload.
+ *
+ * An installed PWA plus the site open in a browser tab is an ordinary state.
+ */
+export class ConcurrentEditError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConcurrentEditError';
+  }
+}
+
 export class LocalWorkoutStorage {
   private storageLimit = 5 * 1024 * 1024; // 5MB approximate
   private warningThreshold = 0.8;
@@ -658,17 +676,54 @@ export class LocalWorkoutStorage {
     return newWorkout;
   }
 
-  async updateWorkout(id: number, updates: Partial<InsertWorkout>): Promise<Workout | undefined> {
+  /**
+   * `expectedUpdatedAt` is what the caller last saw on this record. If the
+   * stored copy is newer, another tab has written since, and overwriting would
+   * erase whatever it saved — so this refuses instead. Omit it and the check is
+   * skipped, which keeps every other caller behaving as before.
+   */
+  async updateWorkout(
+    id: number,
+    updates: Partial<InsertWorkout>,
+    options: { expectedUpdatedAt?: Date | null } = {},
+  ): Promise<Workout | undefined> {
     const workouts = this.getWorkouts();
     const index = workouts.findIndex(w => w.id === id);
     
     if (index === -1) return undefined;
+
+    const { expectedUpdatedAt } = options;
+    const storedUpdatedAt = workouts[index].updatedAt;
+    if (
+      expectedUpdatedAt != null &&
+      storedUpdatedAt != null &&
+      storedUpdatedAt.getTime() > expectedUpdatedAt.getTime()
+    ) {
+      throw new ConcurrentEditError(
+        'This workout was changed somewhere else — another tab or window. ' +
+          'Reload to pick up those changes before editing further.',
+      );
+    }
     
+    /*
+     * `updatedAt` must strictly increase, because the conflict check above
+     * compares against it. `new Date()` has millisecond resolution, so two
+     * writes inside the same millisecond — a create followed straight away by
+     * the first autosave, say — would carry identical stamps and a genuine
+     * conflict would slip through. Found by a test that failed about half the
+     * time, not by reading this.
+     */
+    const now = new Date();
+    const nextUpdatedAt =
+      storedUpdatedAt != null && now.getTime() <= storedUpdatedAt.getTime()
+        ? new Date(storedUpdatedAt.getTime() + 1)
+        : now;
+
     const updatedWorkout = {
       ...workouts[index],
       ...updates,
       duration: updates.duration ?? workouts[index].duration ?? null,
-      updatedAt: new Date(),
+      updatedAt: nextUpdatedAt,
     } as Workout;
     
     workouts[index] = updatedWorkout;

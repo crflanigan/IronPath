@@ -137,8 +137,9 @@ export function useWorkoutStorage() {
   const updateWorkout = async (
     id: number,
     updates: Partial<InsertWorkout>,
+    options: { expectedUpdatedAt?: Date | null } = {},
   ) => {
-    const updated = await localWorkoutStorage.updateWorkout(id, updates);
+    const updated = await localWorkoutStorage.updateWorkout(id, updates, options);
     if (updated) {
       setWorkouts((prev) =>
         prev.map((w) => (w.id === id ? updated : w)),

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { personalBests } from '@/lib/personal-best';
-import { StorageWriteError } from '@/lib/storage';
+import { ConcurrentEditError, StorageWriteError } from '@/lib/storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -82,6 +82,16 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const lastSavedRef = useRef<string>(JSON.stringify(initialWorkout));
   const toastIdRef = useRef<string | null>(null);
 
+  /**
+   * The `updatedAt` this tab last saw on the stored record.
+   *
+   * Two tabs on the same workout each save their own complete copy of the
+   * exercises array, so the later write erased the earlier one's sets — with
+   * both screens still showing numbers that were no longer on disk. Sending
+   * what we last saw lets the storage layer refuse rather than clobber.
+   */
+  const expectedUpdatedAtRef = useRef<Date | null>(initialWorkout.updatedAt ?? null);
+
   const workoutRef = useRef<Workout>(initialWorkout);
   const autoSaveEnabledRef = useRef<boolean>(true);
 
@@ -114,15 +124,20 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     const startedAt = currentWorkout.startedAt ?? new Date();
 
     try {
-      await updateWorkout(currentWorkout.id, {
-        exercises: currentWorkout.exercises,
-        abs: currentWorkout.abs,
-        cardio: currentWorkout.cardio,
-        completed: currentWorkout.completed,
-        duration: currentWorkout.duration,
-        startedAt,
-      });
+      const saved = await updateWorkout(
+        currentWorkout.id,
+        {
+          exercises: currentWorkout.exercises,
+          abs: currentWorkout.abs,
+          cardio: currentWorkout.cardio,
+          completed: currentWorkout.completed,
+          duration: currentWorkout.duration,
+          startedAt,
+        },
+        { expectedUpdatedAt: expectedUpdatedAtRef.current },
+      );
 
+      expectedUpdatedAtRef.current = saved?.updatedAt ?? new Date();
       lastSavedRef.current = serialized;
       setLastSavedAt(new Date());
 
@@ -139,13 +154,25 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       }
     } catch (error) {
       console.error("Autosave failed", error);
+
+      // Autosave retries every couple of seconds, so without stopping it the
+      // same warning would fire on a loop — and every attempt would be another
+      // chance to overwrite what the other tab saved.
+      if (error instanceof ConcurrentEditError) {
+        autoSaveEnabledRef.current = false;
+      }
+
       toast({
-        title: "Not saved to this device",
+        title:
+          error instanceof ConcurrentEditError
+            ? "Changed in another tab"
+            : "Not saved to this device",
         description:
-          error instanceof StorageWriteError
+          error instanceof ConcurrentEditError || error instanceof StorageWriteError
             ? error.message
             : "Failed to save workout progress",
         variant: "destructive",
+        duration: error instanceof ConcurrentEditError ? 10000 : undefined,
       });
     }
   }, [updateWorkout, toast, dismiss]);
