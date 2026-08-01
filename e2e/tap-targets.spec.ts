@@ -93,3 +93,42 @@ test.describe('the reference-photo button', () => {
     await expect(dialogs).toHaveCount(0);
   });
 });
+
+/**
+ * The Core Block's six completion ticks sit in a column. They are the controls
+ * that actually get mis-tapped — reaching for one and unchecking the row above.
+ *
+ * The fix is separation rather than a bigger target, and the direction matters:
+ * at 36px tall, widening these to the usual 44px would cut the gap between them
+ * from 16px to 8px, so taps that currently land in dead space and do nothing
+ * would start hitting the neighbour. This asserts both halves of that — more
+ * space between them, and no growth in height that would eat the space back.
+ */
+test('the Core Block ticks keep real space between them', async ({ page }) => {
+  await startTodaysWorkout(page);
+
+  const geometry = await page.evaluate(() => {
+    const marks = Array.from(document.querySelectorAll('button'))
+      .filter(b => /^Mark /.test(b.getAttribute('aria-label') || ''))
+      .map(b => {
+        const r = b.getBoundingClientRect();
+        return { label: b.getAttribute('aria-label')!, top: r.top + scrollY, bottom: r.bottom + scrollY, h: r.height };
+      })
+      .filter(m => !/set \d|cardio/i.test(m.label))
+      .sort((a, b) => a.top - b.top);
+
+    const gaps: number[] = [];
+    for (let i = 1; i < marks.length; i++) gaps.push(Math.round(marks[i].top - marks[i - 1].bottom));
+    return { count: marks.length, gaps, height: Math.round(marks[0]?.h ?? 0) };
+  });
+
+  expect(geometry.count, 'expected a column of Core Block ticks').toBeGreaterThan(2);
+
+  // Was 16px, which is where the mis-taps came from.
+  for (const gap of geometry.gaps) {
+    expect(gap, `gap between adjacent ticks: ${geometry.gaps.join(', ')}`).toBeGreaterThanOrEqual(24);
+  }
+
+  // If these ever grow, the separation above is silently spent paying for it.
+  expect(geometry.height).toBeLessThanOrEqual(40);
+});
