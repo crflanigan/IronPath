@@ -6,7 +6,9 @@
 
 ## Repository Structure
 
-The project consists of a React + TypeScript client, a small Express server and a shared schema package. Below is the top level layout (generated from `tree -L 2`).
+The project is a React + TypeScript client and a shared schema package. There is
+no server and no database: IronPath runs entirely in the browser and stores
+everything in localStorage. Below is the top level layout.
 
 ```
 .
@@ -21,16 +23,19 @@ The project consists of a React + TypeScript client, a small Express server and 
 ├── dist/                        # Production build output
 │   ├── assets/                  # Bundled JS/CSS
 │   └── index.html               # Built client entry
-├── drizzle.config.ts            # Drizzle ORM migration config
+├── docs/                        # This file
+├── e2e/                         # Playwright end-to-end specs
+├── eslint.config.js             # ESLint configuration
 ├── netlify.toml                 # Netlify build settings
 ├── package.json
+├── playwright.config.ts         # E2E config; runs against a production build
 ├── postcss.config.js
-├── replit.md                    # High level design document
-├── server/                      # Express server source
-├── shared/                      # Shared types and schema definitions
+├── shared/                      # Shared schemas and types
 ├── tailwind.config.ts           # Tailwind CSS configuration
 ├── tsconfig.json                # TypeScript configuration
-└── vite.config.ts               # Vite configuration
+├── vite.config.ts               # Vite configuration
+├── vitest.config.ts             # Unit test configuration
+└── vitest.setup.ts              # Unit test setup
 ```
 
 ### Client Source (`client/src`)
@@ -48,9 +53,8 @@ client/src
 │   ├── exercise-form.tsx
 │   ├── theme-provider.tsx
 │   ├── workout-card.tsx
-│   └── ui/                      # Shadcn UI components (many small files)
+│   └── ui/                      # shadcn/ui primitives still in use
 ├── hooks/                       # Custom React hooks
-│   ├── use-mobile.tsx
 │   ├── use-theme.tsx
 │   ├── use-toast.ts
 │   └── use-workout-storage.tsx
@@ -58,7 +62,6 @@ client/src
 ├── lib/                         # Utility modules and data generators
 │   ├── abs-library.ts
 │   ├── exercise-library.ts
-│   ├── queryClient.ts
 │   ├── storage.ts
 │   ├── utils.ts
 │   ├── workout-data.test.ts
@@ -67,44 +70,43 @@ client/src
 ├── pages/                       # Route components
 │   ├── calendar.tsx
 │   ├── history.tsx
-│   ├── not-found.tsx
 │   └── workout.tsx
 └── types/
     └── canvas-confetti.d.ts     # Type definition for confetti library
 ```
 
-### Server Source (`server`)
-
-```
-server/
-├── index.ts       # Express server bootstrap and middleware
-├── routes.ts      # Placeholder for API routes
-├── storage.ts     # In-memory storage implementing a simple interface
-└── vite.ts        # Vite dev server & static file helpers
-```
-
 ### Shared Types (`shared`)
 
-`shared/schema.ts` defines all strong types used by the client and server. It uses Drizzle ORM and Zod to define schemas for `Workout`, `Exercise`, `AbsExercise`, `Cardio`, and user preferences. Insert schemas are exported for validation.
+`shared/schema.ts` defines the types the client uses. It is plain Zod: runtime
+schemas for `Exercise`, `ExerciseSet`, `AbsExercise` and `Cardio`, and interfaces
+for `Workout` and `UserPreferences`. It previously described Postgres tables with
+Drizzle ORM purely to derive these types; there was never a database.
+
+The *validator* for a stored workout is `storedWorkoutSchema` in
+`client/src/lib/storage.ts`, not here — localStorage holds JSON, so it coerces
+date strings back into `Date` and is stricter about ids and dates.
 
 ## Purpose of Each Folder
 
 - **attached_assets/** – Misc design docs and planning notes.
 - **client/** – The entire frontend. Built with React + Vite. Contains public PWA assets and all React code.
 - **dist/** – Build output for deployment.
-- **server/** – Express server that can serve the built client and later host API routes. Currently uses an in-memory storage adapter.
-- **shared/** – TypeScript definitions shared between client and server so both sides agree on data shapes.
+- **shared/** – Zod schemas and the TypeScript types inferred from them, imported by the client.
 - **docs/** – Documentation (this file).
 
 ## React Components
 
-Below is a summary of the main React components. Many small primitives under `components/ui` are generated shadcn components and behave like standard Radix wrappers (Button, Dialog, etc.).
+Below is a summary of the main React components. The primitives under
+`components/ui` are generated shadcn components and behave like standard Radix
+wrappers (Button, Dialog, etc.). Only the ones the app actually imports are
+kept — the 30 unused ones the project was scaffolded with were removed, along
+with the packages behind them.
 
 ### App.tsx
-Sets up React Query provider, theme context, tooltip provider and defines the app header/navigation. Uses Wouter for routing to `/`, `/workout`, and `/history`. Holds the currently opened workout in state.
+Sets up theme context, tooltip provider and defines the app header/navigation. Uses Wouter for routing to `/`, `/workout`, and `/history`. Holds the currently opened workout in state.
 
 ### calendar-grid.tsx
-Renders a monthly calendar with buttons for each day. Uses `generateWorkoutSchedule` from `lib/workout-data` to know what workout type is scheduled. Shows emojis to mark completed workouts, pending days and today. Selecting a day triggers callbacks to the parent.
+Renders a monthly calendar with buttons for each day. Uses `generateWorkoutSchedule` from `lib/workout-data` to know what workout type is scheduled. A completed day is washed green and carries a ✅; today is filled in the primary colour. The 🕒 and 📅 glyphs it used to show on every cell are gone. Selecting a day triggers callbacks to the parent.
 
 ### workout-card.tsx
 Summary card for a single workout, displaying progress percentage, date, and allowing start/view/delete actions. Used in calendar and history pages.
@@ -132,9 +134,6 @@ Complex form used inside the workout page for logging sets of an exercise. Handl
 
 ## Custom Hooks
 
-### use-mobile.tsx
-Simple hook returning a boolean for whether the viewport width is under `768px`.
-
 ### use-theme.tsx
 Reads and writes the `theme` value from `localStorage` and toggles the `<html>` class for dark mode.
 
@@ -148,9 +147,6 @@ Central data hook for all workout persistence. Loads/saves workouts, user prefer
 
 ### utils.ts
 Contains small helpers: `cn` (Tailwind class merge), `parseISODate`, and `formatLocalDate`.
-
-### queryClient.ts
-Configures a React Query client and provides helper `apiRequest` / `getQueryFn` for future server requests.
 
 ### workout-data.ts
 Large module defining all built‑in workout templates and helper functions. Includes `defaultWorkoutCycle` (a 14‑day rotation of workout types), `generateWorkoutSchedule(year, month)` to produce the monthly schedule, and `getTodaysWorkoutType()` which computes today’s workout from the rotation. A unit test `workout-data.test.ts` verifies schedule generation.
@@ -193,7 +189,6 @@ Simple fallback page when a route is missing.
 5. **Template Rotation** – `generateWorkoutSchedule` (using `getWorkoutCycle`) determines which workout type falls on which calendar date. `AutoScheduleModal` can alter the rotation by letting the user select presets and custom templates. Selected names are stored under `ironpath_auto_schedule_workouts` in localStorage.
 6. **Custom Workouts** – Created or edited via `CustomWorkoutBuilderModal`. Stored templates are kept under `ironpath_custom_templates` and included in the schedule if marked for auto scheduling.
 7. **Export/Import** – Settings writes a complete JSON backup covering every stored key, and restores from one after confirming what it contains. History additionally offers a CSV export for spreadsheets.
-8. **Server Side** – The Express server currently only serves the client and provides an in-memory storage interface placeholder. API routes can later persist data to a real database.
 
 ## LocalStorage Keys
 
@@ -242,6 +237,9 @@ The service worker (`public/sw.js`) serves navigations **network-first** so a de
 
 ## Additional Notes
 
-- All UI components under `components/ui` are standard shadcn-generated wrappers around Radix primitives. They provide consistent styling and behavior across the app.
-- `replit.md` and `attached_assets/design.txt` document design goals and architecture decisions used during development.
-- The project currently runs entirely on the client with localStorage. The server portion is ready for future expansion to database persistence.
+- All UI components under `components/ui` are standard shadcn-generated wrappers around Radix primitives. `components.json` configures the generator, so `npx shadcn add <name>` still works if one is needed again.
+- `attached_assets/design.txt` is the original project brief, kept for reference. It describes an early plan, not the current architecture.
+- The project runs entirely on the client with localStorage, and this is a
+  deliberate architectural decision rather than a stage on the way to a backend.
+  There is no sync, no account and no server: the data lives on the device that
+  recorded it. See the README for what that means for backups.
