@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
+import { personalBests } from '@/lib/personal-best';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -54,8 +55,21 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [celebrated, setCelebrated] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
-  const { updateWorkout } = useWorkoutStorage();
+  const { updateWorkout, workouts } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
+
+  /**
+   * What you walked in with, per exercise — the heaviest set logged in any
+   * earlier session. The current workout is excluded, so today's typing does
+   * not instantly become the record it is compared against.
+   *
+   * Memoised because it scans every stored workout, and this page re-renders
+   * on each keystroke.
+   */
+  const bests = useMemo(
+    () => personalBests(workouts, initialWorkout.id),
+    [workouts, initialWorkout.id],
+  );
   const focusToEnd = useCursorEndOnFocus();
 
   useEffect(() => {
@@ -598,6 +612,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               exercise={exercise}
               onUpdate={(updatedExercise) => handleExerciseUpdate(index, updatedExercise)}
               isActive={index === currentExerciseIndex}
+              personalBest={bests.get(exercise.machine)}
             />
           </ErrorBoundary>
         ))}

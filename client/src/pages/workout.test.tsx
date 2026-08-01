@@ -7,7 +7,8 @@ import type { Workout } from '@shared/schema';
 const mockUpdateWorkout = vi.fn();
 
 vi.mock('@/hooks/use-workout-storage', () => ({
-  useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout }),
+  // `workouts` feeds the personal-best derivation; the page reads it now.
+  useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout, workouts: [] }),
 }));
 
 vi.mock('canvas-confetti', () => ({
@@ -27,7 +28,7 @@ vi.mock('@/components/exercise-form', () => ({
       <p>{exercise.machine}</p>
       <button
         data-testid={`update-${exercise.machine}-${isActive ? 'active' : 'inactive'}`}
-        onClick={() => onUpdate({ ...exercise, bestReps: (exercise.bestReps ?? 0) + 1 })}
+        onClick={() => onUpdate({ ...exercise, code: String(Number(exercise.code ?? 0) + 1) })}
       >
         update
       </button>
@@ -47,8 +48,6 @@ const baseWorkout: Workout = {
       region: 'chest',
       feel: 'Medium',
       sets: [{ weight: 100, reps: 8, rest: '1:00', completed: false }],
-      bestWeight: undefined,
-      bestReps: undefined,
       completed: false,
     },
   ],
@@ -104,12 +103,12 @@ describe('WorkoutPage exercise updates', () => {
         {
           ...baseWorkout.exercises[0],
           machine: 'Dup Machine',
-          bestReps: 1,
+          code: '1',
         },
         {
           ...baseWorkout.exercises[0],
           machine: 'Dup Machine',
-          bestReps: 2,
+          code: '2',
         },
       ],
     };
@@ -120,7 +119,8 @@ describe('WorkoutPage exercise updates', () => {
     fireEvent.click(screen.getByText('Save Workout'));
 
     const payload = mockUpdateWorkout.mock.calls.at(-1)?.[1];
-    expect(payload.exercises[0].bestReps).toBe(1);
-    expect(payload.exercises[1].bestReps).toBe(3);
+    // `code` is just a marker here: index 1 was updated, index 0 untouched.
+    expect(payload.exercises[0].code).toBe('1');
+    expect(payload.exercises[1].code).toBe('3');
   });
 });

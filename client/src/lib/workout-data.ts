@@ -24,9 +24,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 15, rest: "1:00" },
           { weight: 70, reps: 15, rest: "1:00" },
           { weight: 90, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 90,
-        bestReps: 15
+        ]
       },
       {
         code: "S5",
@@ -38,9 +36,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 100, reps: 15, rest: "1:00" },
           { weight: 115, reps: 10, rest: "1:30" },
           { weight: 115, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 115,
-        bestReps: 10
+        ]
       },
       {
         code: "S4",
@@ -52,9 +48,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 160, reps: 15, rest: "1:00" },
           { weight: 160, reps: 15, rest: "1:00" },
           { weight: 165, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 165,
-        bestReps: 15
+        ]
       },
       {
         code: "S12",
@@ -66,9 +60,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 15, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 10
+        ]
       },
       {
         code: "S33",
@@ -80,9 +72,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 25, reps: 15, rest: "1:00" },
           { weight: 25, reps: 15, rest: "1:00" },
           { weight: 25, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 25,
-        bestReps: 15
+        ]
       },
       {
         code: "S24",
@@ -94,9 +84,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 100, reps: 15, rest: "1:00" },
           { weight: 120, reps: 10, rest: "1:30" },
           { weight: 120, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 120,
-        bestReps: 10
+        ]
       },
       {
         code: "S8",
@@ -108,9 +96,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 125, reps: 15, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 140,
-        bestReps: 10
+        ]
       }
     ],
     abs: [
@@ -134,9 +120,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 180, reps: 10, rest: "1:00" },
           { weight: 220, reps: 15, rest: "1:00" },
           { weight: 230, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 230,
-        bestReps: 15
+        ]
       },
       {
         code: "S22",
@@ -148,9 +132,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 400, reps: 10, rest: "1:30" },
           { weight: 450, reps: 10, rest: "1:00" },
           { weight: 450, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 450,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -162,9 +144,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 0, reps: 20, rest: "1:00" },
           { weight: 0, reps: 20, rest: "1:00" },
           { weight: 0, reps: 20, rest: "1:00" }
-        ],
-        bestWeight: 0,
-        bestReps: 20
+        ]
       },
       {
         code: "S14",
@@ -176,9 +156,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 165, reps: 15, rest: "1:30" },
           { weight: 175, reps: 10, rest: "1:00" },
           { weight: 175, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 175,
-        bestReps: 10
+        ]
       },
       {
         code: "S15",
@@ -190,9 +168,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 160, reps: 15, rest: "1:00" },
           { weight: 170, reps: 15, rest: "1:00" },
           { weight: 185, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 185,
-        bestReps: 15
+        ]
       },
       {
         code: "S16",
@@ -204,9 +180,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 150, reps: 10, rest: "1:00" },
           { weight: 150, reps: 10, rest: "1:00" },
           { weight: 150, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 150,
-        bestReps: 10
+        ]
       },
       {
         code: "S18",
@@ -218,9 +192,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 155, reps: 10, rest: "1:00" },
           { weight: 155, reps: 10, rest: "1:00" },
           { weight: 155, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 155,
-        bestReps: 10
+        ]
       },
       {
         code: "S17",
@@ -232,9 +204,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 135, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 140,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -246,9 +216,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" }
-        ],
-        bestWeight: 0,
-        bestReps: 12
+        ]
       },
       {
         code: "S3",
@@ -260,9 +228,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 45, reps: 20, rest: "1:00" },
           { weight: 45, reps: 20, rest: "1:00" },
           { weight: 45, reps: 20, rest: "1:00" }
-        ],
-        bestWeight: 45,
-        bestReps: 20
+        ]
       }
     ],
     abs: [
@@ -287,9 +253,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 135, reps: 10, rest: "1:00" },
           { weight: 150, reps: 10, rest: "1:00" },
           { weight: 160, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 160,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -301,9 +265,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 120, reps: 15, rest: "1:30" },
           { weight: 140, reps: 15, rest: "1:30" },
           { weight: 150, reps: 15, rest: "1:30" }
-        ],
-        bestWeight: 150,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -315,9 +277,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 140, reps: 15, rest: "1:30" },
           { weight: 200, reps: 10, rest: "1:30" },
           { weight: 200, reps: 6, rest: "1:30" }
-        ],
-        bestWeight: 200,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -329,9 +289,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 200, reps: 20, rest: "1:00" },
           { weight: 200, reps: 20, rest: "1:00" },
           { weight: 200, reps: 20, rest: "1:00" }
-        ],
-        bestWeight: 200,
-        bestReps: 20
+        ]
       },
       {
         code: "N/A",
@@ -343,9 +301,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 15, reps: 10, rest: "1:00" },
           { weight: 15, reps: 10, rest: "1:00" },
           { weight: 15, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 15,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -357,9 +313,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -371,9 +325,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 40, reps: 10, rest: "1:00" },
           { weight: 40, reps: 10, rest: "1:00" },
           { weight: 50, reps: 6, rest: "1:00" }
-        ],
-        bestWeight: 50,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -385,9 +337,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 55, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -399,9 +349,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 15, reps: 15, rest: "1:00" },
           { weight: 15, reps: 15, rest: "1:00" },
           { weight: 15, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 15,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -413,9 +361,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 90, reps: 15, rest: "1:00" },
           { weight: 90, reps: 15, rest: "1:00" },
           { weight: 90, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 90,
-        bestReps: 15
+        ]
       }
     ],
     abs: [
@@ -440,9 +386,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 110, reps: 15, rest: "1:00" },
           { weight: 135, reps: 15, rest: "1:00" },
           { weight: 135, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 135,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -454,9 +398,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 120, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 140,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -468,9 +410,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 40, reps: 10, rest: "1:30" },
           { weight: 40, reps: 10, rest: "1:30" },
           { weight: 40, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 40,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -482,9 +422,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 90, reps: 10, rest: "1:00" },
           { weight: 90, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 90,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -496,9 +434,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 70, reps: 15, rest: "1:00" },
           { weight: 70, reps: 15, rest: "1:00" },
           { weight: 70, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -510,9 +446,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 200, reps: 20, rest: "1:00" },
           { weight: 200, reps: 20, rest: "1:00" },
           { weight: 200, reps: 20, rest: "1:00" }
-        ],
-        bestWeight: 200,
-        bestReps: 20
+        ]
       },
       {
         code: "N/A",
@@ -524,9 +458,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 155, reps: 10, rest: "1:00" },
           { weight: 160, reps: 10, rest: "1:00" },
           { weight: 160, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 160,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -538,9 +470,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 380, reps: 15, rest: "1:30" },
           { weight: 400, reps: 10, rest: "1:30" },
           { weight: 400, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 400,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -552,9 +482,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 130, reps: 15, rest: "1:00" },
           { weight: 130, reps: 15, rest: "1:00" },
           { weight: 130, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 130,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -566,9 +494,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" }
-        ],
-        bestWeight: 0,
-        bestReps: 12
+        ]
       },
       {
         code: "N/A",
@@ -580,9 +506,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 45, reps: 15, rest: "1:00" },
           { weight: 45, reps: 15, rest: "1:00" },
           { weight: 45, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 45,
-        bestReps: 15
+        ]
       }
     ],
     abs: [
@@ -607,9 +531,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 75, reps: 15, rest: "1:00" },
           { weight: 100, reps: 15, rest: "1:00" },
           { weight: 100, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 100,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -621,9 +543,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 15, rest: "1:00" },
           { weight: 80, reps: 6, rest: "1:00" },
           { weight: 80, reps: 6, rest: "1:00" }
-        ],
-        bestWeight: 80,
-        bestReps: 6
+        ]
       },
       {
         code: "N/A",
@@ -635,9 +555,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 15, reps: 15, rest: "1:00" },
           { weight: 15, reps: 15, rest: "1:00" },
           { weight: 15, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 15,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -649,9 +567,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 140, reps: 10, rest: "1:00" },
           { weight: 140, reps: 10, rest: "1:00" },
           { weight: 150, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 150,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -663,9 +579,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 50, reps: 10, rest: "1:30" },
           { weight: 50, reps: 10, rest: "1:30" },
           { weight: 50, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 50,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -677,9 +591,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 15, reps: 10, rest: "1:00" },
           { weight: 15, reps: 10, rest: "1:00" },
           { weight: 15, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 15,
-        bestReps: 10
+        ]
       }
     ],
     abs: [
@@ -704,9 +616,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 75, reps: 10, rest: "1:00" },
           { weight: 100, reps: 10, rest: "1:00" },
           { weight: 100, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 100,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -718,9 +628,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 0, reps: 10, rest: "1:00" },
           { weight: 0, reps: 10, rest: "1:00" },
           { weight: 0, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 0,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -732,9 +640,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 100, reps: 10, rest: "1:00" },
           { weight: 100, reps: 10, rest: "1:00" },
           { weight: 100, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 100,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -746,9 +652,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 20, reps: 10, rest: "1:30" },
           { weight: 30, reps: 10, rest: "1:30" },
           { weight: 30, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 30,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -760,9 +664,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 70, reps: 10, rest: "1:30" },
           { weight: 70, reps: 10, rest: "1:30" },
           { weight: 70, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 70,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -774,9 +676,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 55, reps: 10, rest: "1:30" },
           { weight: 65, reps: 10, rest: "1:30" },
           { weight: 65, reps: 10, rest: "1:30" }
-        ],
-        bestWeight: 65,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -788,9 +688,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 135, reps: 10, rest: "1:00" },
           { weight: 135, reps: 10, rest: "1:00" },
           { weight: 135, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 135,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -802,9 +700,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 200, reps: 10, rest: "1:00" },
           { weight: 200, reps: 10, rest: "1:00" },
           { weight: 200, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 200,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -816,9 +712,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" },
           { weight: 70, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 10
+        ]
       }
     ],
     abs: [
@@ -842,9 +736,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 15, rest: "1:00" },
           { weight: 80, reps: 8, rest: "1:00" },
           { weight: 90, reps: 6, rest: "1:00" }
-        ],
-        bestWeight: 90,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -856,9 +748,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 25, reps: 15, rest: "1:00" },
           { weight: 30, reps: 15, rest: "1:00" },
           { weight: 30, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 30,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -870,9 +760,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 60, reps: 15, rest: "1:00" },
           { weight: 70, reps: 15, rest: "1:00" },
           { weight: 70, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 70,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -884,9 +772,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 180, reps: 10, rest: "1:00" },
           { weight: 200, reps: 10, rest: "1:00" },
           { weight: 200, reps: 10, rest: "1:00" }
-        ],
-        bestWeight: 200,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -898,9 +784,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 170, reps: 10, rest: "1:30" },
           { weight: 170, reps: 10, rest: "1:30" },
           { weight: 200, reps: 8, rest: "1:30" }
-        ],
-        bestWeight: 200,
-        bestReps: 10
+        ]
       },
       {
         code: "N/A",
@@ -912,9 +796,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 155, reps: 15, rest: "1:30" },
           { weight: 165, reps: 12, rest: "1:30" },
           { weight: 165, reps: 8, rest: "1:30" }
-        ],
-        bestWeight: 165,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -926,9 +808,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 130, reps: 15, rest: "1:00" },
           { weight: 130, reps: 15, rest: "1:00" },
           { weight: 130, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 130,
-        bestReps: 15
+        ]
       },
       {
         code: "N/A",
@@ -940,9 +820,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" },
           { weight: 0, reps: 12, rest: "1:00" }
-        ],
-        bestWeight: 0,
-        bestReps: 12
+        ]
       },
       {
         code: "N/A",
@@ -954,9 +832,7 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
           { weight: 45, reps: 15, rest: "1:00" },
           { weight: 45, reps: 15, rest: "1:00" },
           { weight: 45, reps: 15, rest: "1:00" }
-        ],
-        bestWeight: 45,
-        bestReps: 15
+        ]
       }
     ],
     abs: [

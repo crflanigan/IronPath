@@ -8,15 +8,24 @@ import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import { hasExerciseImage } from '@/lib/exercise-images';
+import type { PersonalBest } from '@/lib/personal-best';
 import { localWorkoutStorage } from '@/lib/storage';
 
 interface ExerciseFormProps {
   exercise: Exercise;
   onUpdate: (exercise: Exercise) => void;
   isActive?: boolean;
+  /**
+   * The heaviest set logged for this exercise before today, or undefined if it
+   * has never been logged. Derived from stored workouts by `personalBests` and
+   * passed in, rather than read off the exercise — the `bestWeight` that used
+   * to live there was a template constant, identical for everyone and frozen
+   * forever.
+   */
+  personalBest?: PersonalBest;
 }
 
-export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBest }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
   const [restDigits, setRestDigits] = useState<string[]>(
     exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
@@ -99,18 +108,18 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
     return 'pending';
   };
 
-  // A previous best only exists once the exercise has actually been done
-  // before. Exercises added through the custom workout builder carry none, and
-  // treating that as zero made the first set anyone logged look like a
-  // personal record.
-  const hasRecordedBest = localExercise.bestWeight !== undefined;
+  // A previous best only exists once the exercise has actually been logged.
+  // Until then there is nothing true to show, so the line is not rendered at
+  // all — better than an invented number, and one less thing on the screen
+  // during a first workout.
+  const hasRecordedBest = personalBest !== undefined;
 
   const getWeightChange = () => {
     if (!hasRecordedBest) return { change: '', color: '' };
 
     const weights = localExercise.sets.map(s => s.weight ?? 0);
     const currentWeight = weights.length > 0 ? Math.max(...weights) : 0;
-    const difference = currentWeight - localExercise.bestWeight!;
+    const difference = currentWeight - personalBest!.weight;
 
     if (difference > 0) return { change: `↑ +${difference} lbs`, color: 'text-blue-600' };
     if (difference < 0) return { change: `↓ ${Math.abs(difference)} lbs`, color: 'text-red-600' };
@@ -284,8 +293,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
           <div className="mt-2 flex items-center space-x-2">
             <span className="text-xs text-gray-500 dark:text-gray-400">BEST:</span>
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-              {localExercise.bestWeight} lbs
-              {localExercise.bestReps !== undefined && ` × ${localExercise.bestReps} reps`}
+              {personalBest!.weight} lbs × {personalBest!.reps} reps
             </span>
             {getWeightChange().change && (
               <span className={`text-xs ${getWeightChange().color}`}>

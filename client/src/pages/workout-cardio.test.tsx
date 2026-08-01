@@ -19,7 +19,8 @@ const mockToast = vi.fn((_options: { title?: string; description?: string }) => 
 }));
 
 vi.mock('@/hooks/use-workout-storage', () => ({
-  useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout }),
+  // `workouts` feeds the personal-best derivation; the page reads it now.
+  useWorkoutStorage: () => ({ updateWorkout: mockUpdateWorkout, workouts: [] }),
 }));
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('@/hooks/use-toast', () => ({
