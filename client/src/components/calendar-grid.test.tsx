@@ -32,7 +32,53 @@ beforeEach(() => {
   formatCalls.n = 0;
 });
 
-describe('the 42-cell day grid', () => {
+describe('the day grid', () => {
+  /**
+   * Count day cells, excluding the seven weekday headings that share the grid.
+   */
+  const dayCells = (container: HTMLElement) => {
+    const grid = container.querySelector('.grid-cols-7')!;
+    return grid.children.length - 7;
+  };
+
+  /**
+   * The grid used to pad every month to 42 cells, so it always drew six rows.
+   * Most months do not need six: 19 of the 24 months in 2026-27 had a final
+   * row of nothing but next-month filler, and February 2026 — starting on a
+   * Sunday with 28 days — drew two. Cells are `aspect-square`, so each wasted
+   * row pushed a full cell of height onto a page read on a phone.
+   */
+  it.each([
+    { month: 'February 2026', date: new Date(2026, 1, 1), cells: 28, rows: 4 },
+    { month: 'July 2026', date: new Date(2026, 6, 1), cells: 35, rows: 5 },
+    { month: 'May 2026', date: new Date(2026, 4, 1), cells: 42, rows: 6 },
+    { month: 'January 2027', date: new Date(2027, 0, 1), cells: 42, rows: 6 },
+  ])('draws $month as $cells cells, $rows rows', ({ date, cells, rows }) => {
+    const { container } = render(<CalendarGrid {...props} currentDate={date} />);
+
+    expect(dayCells(container)).toBe(cells);
+    expect(dayCells(container) / 7).toBe(rows);
+  });
+
+  it('always ends on a whole week, and never splits a month across a partial row', () => {
+    for (let m = 0; m < 12; m++) {
+      const { container, unmount } = render(
+        <CalendarGrid {...props} currentDate={new Date(2026, m, 1)} />,
+      );
+
+      const cells = dayCells(container);
+      expect(cells % 7, `month ${m + 1} does not end on a whole week`).toBe(0);
+
+      // Every day of the month must still be present — trimming the trailing
+      // row must never trim a real day.
+      const daysInMonth = new Date(2026, m + 1, 0).getDate();
+      const startingDayOfWeek = new Date(2026, m, 1).getDay();
+      expect(cells).toBeGreaterThanOrEqual(startingDayOfWeek + daysInMonth);
+
+      unmount();
+    }
+  });
+
   it('is not rebuilt on an unrelated re-render', () => {
     const { rerender } = render(<CalendarGrid {...props} />);
     const afterFirst = formatCalls.n;
