@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CalendarGrid } from '@/components/calendar-grid';
 import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { generateWorkoutSchedule, getTodaysWorkoutType, workoutTemplates } from '@/lib/workout-data';
+import { generateWorkoutSchedule, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { calculateDayStreak, calculateTopDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
@@ -205,21 +205,31 @@ export function CalendarPage() {
     setSelectedDate(normalized);
   };
 
-  const handleStartTodayWorkout = async () => {
-    const today = formatLocalDate(new Date());
-    const existingWorkout = await getWorkoutByDate(today);
+  /**
+   * Start (or open) the workout for the day the panel is showing.
+   *
+   * This used to always act on `new Date()` while sitting inside a panel headed
+   * with the selected date, directly under a line reading "Selected Day's
+   * Workout: Legs". So tapping a day and pressing the button created a workout
+   * for today, of today's type — not the one named a few pixels above.
+   */
+  const handleStartSelectedWorkout = async () => {
+    const date = selectedDate ?? formatLocalDate(new Date());
+    const existingWorkout = await getWorkoutByDate(date);
 
     if (existingWorkout) {
       navigateToWorkout(existingWorkout);
     } else {
-      // Create new workout for today
-      const workoutType = getTodaysWorkoutType();
+      // The type the panel is advertising for this day, which is the scheduled
+      // one — not today's.
+      const workoutType = selectedWorkoutType;
+      if (!workoutType) return;
       const builtIn = workoutTemplates[workoutType as keyof typeof workoutTemplates];
       let newWorkout: Workout | undefined;
       if (builtIn) {
         const template = builtIn;
         newWorkout = await createWorkout({
-          date: today,
+          date,
           type: workoutType,
           exercises: template.exercises.map(e => ({
             ...e,
@@ -239,7 +249,7 @@ export function CalendarPage() {
         const custom = customTemplates.find(t => t.name === workoutType);
         if (!custom) return;
         newWorkout = await createWorkout({
-          date: today,
+          date,
           type: workoutType,
           exercises: custom.exercises.map(e => ({
             ...e,
@@ -382,8 +392,10 @@ export function CalendarPage() {
             <p className="text-center font-medium">
               Selected Day's Workout: {selectedWorkoutType ?? 'None'}
             </p>
-            <Button onClick={handleStartTodayWorkout} className="w-full">
-              Start Today's Workout
+            <Button onClick={handleStartSelectedWorkout} className="w-full">
+              {selectedDate === formatLocalDate(new Date())
+                ? "Start Today's Workout"
+                : 'Start This Workout'}
             </Button>
 
             {selectedWorkout && (
