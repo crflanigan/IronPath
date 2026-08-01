@@ -136,7 +136,23 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false }: ExerciseF
               <button
                 type="button"
                 onClick={() => setShowHelp(true)}
-                className="text-gray-500 hover:text-primary"
+                /*
+                 * The icon is 20x20 — a hard thing to hit accurately with a
+                 * thumb, one-handed, between sets, which is exactly how this
+                 * screen is used.
+                 *
+                 * `before` is a 44x44 hit area centred on the icon. It is
+                 * absolutely positioned, so it takes part in no layout and the
+                 * row height does not change. Growing the button itself would
+                 * add roughly 400px to this page, which is the opposite of
+                 * what it needs.
+                 *
+                 * Safe to expand here specifically: the nearest neighbouring
+                 * control measures 59px away, and this zone reaches 12px per
+                 * side, leaving ~47px of separation. It cannot steal an
+                 * adjacent tap.
+                 */
+                className="relative text-gray-500 hover:text-primary before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
               >
                 <HelpCircle className="h-5 w-5" />
                 <span className="sr-only">{`Show reference photo for ${localExercise.machine}`}</span>

@@ -442,7 +442,24 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               {/* "Abs Block" until core became its own muscle group and the
                   section stopped being only abs. */}
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Core Block</h3>
-              <div className="space-y-3">
+              {/*
+                * space-y-3 put 16px between one row's tick and the next one's.
+                *
+                * These six sit in a column and are the controls people actually
+                * mis-tap — reaching for one and unchecking the row above. The
+                * set-completion circles are 304px apart and have never had the
+                * problem.
+                *
+                * The fix is separation, not a bigger target: at 36px tall with a
+                * 16px gap, widening the tap area to the usual 44px would cut the
+                * gap to 8px, and taps that currently land in dead space and do
+                * nothing would start hitting the neighbour instead. The dead
+                * zone is what protects you here, so it gets bigger: 16px -> 24px.
+                *
+                * Costs ~40px on a 4472px page, because the Core Block is six
+                * rows rather than the fifty this page has in total.
+                */}
+              <div className="space-y-5">
                 {workout.abs.map((absExercise, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
