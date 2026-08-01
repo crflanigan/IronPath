@@ -60,7 +60,7 @@ Requires Node 20+.
 
 ```bash
 npm install
-npm run dev          # http://localhost:5000
+npm run dev          # http://localhost:5173
 ```
 
 Other scripts:
