@@ -36,8 +36,6 @@ export const exerciseSchema = z.object({
   region: z.string(),
   feel: z.enum(["Light", "Medium", "Hard", "Heavy", "N/A"]),
   sets: z.array(exerciseSetSchema),
-  bestWeight: z.number().optional(),
-  bestReps: z.number().optional(),
   completed: z.boolean().default(false)
 });
 

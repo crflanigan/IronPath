@@ -44,10 +44,14 @@ describe('an exercise with no recorded best', () => {
 });
 
 describe('an exercise with a recorded best', () => {
+  // `personalBest` is now derived from logged workouts and passed in. It used
+  // to be `bestWeight` on the exercise itself, which came from the template and
+  // was the same fabricated number for everybody.
   it('still shows it', () => {
     render(
       <ExerciseForm
-        exercise={exercise({ bestWeight: 120, bestReps: 8 })}
+        exercise={exercise()}
+        personalBest={{ weight: 120, reps: 8 }}
         onUpdate={() => {}}
       />,
     );
@@ -59,10 +63,9 @@ describe('an exercise with a recorded best', () => {
     render(
       <ExerciseForm
         exercise={exercise({
-          bestWeight: 120,
-          bestReps: 8,
           sets: [{ weight: 130, reps: 8, rest: '1:00', completed: false }],
         })}
+        personalBest={{ weight: 120, reps: 8 }}
         onUpdate={() => {}}
       />,
     );
@@ -73,10 +76,9 @@ describe('an exercise with a recorded best', () => {
     render(
       <ExerciseForm
         exercise={exercise({
-          bestWeight: 120,
-          bestReps: 8,
           sets: [{ weight: 110, reps: 8, rest: '1:00', completed: false }],
         })}
+        personalBest={{ weight: 120, reps: 8 }}
         onUpdate={() => {}}
       />,
     );
