@@ -175,6 +175,20 @@ export interface IronPathBackup {
   customExercises: CustomExercise[];
 }
 
+/**
+ * Thrown when an edit could not be written to this device.
+ *
+ * A distinct type so a caller can tell "your data is not durable" apart from a
+ * programming error, and so the message shown to a user is not a raw browser
+ * exception.
+ */
+export class StorageWriteError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StorageWriteError';
+  }
+}
+
 export class LocalWorkoutStorage {
   private storageLimit = 5 * 1024 * 1024; // 5MB approximate
   private warningThreshold = 0.8;
@@ -196,19 +210,33 @@ export class LocalWorkoutStorage {
     }
   }
 
-  private safeSetItem(key: string, value: string): void {
+  /**
+   * Write a key, falling back to memory when the browser refuses.
+   *
+   * Returns whether the value actually reached localStorage. That return value
+   * is the whole point: this used to swallow the failure and return normally,
+   * so a caller's `catch` never fired and the success path ran. A workout could
+   * be reported as "Auto-saved" with nothing whatsoever persisted — Safari
+   * private mode, "block all cookies", and an exhausted quota all throw here.
+   *
+   * Falling back to memory is still right: the session keeps working. What was
+   * wrong was not saying so.
+   */
+  private safeSetItem(key: string, value: string): boolean {
     if (typeof localStorage === 'undefined' || this.storageFailed) {
       this.memoryStore[key] = value;
-      return;
+      return false;
     }
     try {
       localStorage.setItem(key, value);
       this.checkQuota();
+      return true;
     } catch (err) {
       console.error('localStorage setItem failed', err);
       this.storageFailed = true;
       this.memoryStore[key] = value;
       this.handleStorageError(err);
+      return false;
     }
   }
 
@@ -450,8 +478,9 @@ export class LocalWorkoutStorage {
     return workouts;
   }
 
-  private saveWorkouts(workouts: Workout[]): void {
-    this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+  /** Returns whether the workouts actually reached localStorage. */
+  private saveWorkouts(workouts: Workout[]): boolean {
+    return this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
   }
 
   private getExerciseHistory(): Record<string, ExerciseHistoryEntry> {
@@ -643,7 +672,17 @@ export class LocalWorkoutStorage {
     } as Workout;
     
     workouts[index] = updatedWorkout;
-    this.saveWorkouts(workouts);
+
+    // Throwing here is what stops the caller reporting a save that did not
+    // happen. The edit is still in the in-memory store, so the session keeps
+    // working — the user is simply told the truth about durability.
+    if (!this.saveWorkouts(workouts)) {
+      throw new StorageWriteError(
+        'Workout could not be saved to this device. It is kept in memory for ' +
+          'this session only.',
+      );
+    }
+
     if (updates.exercises) {
       this.updateExerciseHistory(updatedWorkout.exercises, updatedWorkout.date);
     }

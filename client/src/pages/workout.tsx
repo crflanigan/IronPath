@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { personalBests } from '@/lib/personal-best';
+import { StorageWriteError } from '@/lib/storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -139,8 +140,11 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     } catch (error) {
       console.error("Autosave failed", error);
       toast({
-        title: "Save failed",
-        description: "Failed to save workout progress",
+        title: "Not saved to this device",
+        description:
+          error instanceof StorageWriteError
+            ? error.message
+            : "Failed to save workout progress",
         variant: "destructive",
       });
     }
