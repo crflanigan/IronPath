@@ -74,7 +74,15 @@ export function CalendarGrid({
       });
     }
 
-    const remainingDays = 42 - days.length;
+    // Pad out to a whole week, not to a fixed six rows.
+    //
+    // This used to be `42 - days.length`, so every month rendered six rows
+    // whether it needed them or not. 19 of the 24 months in 2026-27 have a
+    // sixth row containing nothing but next-month filler, and February 2026
+    // — which starts on a Sunday and has 28 days — rendered two such rows.
+    // Cells are `aspect-square`, so each one costs a full cell of height on
+    // the page above the fold.
+    const remainingDays = (7 - (days.length % 7)) % 7;
     for (let day = 1; day <= remainingDays; day++) {
       days.push({
         day,
