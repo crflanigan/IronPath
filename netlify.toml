@@ -1,3 +1,14 @@
 [build]
   publish = "dist"
   command = "npm run build"
+
+# Deploy previews only. Production's command above is deliberately untouched,
+# so the CSP the public site serves is unchanged.
+#
+# Netlify injects its preview toolbar as an iframe from https://app.netlify.com,
+# which the site's `default-src 'self'` blocks — leaving a bar at the bottom of
+# every preview that cannot be dismissed. Headers in this file are global and
+# cannot be scoped to a context, but commands can, so the relaxation is applied
+# here instead. See scripts/allow-preview-toolbar.mjs.
+[context.deploy-preview]
+  command = "npm run build && node scripts/allow-preview-toolbar.mjs"

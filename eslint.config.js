@@ -108,4 +108,12 @@ export default tseslint.config(
     files: ['client/public/sw.js'],
     languageOptions: { globals: { ...globals.serviceworker, ...globals.browser } },
   },
+
+  // Build scripts run under Node, not in a browser. The base config only hands
+  // Node globals to .ts/.tsx, so without this a plain `console.log` here is
+  // reported as `'console' is not defined`.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node } },
+  },
 );
