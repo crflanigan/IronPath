@@ -124,25 +124,27 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           ))}
 
           {/*
-            * This is an action, not a template.
+            * This is an action, not a template, and it used to be impossible to
+            * tell: same outlined card as Chest Day or Legs, with a gear beside
+            * it. A verb among nouns, and a gear implying "configure the
+            * create-new action", which is not a thing.
             *
-            * It used to sit in the list styled exactly like Chest Day or Legs —
-            * same outlined card, and a gear button beside it. Two things were
-            * wrong with that: it is a verb among nouns, and a gear next to it
-            * implies "configure the create-new action", which is not a thing.
+            * It stays in the list rather than moving below a divider. Pulling
+            * it out cost a separator plus a full-width row, and that space is
+            * worth most exactly when it is scarcest — a picker holding a lot of
+            * custom workouts already scrolls.
             *
-            * The gear was also a duplicate: it called the same handler as the
-            * button it sat beside, so the row carried two controls doing one
-            * job, and a screen reader found two buttons with the same name.
+            * So the difference is carried by colour instead: the primary teal
+            * on the border, text and icon, against the neutral grey of every
+            * template around it. Same footprint, unmistakably not a template.
             *
-            * Now it is below the divider that ends the preset list, full width,
-            * with a plus rather than a gear.
+            * The gear is gone regardless. It called the same handler as the
+            * button beside it, so the row held two controls doing one job and a
+            * screen reader found two buttons with the same name.
             */}
-          <Separator className="my-2" />
-
           <Button
-            variant="secondary"
-            className="w-full"
+            variant="outline"
+            className="w-full justify-start border-primary text-primary hover:bg-primary/10 hover:text-primary"
             data-builder-tour="create-custom"
             onClick={() => {
               onCreateCustom();
@@ -152,6 +154,8 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             <Plus className="mr-2 h-4 w-4" />
             Create Custom Workout
           </Button>
+
+          <Separator className="my-2" />
 
           {customTemplates.length > 0 && (
             <div className="pt-2 space-y-2">
