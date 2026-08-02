@@ -626,6 +626,17 @@ export class LocalWorkoutStorage {
         continue;
       }
       const key = e.machine; // use machine name to avoid duplicate codes
+
+      // Only move history forward. This used to overwrite unconditionally, so
+      // editing an old session rewrote "last used" with that session's older
+      // numbers and every future workout pre-filled from them.
+      //
+      // Seen in real data: a user's Seated Leg Press history read 130 dated
+      // 2026-07-07 while she had 140s logged on the 9th, 14th and 21st —
+      // because the July 7th workout was edited on the 26th, after all three.
+      const existing = history[key];
+      if (existing && existing.date > date) continue;
+
       history[key] = {
         sets: e.sets.map(s => ({ weight: s.weight!, reps: s.reps!, rest: s.rest })),
         date,
