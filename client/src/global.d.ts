@@ -4,3 +4,5 @@
  * render it). See `version.test.ts` for the guard that keeps the two in step.
  */
 declare const __APP_VERSION__: string;
+/** "PR #210 · 9ffdc4d" on a preview, "9ffdc4d" in production, "dev" locally. */
+declare const __APP_BUILD__: string;

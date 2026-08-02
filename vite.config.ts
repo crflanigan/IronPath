@@ -19,9 +19,24 @@ const { version } = JSON.parse(
   readFileSync(path.resolve(DIRNAME, "package.json"), "utf-8"),
 ) as { version: string };
 
+/**
+ * Which build you are looking at.
+ *
+ * The version alone could not answer that. It only moves at release time, so
+ * every deploy preview between releases showed the same number as production
+ * and there was no way to tell them apart in the app — which matters most
+ * exactly when you are testing a preview and asking "is this the new one?".
+ *
+ * Netlify sets these at build time. Locally they are undefined, which is its
+ * own useful answer.
+ */
+const commit = process.env.COMMIT_REF?.slice(0, 7) ?? "dev";
+const review = process.env.REVIEW_ID ? `PR #${process.env.REVIEW_ID}` : "";
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
+    __APP_BUILD__: JSON.stringify([review, commit].filter(Boolean).join(" · ")),
   },
   plugins: [
     react(),
