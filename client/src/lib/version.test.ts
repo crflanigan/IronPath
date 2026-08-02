@@ -51,3 +51,34 @@ describe('the displayed app version', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/**
+ * The version alone could not say which build you were looking at. It moves
+ * only at release time, so every deploy preview between releases showed the
+ * same number as production — precisely when knowing the difference matters
+ * most, because you are testing a preview and asking "is this the new one?".
+ */
+describe('the build identity', () => {
+  const read = (rel: string) => readFileSync(path.join(REPO_ROOT, rel), 'utf-8');
+  const config = read('vite.config.ts');
+
+  it('is injected at build time, like the version', () => {
+    expect(config).toMatch(/__APP_BUILD__:\s*JSON\.stringify/);
+  });
+
+  it('comes from the deploy, not from anything committed', () => {
+    // Hardcoding it would go stale the moment it was written.
+    expect(config).toContain('process.env.COMMIT_REF');
+    expect(config).toContain('process.env.REVIEW_ID');
+  });
+
+  it('is declared, so a typo is a compile error rather than "undefined"', () => {
+    expect(read('client/src/global.d.ts')).toContain('__APP_BUILD__');
+  });
+
+  it('is shown beside the version in Settings', () => {
+    const settings = read('client/src/components/SettingsDialog.tsx');
+    expect(settings).toContain('__APP_VERSION__');
+    expect(settings).toContain('__APP_BUILD__');
+  });
+});
