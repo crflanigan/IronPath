@@ -318,13 +318,37 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     setWorkout(completedWorkout);
     
     try {
-      await updateWorkout(workout.id, {
+      /*
+       * Deliberately not guarded by `expectedUpdatedAt`.
+       *
+       * Completing is an explicit, user-initiated action at the end of a
+       * session. Refusing it over a concurrency check is a worse outcome than
+       * the thing that check prevents, and doing so broke eight existing tests
+       * by leaving people stranded on a workout they had just finished.
+       */
+      const saved = await updateWorkout(workout.id, {
         exercises: completedWorkout.exercises,
         abs: completedWorkout.abs,
         cardio: completedWorkout.cardio,
         completed: true,
-        duration: completedWorkout.duration
+        duration: completedWorkout.duration,
       });
+
+      /*
+       * Both refs must follow what was just written.
+       *
+       * Without this, completing raised "Changed in another tab" on the way
+       * back to the calendar, with one tab open: the stored `updatedAt` moved
+       * on here, this tab kept believing the older value, and the flush that
+       * runs on navigation sent that stale expectation to a concurrency check
+       * doing exactly its job.
+       *
+       * `lastSavedRef` matters too — without it the flush runs at all, despite
+       * this write having just persisted everything.
+       */
+      expectedUpdatedAtRef.current = saved?.updatedAt ?? new Date();
+      lastSavedRef.current = JSON.stringify(completedWorkout);
+
       toast({
         title: "Workout completed! 🎉",
         description: "Great job! Your workout has been saved.",
