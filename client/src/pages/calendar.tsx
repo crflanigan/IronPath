@@ -407,9 +407,18 @@ export function CalendarPage() {
               />
             )}
 
+            {/*
+              * "No custom workout scheduled for this date" — which read as
+              * flatly denying the "Selected Day's Workout: Legs" three lines
+              * above it, and had two wrong words in five.
+              *
+              * `selectedWorkout` is the stored *record*, so this state has
+              * nothing to do with custom templates, and the day is scheduled —
+              * the rotation named it. What is absent is anything logged.
+              */}
             {!selectedWorkout && (
               <p className="text-center text-gray-600 dark:text-gray-400">
-                No custom workout scheduled for this date
+                Nothing logged for this day yet
               </p>
             )}
 

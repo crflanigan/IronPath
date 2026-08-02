@@ -25,7 +25,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
 import { ModalTour, TEMPLATE_STEPS } from './ModalTour';
 import { hasSeenTemplateTour, markTemplateTourSeen } from '@/lib/onboarding';
@@ -123,32 +123,35 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             </div>
           ))}
 
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="outline"
-              className="flex-1 justify-start"
-              data-builder-tour="create-custom"
-              onClick={() => {
-                onCreateCustom();
-                pushView('customWorkoutBuilder');
-              }}
-            >
-              Create Custom Workout
-            </Button>
-            <Button
-              aria-label="Create Custom Workout"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                onCreateCustom();
-                pushView('customWorkoutBuilder');
-              }}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          </div>
-
+          {/*
+            * This is an action, not a template.
+            *
+            * It used to sit in the list styled exactly like Chest Day or Legs —
+            * same outlined card, and a gear button beside it. Two things were
+            * wrong with that: it is a verb among nouns, and a gear next to it
+            * implies "configure the create-new action", which is not a thing.
+            *
+            * The gear was also a duplicate: it called the same handler as the
+            * button it sat beside, so the row carried two controls doing one
+            * job, and a screen reader found two buttons with the same name.
+            *
+            * Now it is below the divider that ends the preset list, full width,
+            * with a plus rather than a gear.
+            */}
           <Separator className="my-2" />
+
+          <Button
+            variant="secondary"
+            className="w-full"
+            data-builder-tour="create-custom"
+            onClick={() => {
+              onCreateCustom();
+              pushView('customWorkoutBuilder');
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Custom Workout
+          </Button>
 
           {customTemplates.length > 0 && (
             <div className="pt-2 space-y-2">
