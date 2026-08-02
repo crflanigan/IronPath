@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExerciseForm } from '@/components/exercise-form';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { personalBests } from '@/lib/personal-best';
+import { personalBests, type PersonalBest } from '@/lib/personal-best';
+import { ResetPersonalBestDialog } from '@/components/ResetPersonalBestDialog';
+import { localWorkoutStorage } from '@/lib/storage';
 import { ConcurrentEditError, StorageWriteError } from '@/lib/storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
@@ -67,9 +69,14 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
    * Memoised because it scans every stored workout, and this page re-renders
    * on each keystroke.
    */
+  const [resetsVersion, setResetsVersion] = useState(0);
+  const [resetting, setResetting] = useState<{ machine: string; current: PersonalBest } | null>(null);
+
   const bests = useMemo(
-    () => personalBests(workouts, initialWorkout.id),
-    [workouts, initialWorkout.id],
+    () => personalBests(workouts, initialWorkout.id, localWorkoutStorage.getPersonalBestResets()),
+    // `resetsVersion` re-reads the resets after one is saved; they live in
+    // storage rather than state because nothing else needs to watch them.
+    [workouts, initialWorkout.id, resetsVersion],
   );
   const focusToEnd = useCursorEndOnFocus();
 
@@ -311,13 +318,37 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     setWorkout(completedWorkout);
     
     try {
-      await updateWorkout(workout.id, {
+      /*
+       * Deliberately not guarded by `expectedUpdatedAt`.
+       *
+       * Completing is an explicit, user-initiated action at the end of a
+       * session. Refusing it over a concurrency check is a worse outcome than
+       * the thing that check prevents, and doing so broke eight existing tests
+       * by leaving people stranded on a workout they had just finished.
+       */
+      const saved = await updateWorkout(workout.id, {
         exercises: completedWorkout.exercises,
         abs: completedWorkout.abs,
         cardio: completedWorkout.cardio,
         completed: true,
-        duration: completedWorkout.duration
+        duration: completedWorkout.duration,
       });
+
+      /*
+       * Both refs must follow what was just written.
+       *
+       * Without this, completing raised "Changed in another tab" on the way
+       * back to the calendar, with one tab open: the stored `updatedAt` moved
+       * on here, this tab kept believing the older value, and the flush that
+       * runs on navigation sent that stale expectation to a concurrency check
+       * doing exactly its job.
+       *
+       * `lastSavedRef` matters too — without it the flush runs at all, despite
+       * this write having just persisted everything.
+       */
+      expectedUpdatedAtRef.current = saved?.updatedAt ?? new Date();
+      lastSavedRef.current = JSON.stringify(completedWorkout);
+
       toast({
         title: "Workout completed! 🎉",
         description: "Great job! Your workout has been saved.",
@@ -544,7 +575,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                             placeholder="time"
                           />
                           <span className="text-xs text-gray-500 dark:text-gray-400">time</span>
-                        </>
+    </>
                       )}
                       <Button
                         variant="ghost"
@@ -644,6 +675,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               onUpdate={(updatedExercise) => handleExerciseUpdate(index, updatedExercise)}
               isActive={index === currentExerciseIndex}
               personalBest={bests.get(exercise.machine)}
+              onResetBest={(machine, current) => setResetting({ machine, current })}
             />
           </ErrorBoundary>
         ))}
@@ -685,6 +717,23 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </AlertDialogFooter>
       </AlertDialogContent>
       </AlertDialog>
+
+      <ResetPersonalBestDialog
+        machine={resetting?.machine ?? null}
+        current={resetting?.current}
+        onClose={() => setResetting(null)}
+        onReset={({ manual }) => {
+          if (resetting) {
+            localWorkoutStorage.savePersonalBestReset({
+              machine: resetting.machine,
+              resetOn: new Date().toISOString().slice(0, 10),
+              manual,
+            });
+            setResetsVersion(v => v + 1);
+          }
+          setResetting(null);
+        }}
+      />
     </ErrorBoundary>
   );
 }

@@ -3,6 +3,7 @@ import { exerciseSchema, absExerciseSchema, cardioSchema } from "@shared/schema"
 import { z } from "zod";
 import { toast } from '@/hooks/use-toast';
 import { presetCycleNames } from '@/lib/workout-cycle';
+import type { PersonalBestReset } from '@/lib/personal-best';
 
 export interface CustomWorkoutTemplate {
   id: number;
@@ -23,7 +24,8 @@ const STORAGE_KEYS = {
   PRESET_PROMPTS: 'ironpath_preset_prompts',
   STREAK_DAYS: 'ironpath_streak_days',
   QUARANTINE: 'ironpath_quarantined_workouts',
-  CUSTOM_EXERCISES: 'ironpath_custom_exercises'
+  CUSTOM_EXERCISES: 'ironpath_custom_exercises',
+  PERSONAL_BEST_RESETS: 'ironpath_personal_best_resets'
 } as const;
 
 /**
@@ -626,6 +628,17 @@ export class LocalWorkoutStorage {
         continue;
       }
       const key = e.machine; // use machine name to avoid duplicate codes
+
+      // Only move history forward. This used to overwrite unconditionally, so
+      // editing an old session rewrote "last used" with that session's older
+      // numbers and every future workout pre-filled from them.
+      //
+      // Seen in real data: a user's Seated Leg Press history read 130 dated
+      // 2026-07-07 while she had 140s logged on the 9th, 14th and 21st —
+      // because the July 7th workout was edited on the 26th, after all three.
+      const existing = history[key];
+      if (existing && existing.date > date) continue;
+
       history[key] = {
         sets: e.sets.map(s => ({ weight: s.weight!, reps: s.reps!, rest: s.rest })),
         date,
@@ -838,6 +851,43 @@ export class LocalWorkoutStorage {
       this.syncAutoScheduleName(previousName, updated.name);
     }
     return updated;
+  }
+
+  /**
+   * Exercises whose personal best the user has chosen to start over.
+   *
+   * The reason is theirs — an injury, time away, or simply wanting a target
+   * that reflects where they are now. Nothing here treats a reset as a
+   * correction: it is a normal thing to want, and it is reversible by resetting
+   * again or by logging something heavier.
+   */
+  getPersonalBestResets(): PersonalBestReset[] {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.PERSONAL_BEST_RESETS);
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (r): r is PersonalBestReset =>
+          typeof r?.machine === 'string' && typeof r?.resetOn === 'string',
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  /** Replaces any previous reset for the same exercise. */
+  savePersonalBestReset(reset: PersonalBestReset): void {
+    const others = this.getPersonalBestResets().filter(r => r.machine !== reset.machine);
+    this.safeSetItem(
+      STORAGE_KEYS.PERSONAL_BEST_RESETS,
+      JSON.stringify([...others, reset]),
+    );
+  }
+
+  /** Undo a reset, so the full logged history counts again. */
+  clearPersonalBestReset(machine: string): void {
+    const remaining = this.getPersonalBestResets().filter(r => r.machine !== machine);
+    this.safeSetItem(STORAGE_KEYS.PERSONAL_BEST_RESETS, JSON.stringify(remaining));
   }
 
   getCustomExercises(): CustomExercise[] {

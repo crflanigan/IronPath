@@ -32,7 +32,9 @@ test('exporting CSV with nothing logged says so rather than downloading a header
   page.on('download', () => { downloadStarted = true; });
 
   await page.getByRole('button', { name: /Export to CSV/i }).click();
-  await expect(page.getByText(/Nothing to export yet/i)).toBeVisible();
+  // The toast renders its title and an aria-live status with the same words,
+  // so both match. Either proves it fired.
+  await expect(page.getByText(/Nothing to export yet/i).first()).toBeVisible();
 
   await page.waitForTimeout(700);
   expect(downloadStarted, 'an empty CSV should not have been downloaded').toBe(false);
