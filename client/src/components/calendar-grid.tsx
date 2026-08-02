@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import type { Workout } from '@shared/schema';
 import { generateWorkoutSchedule } from '@/lib/workout-data';
 import { cn, formatLocalDate } from '@/lib/utils';
+import { isSameMonth } from '@/lib/calendar-position';
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -108,6 +109,8 @@ export function CalendarGrid({
     return workoutSchedule.find(w => w.date === date);
   };
 
+  const showingCurrentMonth = isSameMonth(currentDate, new Date());
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     newDate.setMonth(month + (direction === 'next' ? 1 : -1));
@@ -126,9 +129,37 @@ export function CalendarGrid({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {monthNames[month]} {year}
-        </h2>
+        <div className="flex flex-col items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {monthNames[month]} {year}
+          </h2>
+          {/*
+            * The way home.
+            *
+            * There was none: once you had browsed to June, the only route back
+            * was tapping the arrow the same number of times. That is what made
+            * the old "Start Today's Workout" feel missed — it always acted on
+            * today regardless of what was selected, so it doubled as an escape
+            * hatch, but only by claiming one day while acting on another.
+            *
+            * Hidden while the current month is on screen, so it is not a
+            * permanent control that does nothing most of the time.
+            */}
+          {!showingCurrentMonth && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const now = new Date();
+                onDateChange(now);
+                onSelectDate(formatLocalDate(now));
+              }}
+              className="h-auto p-0 text-xs font-medium text-primary hover:bg-transparent hover:text-primary/80"
+            >
+              Today
+            </Button>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="sm"
