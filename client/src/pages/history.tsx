@@ -9,11 +9,21 @@ import { parseISODate } from '@/lib/utils';
 import { calculateDayStreak } from '@/lib/streak';
 import { localWorkoutStorage } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import { liftProgress, describeProgress, type LiftProgress } from '@/lib/progression';
+import { Sparkline } from '@/components/Sparkline';
+import { LiftProgressDialog } from '@/components/LiftProgressDialog';
 
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
   const { toast } = useToast();
+  const [openLift, setOpenLift] = useState<LiftProgress | null>(null);
+
+  /* Scans every stored workout, and this page re-renders on filter changes. */
+  const lifts = useMemo(
+    () => liftProgress(workouts, localWorkoutStorage.getPersonalBestResets()),
+    [workouts],
+  );
 
 
   const calculateWeightProgress = (completedWorkouts: Workout[]) => {
@@ -268,6 +278,54 @@ export function HistoryPage() {
         </CardContent>
       </Card>
 
+      {/*
+        * Your lifts.
+        *
+        * The insight is the sentence — "125 lbs, up 45 since Jul 2025" — and
+        * the shape beside it is decoration on top of that, not the other way
+        * round. Most recently trained first, so what you are working on now is
+        * what you see.
+        */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2" />
+            Your lifts
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lifts.length === 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              No lifts logged yet. Tick a set as done and the weights you
+              lift will show up here, with how they have moved.
+            </p>
+          )}
+          <div className="space-y-1">
+            {lifts.map(lift => (
+              <button
+                key={lift.machine}
+                type="button"
+                onClick={() => setOpenLift(lift)}
+                className="flex w-full items-center justify-between rounded p-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <span className="min-w-0 flex-1 pr-3">
+                  <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">
+                    {lift.machine}
+                  </span>
+                  <span className="block text-xs text-gray-600 dark:text-gray-400">
+                    {describeProgress(lift)}
+                  </span>
+                </span>
+                <Sparkline
+                  values={lift.points.map(p => p.weight)}
+                  className="shrink-0 text-primary"
+                />
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recent Workouts */}
       <Card>
         <CardHeader>
@@ -331,6 +389,8 @@ export function HistoryPage() {
           </div>
         </CardContent>
       </Card>
+
+      <LiftProgressDialog lift={openLift} onClose={() => setOpenLift(null)} />
     </div>
   );
 }
