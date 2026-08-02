@@ -8,6 +8,7 @@ import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { generateWorkoutSchedule, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
+import { readCalendarPosition, writeCalendarPosition } from '@/lib/calendar-position';
 import { calculateDayStreak, calculateTopDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
@@ -24,10 +25,32 @@ import { hasSeenTour, recordVisit } from '@/lib/onboarding';
 let visitRecorded = false;
 
 export function CalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(
-    () => formatLocalDate(new Date())
+  /*
+   * Restored from the visit, not reset to today.
+   *
+   * This page unmounts whenever a workout is opened, so `useState(new Date())`
+   * ran again on the way back and threw away however far you had browsed. Six
+   * months back to check something meant six taps to return.
+   *
+   * Reading here rather than hooking navigation covers every route back at
+   * once — the in-app arrow, the browser back button, and a swipe on an
+   * installed PWA all simply remount this.
+   */
+  const restored = readCalendarPosition();
+  const [currentDate, setCurrentDate] = useState(
+    () => (restored ? parseISODate(restored.month) : new Date()),
   );
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    () => restored?.selectedDate ?? formatLocalDate(new Date()),
+  );
+
+  useEffect(() => {
+    if (!selectedDate) return;
+    writeCalendarPosition({
+      month: formatLocalDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)),
+      selectedDate,
+    });
+  }, [currentDate, selectedDate]);
   const { currentView, pushView, popView } = useViewStack();
   const [, setLocation] = useLocation();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
