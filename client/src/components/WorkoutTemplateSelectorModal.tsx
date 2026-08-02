@@ -142,18 +142,27 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             * button beside it, so the row held two controls doing one job and a
             * screen reader found two buttons with the same name.
             */}
-          <Button
-            variant="outline"
-            className="w-full justify-start border-primary text-primary hover:bg-primary/10 hover:text-primary"
-            data-builder-tour="create-custom"
-            onClick={() => {
-              onCreateCustom();
-              pushView('customWorkoutBuilder');
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Custom Workout
-          </Button>
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              className="flex-1 justify-start border-primary text-primary hover:bg-primary/10 hover:text-primary"
+              data-builder-tour="create-custom"
+              onClick={() => {
+                onCreateCustom();
+                pushView('customWorkoutBuilder');
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Custom Workout
+            </Button>
+            {/*
+              * Holds the space a template's gear occupies, so this row ends
+              * where every row above it ends. Without it the button was
+              * `w-full` and ran 44px past them, which read as a mistake rather
+              * than as emphasis.
+              */}
+            <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+          </div>
 
           <Separator className="my-2" />
 
