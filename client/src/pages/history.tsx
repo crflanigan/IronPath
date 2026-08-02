@@ -8,10 +8,12 @@ import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react
 import { parseISODate } from '@/lib/utils';
 import { calculateDayStreak } from '@/lib/streak';
 import { localWorkoutStorage } from '@/lib/storage';
+import { useToast } from '@/hooks/use-toast';
 
 export function HistoryPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const { workouts, exportData, exportCSV, loading } = useWorkoutStorage();
+  const { toast } = useToast();
 
 
   const calculateWeightProgress = (completedWorkouts: Workout[]) => {
@@ -123,6 +125,15 @@ export function HistoryPage() {
       if (format === 'json') {
         await exportData();
       } else {
+        // A CSV of nothing is a 31-byte file containing a header row, which
+        // downloaded silently and looked like the export had failed.
+        if (workouts.filter(w => w.completed).length === 0) {
+          toast({
+            title: 'Nothing to export yet',
+            description: 'Finish a workout and its sets will be in the CSV.',
+          });
+          return;
+        }
         await exportCSV();
       }
     } catch (error) {
@@ -232,6 +243,18 @@ export function HistoryPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/*
+            * On a fresh install both this card and Recent Workouts rendered as
+            * a heading over roughly 110px of nothing. That reads as something
+            * failing to load rather than as "you have not trained yet", and it
+            * is the first screen a new user is likely to reach.
+            */}
+          {getWorkoutsByType().length === 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Nothing here yet. Finish a workout and the types you train will
+              show up, with a count for each.
+            </p>
+          )}
           <div className="space-y-2">
             {getWorkoutsByType().map(([type, count]) => (
               <div key={type} className="flex items-center justify-between">
@@ -254,6 +277,11 @@ export function HistoryPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {filteredWorkouts.filter(w => w.completed).length === 0 && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              No completed workouts yet. Finish one and it will appear here.
+            </p>
+          )}
           <div className="space-y-3">
             {filteredWorkouts
               .filter(w => w.completed)

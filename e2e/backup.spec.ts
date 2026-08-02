@@ -45,7 +45,9 @@ test('a backup exports and restores through the UI', async ({ page }) => {
     localStorage.setItem('ironpath_tour_seen', '1');
   });
   await page.reload();
-  await expect(page.getByText('No custom workout scheduled for this date')).toBeVisible();
+  // Wording changed in #153: this state means nothing has been *logged* for
+  // the day, not that the day is unscheduled.
+  await expect(page.getByText('Nothing logged for this day yet')).toBeVisible();
 
   // Restore from the exported file.
   await page.getByRole('button', { name: 'Settings' }).click();

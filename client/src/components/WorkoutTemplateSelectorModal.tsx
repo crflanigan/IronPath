@@ -25,7 +25,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
 import { ModalTour, TEMPLATE_STEPS } from './ModalTour';
 import { hasSeenTemplateTour, markTemplateTourSeen } from '@/lib/onboarding';
@@ -123,29 +123,45 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             </div>
           ))}
 
+          {/*
+            * This is an action, not a template, and it used to be impossible to
+            * tell: same outlined card as Chest Day or Legs, with a gear beside
+            * it. A verb among nouns, and a gear implying "configure the
+            * create-new action", which is not a thing.
+            *
+            * It stays in the list rather than moving below a divider. Pulling
+            * it out cost a separator plus a full-width row, and that space is
+            * worth most exactly when it is scarcest — a picker holding a lot of
+            * custom workouts already scrolls.
+            *
+            * So the difference is carried by colour instead: the primary teal
+            * on the border, text and icon, against the neutral grey of every
+            * template around it. Same footprint, unmistakably not a template.
+            *
+            * The gear is gone regardless. It called the same handler as the
+            * button beside it, so the row held two controls doing one job and a
+            * screen reader found two buttons with the same name.
+            */}
           <div className="flex items-center space-x-1">
             <Button
               variant="outline"
-              className="flex-1 justify-start"
+              className="flex-1 justify-start border-primary text-primary hover:bg-primary/10 hover:text-primary"
               data-builder-tour="create-custom"
               onClick={() => {
                 onCreateCustom();
                 pushView('customWorkoutBuilder');
               }}
             >
+              <Plus className="mr-2 h-4 w-4" />
               Create Custom Workout
             </Button>
-            <Button
-              aria-label="Create Custom Workout"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                onCreateCustom();
-                pushView('customWorkoutBuilder');
-              }}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            {/*
+              * Holds the space a template's gear occupies, so this row ends
+              * where every row above it ends. Without it the button was
+              * `w-full` and ran 44px past them, which read as a mistake rather
+              * than as emphasis.
+              */}
+            <div className="h-10 w-10 shrink-0" aria-hidden="true" />
           </div>
 
           <Separator className="my-2" />
