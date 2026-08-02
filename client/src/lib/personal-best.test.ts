@@ -53,7 +53,7 @@ describe('personalBests', () => {
       workout(3, 'Pec Fly', [set(100, 10)]), // later, but lighter
     ]);
 
-    expect(best.get('Pec Fly')).toEqual({ weight: 120, reps: 8 });
+    expect(best.get('Pec Fly')).toEqual({ weight: 120, reps: 8, date: '2026-08-01' });
   });
 
   it('breaks ties on weight by reps', () => {
@@ -62,7 +62,7 @@ describe('personalBests', () => {
       workout(2, 'Seated Row', [set(100, 12)]),
     ]);
 
-    expect(best.get('Seated Row')).toEqual({ weight: 100, reps: 12 });
+    expect(best.get('Seated Row')).toEqual({ weight: 100, reps: 12, date: '2026-08-01' });
   });
 
   it('ignores sets with no weight or no reps', () => {
@@ -70,7 +70,7 @@ describe('personalBests', () => {
       workout(1, 'Leg Press', [set(undefined, 10), set(200, undefined), set(80, 10)]),
     ]);
 
-    expect(best.get('Leg Press')).toEqual({ weight: 80, reps: 10 });
+    expect(best.get('Leg Press')).toEqual({ weight: 80, reps: 10, date: '2026-08-01' });
   });
 
   it('leaves out the workout in progress', () => {
@@ -81,8 +81,8 @@ describe('personalBests', () => {
 
     // Without this, whatever you have just typed instantly becomes your record
     // and the change indicator can never read anything but zero.
-    expect(personalBests(workouts, 2).get('Bar Curl')).toEqual({ weight: 50, reps: 10 });
-    expect(personalBests(workouts).get('Bar Curl')).toEqual({ weight: 999, reps: 10 });
+    expect(personalBests(workouts, 2).get('Bar Curl')).toEqual({ weight: 50, reps: 10, date: '2026-08-01' });
+    expect(personalBests(workouts).get('Bar Curl')).toEqual({ weight: 999, reps: 10, date: '2026-08-01' });
   });
 
   it('keeps exercises separate', () => {
@@ -91,8 +91,8 @@ describe('personalBests', () => {
       workout(2, 'Leg Press', [set(300, 10)]),
     ]);
 
-    expect(best.get('Pec Fly')).toEqual({ weight: 90, reps: 10 });
-    expect(best.get('Leg Press')).toEqual({ weight: 300, reps: 10 });
+    expect(best.get('Pec Fly')).toEqual({ weight: 90, reps: 10, date: '2026-08-01' });
+    expect(best.get('Leg Press')).toEqual({ weight: 300, reps: 10, date: '2026-08-01' });
     expect(best.get('Never Done')).toBeUndefined();
   });
 
@@ -116,6 +116,65 @@ describe('personalBests', () => {
       workout(1, 'Leg Press', [set(200, 10), prefilled(450, 15)]),
     ]);
 
-    expect(best.get('Leg Press')).toEqual({ weight: 200, reps: 10 });
+    expect(best.get('Leg Press')).toEqual({ weight: 200, reps: 10, date: '2026-08-01' });
+  });
+});
+
+describe('resetting a personal best', () => {
+  /**
+   * People reset for their own reasons — an injury, a year away, or a figure
+   * from long ago that is not a useful target any more. None of these is a
+   * correction, so nothing here treats a reset as fixing a mistake.
+   */
+  const dated = (id: number, date: string, weight: number): Workout =>
+    ({ ...workout(id, 'Seated Dip', [set(weight, 10)]), date }) as Workout;
+
+  it('stops sessions on or before the reset date counting', () => {
+    const best = personalBests(
+      [dated(1, '2025-07-29', 140), dated(2, '2026-06-01', 110)],
+      undefined,
+      [{ machine: 'Seated Dip', resetOn: '2026-01-01' }],
+    );
+
+    expect(best.get('Seated Dip')).toEqual({ weight: 110, reps: 10, date: '2026-06-01' });
+  });
+
+  it('leaves nothing at all when everything logged predates the reset', () => {
+    const best = personalBests([dated(1, '2025-07-29', 140)], undefined, [
+      { machine: 'Seated Dip', resetOn: '2026-01-01' },
+    ]);
+
+    // The line disappears until the next session, rather than falling back to
+    // a lower old figure that is just as stale.
+    expect(best.get('Seated Dip')).toBeUndefined();
+  });
+
+  it('shows a figure the user named, marked as theirs', () => {
+    const best = personalBests([dated(1, '2025-07-29', 140)], undefined, [
+      { machine: 'Seated Dip', resetOn: '2026-01-01', manual: { weight: 90, reps: 10 } },
+    ]);
+
+    expect(best.get('Seated Dip')).toEqual({ weight: 90, reps: 10, manual: true });
+  });
+
+  it('lets a logged session beat the figure the user named', () => {
+    const best = personalBests(
+      [dated(1, '2025-07-29', 140), dated(2, '2026-06-01', 100)],
+      undefined,
+      [{ machine: 'Seated Dip', resetOn: '2026-01-01', manual: { weight: 90, reps: 10 } }],
+    );
+
+    expect(best.get('Seated Dip')).toEqual({ weight: 100, reps: 10, date: '2026-06-01' });
+  });
+
+  it('touches only the exercise it names', () => {
+    const best = personalBests(
+      [dated(1, '2025-07-29', 140), workout(2, 'Pec Fly', [set(165, 15)])],
+      undefined,
+      [{ machine: 'Seated Dip', resetOn: '2026-01-01' }],
+    );
+
+    expect(best.get('Seated Dip')).toBeUndefined();
+    expect(best.get('Pec Fly')).toEqual({ weight: 165, reps: 15, date: '2026-08-01' });
   });
 });

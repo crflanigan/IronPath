@@ -8,7 +8,7 @@ import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import { hasExerciseImage } from '@/lib/exercise-images';
-import type { PersonalBest } from '@/lib/personal-best';
+import { formatBestDate, type PersonalBest } from '@/lib/personal-best';
 import { localWorkoutStorage } from '@/lib/storage';
 
 interface ExerciseFormProps {
@@ -23,9 +23,14 @@ interface ExerciseFormProps {
    * forever.
    */
   personalBest?: PersonalBest;
+  /**
+   * Opens the reset for this exercise. Omitted in contexts where resetting
+   * makes no sense, in which case the line renders as plain text.
+   */
+  onResetBest?: (machine: string, current: PersonalBest) => void;
 }
 
-export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBest }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBest, onResetBest }: ExerciseFormProps) {
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
   const [restDigits, setRestDigits] = useState<string[]>(
     exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
@@ -288,19 +293,44 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
           })}
         </div>
 
-        {/* Best Performance — omitted entirely when there is nothing to compare against */}
+        {/*
+          * Best Performance — omitted entirely when there is nothing to
+          * compare against.
+          *
+          * The date is not decoration. Without it this was an unattributed
+          * number you had to take on faith, and a real user spent a year with
+          * a Seated Dip "best" of 140lbs she had never lifted — a template
+          * default ticked through once in July 2025. A date from a year ago,
+          * on a workout she does not do, would have told her immediately.
+          *
+          * Tapping it opens the reset, because that is where you are when you
+          * decide the figure no longer represents you.
+          */}
         {hasRecordedBest && (
-          <div className="mt-2 flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => onResetBest?.(localExercise.machine, personalBest!)}
+            disabled={!onResetBest}
+            className="mt-2 flex w-full items-center space-x-2 rounded text-left disabled:cursor-default"
+          >
             <span className="text-xs text-gray-500 dark:text-gray-400">BEST:</span>
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
               {personalBest!.weight} lbs × {personalBest!.reps} reps
             </span>
+            {personalBest!.date && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                {formatBestDate(personalBest!.date)}
+              </span>
+            )}
+            {personalBest!.manual && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">set by you</span>
+            )}
             {getWeightChange().change && (
               <span className={`text-xs ${getWeightChange().color}`}>
                 {getWeightChange().change}
               </span>
             )}
-          </div>
+          </button>
         )}
       </CardContent>
     </Card>
