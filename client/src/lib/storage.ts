@@ -175,6 +175,38 @@ export interface IronPathBackup {
   customExercises: CustomExercise[];
 }
 
+/**
+ * Thrown when an edit could not be written to this device.
+ *
+ * A distinct type so a caller can tell "your data is not durable" apart from a
+ * programming error, and so the message shown to a user is not a raw browser
+ * exception.
+ */
+export class StorageWriteError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StorageWriteError';
+  }
+}
+
+/**
+ * Thrown when the stored workout has moved on since this tab last saw it.
+ *
+ * Every save serialises the whole workout — including the exercises array this
+ * tab loaded. Two tabs open on the same workout each wrote their own complete
+ * copy, so the later write erased the earlier one's sets, and both screens
+ * carried on showing numbers that were no longer on disk. The loss was
+ * invisible until a reload.
+ *
+ * An installed PWA plus the site open in a browser tab is an ordinary state.
+ */
+export class ConcurrentEditError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConcurrentEditError';
+  }
+}
+
 export class LocalWorkoutStorage {
   private storageLimit = 5 * 1024 * 1024; // 5MB approximate
   private warningThreshold = 0.8;
@@ -196,19 +228,33 @@ export class LocalWorkoutStorage {
     }
   }
 
-  private safeSetItem(key: string, value: string): void {
+  /**
+   * Write a key, falling back to memory when the browser refuses.
+   *
+   * Returns whether the value actually reached localStorage. That return value
+   * is the whole point: this used to swallow the failure and return normally,
+   * so a caller's `catch` never fired and the success path ran. A workout could
+   * be reported as "Auto-saved" with nothing whatsoever persisted — Safari
+   * private mode, "block all cookies", and an exhausted quota all throw here.
+   *
+   * Falling back to memory is still right: the session keeps working. What was
+   * wrong was not saying so.
+   */
+  private safeSetItem(key: string, value: string): boolean {
     if (typeof localStorage === 'undefined' || this.storageFailed) {
       this.memoryStore[key] = value;
-      return;
+      return false;
     }
     try {
       localStorage.setItem(key, value);
       this.checkQuota();
+      return true;
     } catch (err) {
       console.error('localStorage setItem failed', err);
       this.storageFailed = true;
       this.memoryStore[key] = value;
       this.handleStorageError(err);
+      return false;
     }
   }
 
@@ -450,8 +496,9 @@ export class LocalWorkoutStorage {
     return workouts;
   }
 
-  private saveWorkouts(workouts: Workout[]): void {
-    this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
+  /** Returns whether the workouts actually reached localStorage. */
+  private saveWorkouts(workouts: Workout[]): boolean {
+    return this.safeSetItem(STORAGE_KEYS.WORKOUTS, JSON.stringify(workouts));
   }
 
   private getExerciseHistory(): Record<string, ExerciseHistoryEntry> {
@@ -629,21 +676,68 @@ export class LocalWorkoutStorage {
     return newWorkout;
   }
 
-  async updateWorkout(id: number, updates: Partial<InsertWorkout>): Promise<Workout | undefined> {
+  /**
+   * `expectedUpdatedAt` is what the caller last saw on this record. If the
+   * stored copy is newer, another tab has written since, and overwriting would
+   * erase whatever it saved — so this refuses instead. Omit it and the check is
+   * skipped, which keeps every other caller behaving as before.
+   */
+  async updateWorkout(
+    id: number,
+    updates: Partial<InsertWorkout>,
+    options: { expectedUpdatedAt?: Date | null } = {},
+  ): Promise<Workout | undefined> {
     const workouts = this.getWorkouts();
     const index = workouts.findIndex(w => w.id === id);
     
     if (index === -1) return undefined;
+
+    const { expectedUpdatedAt } = options;
+    const storedUpdatedAt = workouts[index].updatedAt;
+    if (
+      expectedUpdatedAt != null &&
+      storedUpdatedAt != null &&
+      storedUpdatedAt.getTime() > expectedUpdatedAt.getTime()
+    ) {
+      throw new ConcurrentEditError(
+        'This workout was changed somewhere else — another tab or window. ' +
+          'Reload to pick up those changes before editing further.',
+      );
+    }
     
+    /*
+     * `updatedAt` must strictly increase, because the conflict check above
+     * compares against it. `new Date()` has millisecond resolution, so two
+     * writes inside the same millisecond — a create followed straight away by
+     * the first autosave, say — would carry identical stamps and a genuine
+     * conflict would slip through. Found by a test that failed about half the
+     * time, not by reading this.
+     */
+    const now = new Date();
+    const nextUpdatedAt =
+      storedUpdatedAt != null && now.getTime() <= storedUpdatedAt.getTime()
+        ? new Date(storedUpdatedAt.getTime() + 1)
+        : now;
+
     const updatedWorkout = {
       ...workouts[index],
       ...updates,
       duration: updates.duration ?? workouts[index].duration ?? null,
-      updatedAt: new Date(),
+      updatedAt: nextUpdatedAt,
     } as Workout;
     
     workouts[index] = updatedWorkout;
-    this.saveWorkouts(workouts);
+
+    // Throwing here is what stops the caller reporting a save that did not
+    // happen. The edit is still in the in-memory store, so the session keeps
+    // working — the user is simply told the truth about durability.
+    if (!this.saveWorkouts(workouts)) {
+      throw new StorageWriteError(
+        'Workout could not be saved to this device. It is kept in memory for ' +
+          'this session only.',
+      );
+    }
+
     if (updates.exercises) {
       this.updateExerciseHistory(updatedWorkout.exercises, updatedWorkout.date);
     }
