@@ -296,8 +296,8 @@ export function HistoryPage() {
         <CardContent>
           {lifts.length === 0 && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Nothing here yet. Tick a set as done and the weights you lift will
-              show up, with how they have moved.
+              No lifts logged yet. Tick a set as done and the weights you
+              lift will show up here, with how they have moved.
             </p>
           )}
           <div className="space-y-1">

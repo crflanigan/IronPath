@@ -95,7 +95,7 @@ test('untouched template weights never appear as progress', async ({ page }) => 
   untouched.exercises[0].sets[0].completed = false;
 
   await openHistory(page, [untouched]);
-  await expect(page.getByText(/Nothing here yet/)).toBeVisible();
+  await expect(page.getByText(/No lifts logged yet/)).toBeVisible();
   await expect(page.getByText(/230 lbs/)).toHaveCount(0);
 });
 
