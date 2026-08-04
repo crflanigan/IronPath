@@ -36,6 +36,34 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
     exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
   );
   const [showHelp, setShowHelp] = useState(false);
+
+  /*
+   * A finished exercise folds to one line.
+   *
+   * The workout page measured 4628px — five and a half screens — with ten
+   * completed cards at ~304px each. Every set meant scrolling past everything
+   * already done to reach the thing being done now, which is friction on every
+   * single set rather than once per session.
+   *
+   * Seeded from completion *at mount*, deliberately, rather than tracking it.
+   * An exercise already finished when you arrive is folded. One you finish
+   * right now stays open: collapsing it the instant you tick the last set
+   * would pull 240px out from under the finger still resting on that circle,
+   * and those circles are already the easiest thing in the app to hit by
+   * mistake — folding on a mis-tap hides the control needed to undo it.
+   *
+   * Either way it is a per-session choice, so correcting a number is one tap
+   * and leaving the screen resets it to folded.
+   */
+  const [expanded, setExpanded] = useState(!exercise.completed);
+  const collapsed = localExercise.completed && !expanded;
+
+  /** The heaviest set, which is what you want to see at a glance. */
+  const topSet = localExercise.sets.reduce<{ weight?: number; reps?: number } | null>(
+    (best, set) =>
+      typeof set.weight === 'number' && (!best || set.weight > (best.weight ?? -1)) ? set : best,
+    null,
+  );
   const { toast } = useToast();
   const focusToEnd = useCursorEndOnFocus();
 
@@ -137,14 +165,57 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
   return (
     <>
     <Card className={`border-l-4 ${borderColor}`}>
+      {collapsed ? (
+        <CardContent className="p-3">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-expanded={false}
+            aria-label={`Show ${localExercise.machine}`}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <span className="min-w-0 flex-1 pr-3">
+              <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">
+                {localExercise.machine}
+              </span>
+              {topSet?.weight !== undefined && (
+                <span className="block text-xs text-gray-600 dark:text-gray-400">
+                  {topSet.weight} lbs{topSet.reps !== undefined && ` × ${topSet.reps} reps`}
+                </span>
+              )}
+            </span>
+            <Check className="h-5 w-5 shrink-0 text-green-500" />
+          </button>
+        </CardContent>
+      ) : (
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">{localExercise.machine}</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {localExercise.region} • {localExercise.feel} Feel
-            </p>
-          </div>
+          {/*
+            * Foldable again once finished, so checking a number does not leave
+            * the card open for the rest of the session. Not a button at all
+            * while the exercise is unfinished — there is nothing to fold.
+            */}
+          {localExercise.completed ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-expanded={true}
+              aria-label={`Hide ${localExercise.machine}`}
+              className="min-w-0 flex-1 pr-2 text-left"
+            >
+              <h4 className="font-medium text-gray-900 dark:text-white">{localExercise.machine}</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {localExercise.region} • {localExercise.feel} Feel
+              </p>
+            </button>
+          ) : (
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white">{localExercise.machine}</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {localExercise.region} • {localExercise.feel} Feel
+              </p>
+            </div>
+          )}
           <div className="flex items-center space-x-2">
             {hasReferencePhoto && (
               <button
@@ -333,6 +404,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
           </button>
         )}
       </CardContent>
+      )}
     </Card>
     <ExerciseImageDialog
       exerciseName={localExercise.machine}
