@@ -80,3 +80,44 @@ test('an unreadable record is set aside rather than deleted', async ({ page }) =
   expect(quarantined).toHaveLength(1);
   expect(quarantined[0].record.id).toBe(2);
 });
+
+/**
+ * `updatedAt` arrived with the two-tab concurrency check, so nothing logged
+ * before that release has one — `LEGACY_WORKOUT` above included.
+ *
+ * `getWorkouts` used to fill the gap with `new Date()`, which invented a
+ * *different* stamp on every read. The value the screen loaded was therefore
+ * always older than the one the next save read back, so the check fired on
+ * every autosave: the record could never be saved again, and the app blamed a
+ * tab the user did not have open.
+ */
+test('a workout logged before updatedAt existed can still be edited', async ({ page }) => {
+  const autosaveErrors: string[] = [];
+  page.on('console', m => {
+    if (m.type() === 'error' && /Autosave failed/i.test(m.text())) autosaveErrors.push(m.text());
+  });
+
+  await seedStorage(page, [LEGACY_WORKOUT]);
+  await page.addInitScript(() => localStorage.setItem('ironpath_tour_seen', '1'));
+  await page.goto('/workout/1');
+
+  const close = page.getByRole('button', { name: 'Close', exact: true });
+  if (await close.count()) await close.click();
+
+  await page.getByLabel('Weight, set 1').fill('165');
+
+  await page.waitForFunction(
+    () => {
+      const w = JSON.parse(localStorage.getItem('ironpath_workouts') || '[]')[0] as
+        | { exercises: { sets: { weight?: number }[] }[] }
+        | undefined;
+      return w?.exercises[0].sets[0].weight === 165;
+    },
+    null,
+    { timeout: 10000 },
+  );
+
+  await expect(page.getByText(/Changed in another tab/i)).toHaveCount(0);
+  await expect(page.getByText(/changed somewhere else/i)).toHaveCount(0);
+  expect(autosaveErrors, 'a single tab is open; nothing changed anywhere else').toEqual([]);
+});
