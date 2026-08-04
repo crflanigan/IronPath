@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setNumericValue } from './helpers';
 
 /**
  * A real browser, booting against data written by an older build.
@@ -104,7 +105,13 @@ test('a workout logged before updatedAt existed can still be edited', async ({ p
   const close = page.getByRole('button', { name: 'Close', exact: true });
   if (await close.count()) await close.click();
 
-  await page.getByLabel('Weight, set 1').fill('165');
+  // This exercise is finished, so it arrives folded. Opening it is what
+  // someone correcting an old number actually does.
+  await page.getByRole('button', { name: 'Show Adjustable Cable Crossover' }).click();
+
+  // `setNumericValue`, not `fill` — the caret-to-end race appends otherwise,
+  // and a seeded 60 becomes "60165".
+  await setNumericValue(page.getByLabel('Weight, set 1'), '165');
 
   await page.waitForFunction(
     () => {
