@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setNumericValue } from './helpers';
 
 /**
  * A finished exercise folds to one line.
@@ -150,8 +151,8 @@ test('finishing an exercise does not fold it under your finger', async ({ page }
   // and everything below jumps up into where the eye already was.
   await open(page);
 
-  await page.getByLabel('Weight, set 1').fill('80');
-  await page.getByLabel('Reps, set 1').fill('12');
+  await setNumericValue(page.getByLabel('Weight, set 1'), '80');
+  await setNumericValue(page.getByLabel('Reps, set 1'), '12');
   await page.getByLabel('Mark set 1 complete').click();
   await dismissCelebration(page);
 
@@ -164,8 +165,8 @@ test('finishing an exercise does not fold it under your finger', async ({ page }
 test('leaving and coming back folds what you finished', async ({ page }) => {
   await open(page);
 
-  await page.getByLabel('Weight, set 1').fill('80');
-  await page.getByLabel('Reps, set 1').fill('12');
+  await setNumericValue(page.getByLabel('Weight, set 1'), '80');
+  await setNumericValue(page.getByLabel('Reps, set 1'), '12');
   await page.getByLabel('Mark set 1 complete').click();
   await dismissCelebration(page);
 
