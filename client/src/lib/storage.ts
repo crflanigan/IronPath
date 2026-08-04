@@ -487,7 +487,19 @@ export class LocalWorkoutStorage {
         duration: workout.duration ?? null,
         cardio: workout.cardio ?? undefined,
         createdAt: workout.createdAt ?? new Date(),
-        updatedAt: workout.updatedAt ?? new Date(),
+        /*
+         * Null, not `new Date()`. A record written before `updatedAt` existed
+         * has none stored, and inventing one here invents a *different* one on
+         * every read — so the stamp a screen loads is always older than the one
+         * the next save reads back, and the conflict check fires every time. A
+         * legacy workout could never be saved again: every autosave failed with
+         * "changed in another tab" with a single tab open, permanently.
+         *
+         * Null means "no basis to detect a conflict", which is the truth, and
+         * `updateWorkout` skips the check and stamps a real value — so the
+         * record heals on its first write and is protected from then on.
+         */
+        updatedAt: workout.updatedAt ?? null,
       } as Workout);
     }
 
@@ -694,6 +706,13 @@ export class LocalWorkoutStorage {
    * stored copy is newer, another tab has written since, and overwriting would
    * erase whatever it saved — so this refuses instead. Omit it and the check is
    * skipped, which keeps every other caller behaving as before.
+   *
+   * Passing it as `null` is not the same as omitting it. Null means the caller
+   * read a record that had no stamp — true of anything logged before
+   * `updatedAt` existed. If one is stored now, it was added after that read, so
+   * the record has moved on and this refuses exactly as it would for any other
+   * stale expectation. Without that distinction a legacy workout kept the
+   * original silent-overwrite bug this check exists to prevent.
    */
   async updateWorkout(
     id: number,
@@ -702,15 +721,15 @@ export class LocalWorkoutStorage {
   ): Promise<Workout | undefined> {
     const workouts = this.getWorkouts();
     const index = workouts.findIndex(w => w.id === id);
-    
+
     if (index === -1) return undefined;
 
     const { expectedUpdatedAt } = options;
     const storedUpdatedAt = workouts[index].updatedAt;
     if (
-      expectedUpdatedAt != null &&
+      'expectedUpdatedAt' in options &&
       storedUpdatedAt != null &&
-      storedUpdatedAt.getTime() > expectedUpdatedAt.getTime()
+      (expectedUpdatedAt == null || storedUpdatedAt.getTime() > expectedUpdatedAt.getTime())
     ) {
       throw new ConcurrentEditError(
         'This workout was changed somewhere else — another tab or window. ' +
