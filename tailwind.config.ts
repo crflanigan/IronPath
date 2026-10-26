@@ -1,6 +1,19 @@
 import type { Config } from "tailwindcss";
 
 export default {
+  /*
+   * `hover:` styles apply only on devices that can actually hover, i.e. a
+   * mouse or trackpad. Phones skip them.
+   *
+   * On an iPhone, a finger sliding across buttons sets `:hover` on whatever is
+   * under it. In a dialog the highlight also trails ahead of the finger, so a
+   * swipe up the template picker lit up one row after another, plus the gears.
+   * Every `hover:` in the app is decoration that a phone has no use for: none
+   * reveals a control. Pressed states (`active:`) are left alone.
+   */
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {

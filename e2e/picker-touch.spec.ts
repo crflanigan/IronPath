@@ -15,7 +15,6 @@ import { test, expect, type Page } from '@playwright/test';
  * it goes through the browser's own gesture handling, the same path a finger
  * takes. This requires Chromium, which both projects use.
  */
-test.use({ hasTouch: true });
 
 const NAMES = [
   'Shoulders and Biceps', 'Shoulders, Chest, and Forearms', 'Cardio',
@@ -65,37 +64,79 @@ async function swipe(page: Page, target: string, dy: number) {
   await page.waitForTimeout(300);
 }
 
-test('a swipe that starts on a gear scrolls the list instead of opening its menu', async ({ page, browserName }) => {
-  test.skip(browserName !== 'chromium', 'raw touch input goes through CDP');
-  await openPicker(page);
+test.describe('with a finger', () => {
+  test.use({ hasTouch: true });
 
-  // Scroll to the bottom first, so the custom workouts are in reach and a
-  // downward swipe has somewhere to go.
-  const bottom = await scrollTop(page, 1e6);
-  expect(bottom, 'the list is too short to scroll, so nothing here is tested').toBeGreaterThan(150);
+  test('a swipe that starts on a gear scrolls the list instead of opening its menu', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'raw touch input goes through CDP');
+    await openPicker(page);
 
-  // The control case shows the swipe itself scrolls, so if the next one fails,
-  // the cause is the gear and not the harness.
-  await swipe(page, 'Caseys Legs', 200);
-  expect(await scrollTop(page), 'a swipe on the row name did not scroll').toBeLessThan(bottom - 100);
+    // Scroll to the bottom first, so the custom workouts are in reach and a
+    // downward swipe has somewhere to go.
+    const bottom = await scrollTop(page, 1e6);
+    expect(bottom, 'the list is too short to scroll, so nothing here is tested').toBeGreaterThan(150);
 
-  await scrollTop(page, 1e6);
-  await swipe(page, 'Options for Caseys Legs', 200);
-  await expect(page.getByRole('menu'), 'the swipe opened the gear menu').toHaveCount(0);
-  expect(await scrollTop(page), 'a swipe on the gear did not scroll').toBeLessThan(bottom - 100);
+    // The control case shows the swipe itself scrolls, so if the next one fails,
+    // the cause is the gear and not the harness.
+    await swipe(page, 'Caseys Legs', 200);
+    expect(await scrollTop(page), 'a swipe on the row name did not scroll').toBeLessThan(bottom - 100);
+
+    await scrollTop(page, 1e6);
+    await swipe(page, 'Options for Caseys Legs', 200);
+    await expect(page.getByRole('menu'), 'the swipe opened the gear menu').toHaveCount(0);
+    expect(await scrollTop(page), 'a swipe on the gear did not scroll').toBeLessThan(bottom - 100);
+  });
+
+  test('a tap on a gear still opens its menu', async ({ page }) => {
+    await openPicker(page);
+    const gear = page.getByRole('button', { name: 'Options for Caseys Legs' });
+    await gear.scrollIntoViewIfNeeded();
+    await gear.tap();
+
+    const menu = page.getByRole('menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Edit workout' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Delete workout' })).toBeVisible();
+
+    await menu.getByRole('menuitem', { name: 'Edit workout' }).tap();
+    await expect(page.getByRole('heading', { name: 'Edit Custom Workout' })).toBeVisible();
+  });
 });
 
-test('a tap on a gear still opens its menu', async ({ page }) => {
+/**
+ * The highlight that trailed a swipe.
+ *
+ * On an iPhone, a finger moving across buttons sets `:hover` on whatever is
+ * under it, so every row and gear a swipe crossed lit up with the hover fill.
+ * The highlight even ran ahead of the finger onto rows it never touched.
+ * Chromium does not do this, so it cannot be swiped into existence here.
+ * What can be checked is the half that IronPath controls: a device that cannot
+ * hover does not paint a hover style, even when `:hover` is set. That is
+ * Tailwind's `hoverOnlyWhenSupported`, and it covers every `hover:` in the app,
+ * not only this list.
+ */
+test('hover styles paint only where there is a mouse to hover with', async ({ page }, testInfo) => {
   await openPicker(page);
-  const gear = page.getByRole('button', { name: 'Options for Caseys Legs' });
-  await gear.scrollIntoViewIfNeeded();
-  await gear.tap();
+  const canHover = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+  // Pinned per project, so a change in emulation cannot quietly turn this
+  // into two runs of the same branch.
+  expect(canHover).toBe(testInfo.project.name === 'chromium');
 
-  const menu = page.getByRole('menu');
-  await expect(menu).toBeVisible();
-  await expect(menu.getByRole('menuitem', { name: 'Edit workout' })).toBeVisible();
-  await expect(menu.getByRole('menuitem', { name: 'Delete workout' })).toBeVisible();
-
-  await menu.getByRole('menuitem', { name: 'Edit workout' }).tap();
-  await expect(page.getByRole('heading', { name: 'Edit Custom Workout' })).toBeVisible();
+  for (const name of ['Caseys Legs', 'Options for Caseys Legs']) {
+    const button = page.getByRole('button', { name, exact: true });
+    await button.scrollIntoViewIfNeeded();
+    const resting = await button.evaluate(el => getComputedStyle(el).backgroundColor);
+    await button.hover();
+    // The state is set either way; only whether it paints may differ.
+    await expect.poll(() => button.evaluate(el => el.matches(':hover'))).toBe(true);
+    // Past the 150ms colour transition, so a highlight has time to show.
+    await page.waitForTimeout(300);
+    const hovered = await button.evaluate(el => getComputedStyle(el).backgroundColor);
+    if (canHover) {
+      expect(hovered, `${name}: a mouse no longer highlights it`).not.toBe(resting);
+    } else {
+      expect(hovered, `${name}: lit up on a phone`).toBe(resting);
+    }
+    await page.mouse.move(0, 0);
+  }
 });
