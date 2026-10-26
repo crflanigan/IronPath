@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
@@ -29,6 +29,52 @@ import { Plus, Settings } from 'lucide-react';
 import { useViewStack } from './view-stack-provider';
 import { ModalTour, TEMPLATE_STEPS } from './ModalTour';
 import { hasSeenTemplateTour, markTemplateTourSeen } from '@/lib/onboarding';
+
+/**
+ * The gear beside a template row, and the menu it opens.
+ *
+ * Radix's DropdownMenu opens on `pointerdown`, and it does that for a finger as
+ * well as a mouse. In a list that scrolls, that is the wrong moment: a swipe
+ * that happens to start on a gear opened the menu as soon as the finger landed,
+ * and the menu's scroll lock then cancelled the swipe. The gears run down the
+ * right-hand side of the screen, which is where a right thumb scrolls, so this
+ * happened a lot. The only reliable place to scroll was the strip of padding at
+ * the edge.
+ *
+ * So for touch and pen the menu opens on `click`, which the browser fires for a
+ * tap and never for a scroll. A mouse keeps Radix's open-on-press and the
+ * keyboard is untouched. Radix's Select, the only other menu in the app, already
+ * works this way, which is why this one felt different.
+ */
+function RowOptions({ name, children }: { name: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const pointerType = useRef('');
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        asChild
+        onPointerDown={e => {
+          pointerType.current = e.pointerType;
+          // Radix skips its own handler when this one has prevented default.
+          if (e.pointerType !== 'mouse') e.preventDefault();
+        }}
+        onClick={() => {
+          // Cleared on use, so a click the keyboard synthesises later is not
+          // mistaken for a tap.
+          const type = pointerType.current;
+          pointerType.current = '';
+          if (type === 'touch' || type === 'pen') setOpen(true);
+        }}
+      >
+        <Button aria-label={`Options for ${name}`} variant="ghost" size="icon">
+          <Settings className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">{children}</DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface WorkoutTemplateSelectorModalProps {
   open: boolean;
@@ -103,23 +149,16 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
               >
                 {name}
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button aria-label={`Options for ${name}`} variant="ghost" size="icon">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      onClonePreset(name);
-                      pushView('customWorkoutBuilder');
-                    }}
-                  >
-                    Clone as custom
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RowOptions name={name}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onClonePreset(name);
+                    pushView('customWorkoutBuilder');
+                  }}
+                >
+                  Clone as custom
+                </DropdownMenuItem>
+              </RowOptions>
             </div>
           ))}
 
@@ -178,30 +217,23 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
                   >
                     {t.name}
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-label={`Options for ${t.name}`} variant="ghost" size="icon">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          onEditTemplate(t);
-                          pushView('customWorkoutBuilder');
-                        }}
-                      >
-                        Edit workout
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setPendingDeleteId(t.id);
-                        }}
-                      >
-                        Delete workout
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <RowOptions name={t.name}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        onEditTemplate(t);
+                        pushView('customWorkoutBuilder');
+                      }}
+                    >
+                      Edit workout
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setPendingDeleteId(t.id);
+                      }}
+                    >
+                      Delete workout
+                    </DropdownMenuItem>
+                  </RowOptions>
                 </div>
               ))}
             </div>
