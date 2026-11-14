@@ -356,8 +356,8 @@ export function CustomWorkoutBuilderModal({
               row overlap. */}
           <div className="grid max-h-[90vh] gap-4 overflow-y-auto overscroll-contain p-6">
           <ErrorBoundary>
-        <DialogHeader className="space-y-1">
-          <DialogTitle>{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
+        <DialogHeader className="space-y-1 text-left">
+          <DialogTitle className="text-xl font-bold">{template ? 'Edit Custom Workout' : 'Create Custom Workout'}</DialogTitle>
           <DialogDescription className="text-left">Name your workout and pick up to 15 exercises — or none, for a cardio-only session.</DialogDescription>
           <p className="text-sm text-muted-foreground text-left">Tap an exercise name to preview it.</p>
         </DialogHeader>
@@ -381,7 +381,7 @@ export function CustomWorkoutBuilderModal({
           <button
             type="button"
             onClick={cycleFilter}
-            className="flex flex-col items-center w-20 text-sm select-none cursor-pointer hover:bg-muted/50 rounded-md p-1 transition-colors"
+            className="flex w-20 cursor-pointer select-none flex-col items-center gap-0.5 rounded-xl bg-gray-100 p-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-white/[0.06] dark:text-gray-200 dark:hover:bg-white/10"
           >
             <span className="text-2xl leading-none">{filterLabel[equipmentFilter].icon}</span>
             <span className="leading-none">{filterLabel[equipmentFilter].label}</span>
@@ -415,15 +415,29 @@ export function CustomWorkoutBuilderModal({
         
         <div className="space-y-4 -mt-2">
           {orderedGroups.map(([region, exercises], groupIndex) => (
-            <div key={region} className="border rounded p-2">
-              <div className="font-medium mb-2">{region}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            <div key={region} className="rounded-2xl bg-gray-50 p-2 dark:bg-white/[0.04]">
+              {/* How many are picked from each group, on the group — so the
+                  shape of the workout is readable without scrolling the whole
+                  list hunting for ticks. */}
+              <div className="flex items-center justify-between px-2 pb-1 pt-1.5">
+                <div className="eyebrow">{region}</div>
+                {exercises.some(ex => selected.has(ex.machine)) && (
+                  <span className="nums rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
+                    {exercises.filter(ex => selected.has(ex.machine)).length}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-x-2 gap-y-0.5 sm:grid-cols-2">
                 {exercises.map((ex, exerciseIndex) => {
                   const isLong = ex.machine.length > 30;
                   return (
                     <div
                       key={ex.machine}
-                      className={cn(isLong && 'sm:col-span-2')}
+                      className={cn(
+                        'rounded-xl px-2 py-2 transition-colors',
+                        selected.has(ex.machine) && 'bg-primary/10',
+                        isLong && 'sm:col-span-2',
+                      )}
                       // One stable target for the builder tour to point at.
                       data-builder-tour={
                         groupIndex === 0 && exerciseIndex === 0 ? 'exercise-row' : undefined
@@ -440,13 +454,22 @@ export function CustomWorkoutBuilderModal({
                             <button
                               type="button"
                               onClick={() => handlePreview(ex.machine)}
-                              className="truncate text-sm text-left hover:text-primary"
+                              className={cn(
+                                'truncate text-left text-sm hover:text-primary',
+                                selected.has(ex.machine) && 'font-semibold text-gray-900 dark:text-white',
+                              )}
                               title={ex.machine}
                             >
                               {ex.machine}
                             </button>
                           ) : (
-                            <span className="truncate text-sm text-left" title={ex.machine}>
+                            <span
+                              className={cn(
+                                'truncate text-left text-sm',
+                                selected.has(ex.machine) && 'font-semibold text-gray-900 dark:text-white',
+                              )}
+                              title={ex.machine}
+                            >
                               {ex.machine}
                             </span>
                           )}
@@ -471,13 +494,27 @@ export function CustomWorkoutBuilderModal({
             </div>
           ))}
         </div>
-        <div className="border rounded p-2">
-          <div className="font-medium mb-2">Add Warm-up Exercises (Optional)</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+        <div className="rounded-2xl bg-gray-50 p-2 dark:bg-white/[0.04]">
+          <div className="flex items-center justify-between px-2 pb-1 pt-1.5">
+            <div className="eyebrow">Add Warm-up Exercises (Optional)</div>
+            {selectedAbs.size > 0 && (
+              <span className="nums rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
+                {selectedAbs.size}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 gap-x-2 gap-y-0.5 sm:grid-cols-2">
             {availableAbs.map(abs => {
               const isLong = abs.name.length > 30;
               return (
-                <div key={abs.name} className={cn(isLong && 'sm:col-span-2')}>
+                <div
+                  key={abs.name}
+                  className={cn(
+                    'rounded-xl px-2 py-2 transition-colors',
+                    selectedAbs.has(abs.name) && 'bg-primary/10',
+                    isLong && 'sm:col-span-2',
+                  )}
+                >
                   <div className="flex items-center gap-1">
                     <div className="flex items-center gap-2 min-w-0">
                       <Checkbox
@@ -489,13 +526,22 @@ export function CustomWorkoutBuilderModal({
                         <button
                           type="button"
                           onClick={() => handlePreview(abs.name)}
-                          className="truncate text-sm text-left hover:text-primary"
+                          className={cn(
+                            'truncate text-left text-sm hover:text-primary',
+                            selectedAbs.has(abs.name) && 'font-semibold text-gray-900 dark:text-white',
+                          )}
                           title={abs.name}
                         >
                           {abs.name}
                         </button>
                       ) : (
-                        <span className="truncate text-sm text-left" title={abs.name}>
+                        <span
+                          className={cn(
+                            'truncate text-left text-sm',
+                            selectedAbs.has(abs.name) && 'font-semibold text-gray-900 dark:text-white',
+                          )}
+                          title={abs.name}
+                        >
                           {abs.name}
                         </span>
                       )}
@@ -519,12 +565,23 @@ export function CustomWorkoutBuilderModal({
           </div>
         </div>
         
-        <div className="space-y-4" data-builder-tour="name-and-save">
+        <div
+          className="space-y-3 rounded-2xl border border-gray-200/80 bg-card p-4 shadow-card dark:border-white/[0.08]"
+          data-builder-tour="name-and-save"
+        >
+          {/* The running total, where the decision to save is made. */}
+          <div className="flex items-center justify-between">
+            <div className="eyebrow">Your workout</div>
+            <div className="nums text-xs font-semibold text-gray-600 dark:text-gray-300" data-testid="builder-count">
+              {selected.size} {selected.size === 1 ? 'exercise' : 'exercises'}
+              {selectedAbs.size > 0 && ` · ${selectedAbs.size} warm-up`}
+            </div>
+          </div>
           {warning12 && (
-            <p className="text-yellow-600 text-sm">⚠️ That's a big session — are you training or moving in?</p>
+            <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">⚠️ That's a big session — are you training or moving in?</p>
           )}
           {warning15 && (
-            <p className="text-red-600 text-sm">🚨 Danger: Too many exercises in one session isn't effective. Consider splitting it up.</p>
+            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">🚨 Danger: Too many exercises in one session isn't effective. Consider splitting it up.</p>
           )}
           {selected.size === 0 && selectedAbs.size === 0 && (
             <p className="text-sm text-muted-foreground">
@@ -548,7 +605,7 @@ export function CustomWorkoutBuilderModal({
           {clashesWithTemplate && (
             <p className="text-red-600 text-sm">Workout name must be unique</p>
           )}
-          <Button onClick={handleSave} disabled={name.trim() === '' || isDuplicate}>
+          <Button size="lg" className="w-full" onClick={handleSave} disabled={name.trim() === '' || isDuplicate}>
             {template ? 'Update Workout' : 'Save Workout'}
           </Button>
         </div>

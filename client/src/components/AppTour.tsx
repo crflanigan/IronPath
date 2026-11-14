@@ -35,7 +35,7 @@ const BASE_STEPS: Step[] = [
   {
     target: 'calendar',
     title: 'Your month at a glance',
-    body: 'Tap any day to see what is scheduled and start it. Days you finish turn green, so a glance tells you how the month went.',
+    body: 'Tap any day to see what is scheduled and start it. Days you finish fill in, so a glance tells you how the month went.',
   },
   {
     target: 'custom-workout',
@@ -223,7 +223,7 @@ export function AppTour({ onClose }: { onClose: () => void }) {
       */}
       {rect ? (
         <div
-          className="pointer-events-none absolute rounded-xl transition-all duration-200"
+          className="pointer-events-none absolute rounded-2xl transition-all duration-300 ease-out"
           style={{
             top: rect.top - HALO,
             left: rect.left - HALO,
@@ -234,11 +234,12 @@ export function AppTour({ onClose }: { onClose: () => void }) {
             // replaces it — the ring never rendered at all until this was
             // written out longhand. It matters most in dark mode, where
             // dimming an already-dark page barely reads.
-            boxShadow: '0 0 0 2px var(--primary), 0 0 0 9999px rgba(0, 0, 0, 0.7)',
+            boxShadow:
+              '0 0 0 2px var(--primary), 0 0 28px 4px color-mix(in srgb, var(--primary) 55%, transparent), 0 0 0 9999px rgba(5, 7, 10, 0.72)',
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-black/65" />
+        <div className="absolute inset-0 bg-gray-950/70 backdrop-blur-sm" />
       )}
 
       <TourPanel

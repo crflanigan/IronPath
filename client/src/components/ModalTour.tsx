@@ -192,8 +192,8 @@ export function ModalTour({
        */
       className={
         sticky
-          ? 'sticky -bottom-6 z-10 -mx-6 -mb-6 rounded-t-2xl bg-white p-5 shadow-2xl outline-none rounded-b-lg dark:bg-gray-800'
-          : '-mx-6 -mb-6 rounded-b-lg border-t bg-gray-50 p-5 outline-none dark:bg-gray-900/40'
+          ? 'sticky -bottom-6 z-10 -mx-6 -mb-6 rounded-t-3xl rounded-b-2xl border-t border-gray-200/80 bg-white p-5 shadow-float outline-none dark:border-white/10 dark:bg-gray-800'
+          : '-mx-6 -mb-6 rounded-b-2xl border-t border-gray-200/80 bg-gray-50 p-5 outline-none dark:border-white/10 dark:bg-white/[0.03]'
       }
       stepIndex={index}
       stepCount={steps.length}

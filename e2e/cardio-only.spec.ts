@@ -63,6 +63,8 @@ test('a cardio-only workout is usable and can be completed', async ({ page }) =>
   if (await close.count()) await close.click();
 
   await page.getByRole('button', { name: 'Complete Workout' }).click();
+  // The summary waits for a tap; it used to leave on a two-second timer.
+  await page.getByRole('button', { name: 'Done' }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
   await page.waitForTimeout(500);
 

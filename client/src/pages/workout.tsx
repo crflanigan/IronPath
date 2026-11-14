@@ -15,16 +15,14 @@ import { parseISODate } from '@/lib/utils';
 import { Save, CheckCircle, ArrowLeft, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
-import confetti from 'canvas-confetti';
+import { WorkoutFinish, pickHeadline, type WorkoutFinishData } from '@/components/WorkoutFinish';
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
+  completedSetCount,
+  newPersonalBests,
+  previousOfSameType,
+  workoutVolume,
+} from '@/lib/workout-summary';
+import { calculateDayStreak } from '@/lib/streak';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
@@ -32,18 +30,6 @@ import {
  */
 const MAX_PLAUSIBLE_MINUTES = 4 * 60;
 
-const successMessages = [
-  { title: '🎉 Workout Complete!', description: 'You crushed it today.' },
-  { title: '💪 Nice Work!', description: 'That session was all you.' },
-  { title: '🏆 Mission Accomplished', description: 'Another one in the books — keep it up!' },
-  { title: '🚀 You Did It!', description: 'Great job pushing through.' },
-  { title: '🔥 Workout Conquered', description: "You're on fire — keep the streak going!" },
-  { title: '🎯 Nailed It', description: 'Focused and finished strong.' },
-  { title: '💥 Boom!', description: 'You just leveled up your fitness.' },
-  { title: '🧠 Mind Over Matter', description: 'You showed discipline today.' },
-  { title: '🙌 Way to Go!', description: 'That kind of effort gets results.' },
-  { title: '🎶 Flex Mode: Activated', description: 'Your future self is already thanking you.' },
-] as const;
 
 interface WorkoutPageProps {
   workout: Workout;
@@ -78,8 +64,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [autoSaveEnabled] = useState(true);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<typeof successMessages[number]>(successMessages[0]);
+  const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
   const { updateWorkout, workouts } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
 
@@ -289,13 +274,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     setWorkout(prev => ({ ...prev, cardio: updatedCardio }));
   };
 
-  const handleDialogOpenChange = (open: boolean) => {
-    setShowDialog(open);
-    if (!open) {
-      completeRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const handleCompleteWorkout = async () => {
     const allExercisesComplete = workout.exercises.every(e => e.completed);
     const allAbsComplete = workout.abs.every(a => a.completed);
@@ -371,15 +349,31 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       expectedUpdatedAtRef.current = saved?.updatedAt ?? new Date();
       lastSavedRef.current = JSON.stringify(completedWorkout);
 
-      toast({
-        title: "Workout completed! 🎉",
-        description: "Great job! Your workout has been saved.",
-        duration: 3000
+      // Any "Auto-saved" toast still on screen would sit on top of the
+      // summary, saying something smaller about the same event.
+      if (toastIdRef.current) dismiss(toastIdRef.current);
+
+      const previous = previousOfSameType(workouts, completedWorkout);
+      setFinish({
+        type: completedWorkout.type,
+        dateLabel: parseISODate(completedWorkout.date).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric',
+        }),
+        duration: completedWorkout.duration,
+        volume: workoutVolume(completedWorkout),
+        previousVolume: previous ? workoutVolume(previous) : undefined,
+        sets: completedSetCount(completedWorkout),
+        // The stored list has not re-rendered with this completion yet, so
+        // count it in by hand.
+        streak: calculateDayStreak(
+          [...workouts.filter(w => w.id !== completedWorkout.id), completedWorkout],
+          localWorkoutStorage.getStreakDays(),
+        ),
+        bests: newPersonalBests(completedWorkout, bests),
+        headline: pickHeadline(),
       });
-      
-      setTimeout(() => {
-        onNavigateBack();
-      }, 2000);
     } catch (error) {
       toast({
         title: "Save failed",
@@ -446,15 +440,12 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       stats.totalItems > 0 &&
       stats.completedItems === stats.totalItems
     ) {
+      // Everything is ticked: bring the one remaining action into view. This
+      // used to fire confetti and a dialog here, and then a toast again on
+      // Complete — two small celebrations for one event. The finish screen is
+      // now the celebration, and it comes after the button, not before it.
       setCelebrated(true);
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-      const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
-      setSuccessMessage(randomMessage);
-      setShowDialog(true);
+      completeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [stats.completedItems, stats.totalItems, workout.completed, celebrated]);
 
@@ -723,7 +714,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           <Button
             onClick={handleCompleteWorkout}
             size="lg"
-            className="w-full"
+            className={`w-full ${celebrated && !workout.completed ? 'animate-pulse [animation-duration:1.6s]' : ''}`}
             disabled={workout.completed ?? false}
           >
           <CheckCircle className="h-4 w-4" />
@@ -731,21 +722,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
       </div>
-      <AlertDialog open={showDialog} onOpenChange={handleDialogOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{successMessage.title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {successMessage.description}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogAction onClick={() => handleDialogOpenChange(false)}>
-            Close
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-      </AlertDialog>
+      <WorkoutFinish
+        data={finish}
+        onDone={() => {
+          setFinish(null);
+          onNavigateBack();
+        }}
+      />
 
       <ResetPersonalBestDialog
         machine={resetting?.machine ?? null}

@@ -32,7 +32,12 @@ async function settledBox(locator: Locator) {
 async function openBuilder(page: Page) {
   await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
   await page.getByRole('button', { name: 'Create Custom Workout' }).first().click();
-  await expect(page.getByTestId('custom-workout-builder')).toBeVisible();
+  const builder = page.getByTestId('custom-workout-builder');
+  await expect(builder).toBeVisible();
+  // The dialog zooms in from 95%. Measured mid-zoom, an 80px control reads as
+  // exactly 76px — two identical frames at the start of the animation were
+  // enough to fool `settledBox`. Wait for the animation itself to end.
+  await builder.evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)));
 }
 
 for (const width of WIDTHS) {

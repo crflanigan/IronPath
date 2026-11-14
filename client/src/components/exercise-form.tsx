@@ -10,6 +10,8 @@ import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import { hasExerciseImage } from '@/lib/exercise-images';
 import { formatBestDate, type PersonalBest } from '@/lib/personal-best';
 import { localWorkoutStorage } from '@/lib/storage';
+import { recordSetIndex } from '@/lib/workout-summary';
+import confetti from 'canvas-confetti';
 
 interface ExerciseFormProps {
   exercise: Exercise;
@@ -105,7 +107,40 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
     onUpdate(updatedExercise);
   };
 
-  const markSetComplete = (setIndex: number) => {
+  /**
+   * The set that currently holds a new personal best, if there is one.
+   *
+   * Derived rather than remembered, so it is right after a reload, moves if a
+   * later set goes heavier still, and disappears if the number is corrected
+   * back down — a badge that only appeared at the moment of the tap would be
+   * a claim nobody could check thirty seconds later.
+   */
+  const recordIndex = recordSetIndex(localExercise, personalBest);
+
+  /** A small gold burst from the tick itself, the moment a record falls. */
+  const celebrateRecord = (from: HTMLElement | null) => {
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const box = from?.getBoundingClientRect();
+      confetti({
+        particleCount: 45,
+        spread: 70,
+        startVelocity: 28,
+        scalar: 0.8,
+        origin: box
+          ? {
+              x: (box.left + box.width / 2) / window.innerWidth,
+              y: (box.top + box.height / 2) / window.innerHeight,
+            }
+          : { y: 0.6 },
+        colors: ['#f59e0b', '#fbbf24', '#fde68a', '#ffffff'],
+      });
+    } catch {
+      // Decoration only.
+    }
+  };
+
+  const markSetComplete = (setIndex: number, from: HTMLElement | null = null) => {
     const set = localExercise.sets[setIndex];
     if (!isSetComplete(set)) {
       toast({
@@ -133,6 +168,12 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
     };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
+
+    // Only the set that takes the record celebrates: a second set at the same
+    // weight is good work, not a second record.
+    if (recordSetIndex(updatedExercise, personalBest) === setIndex && recordIndex !== setIndex) {
+      celebrateRecord(from);
+    }
   };
 
   const getSetStatus = (set: ExerciseSet, index: number) => {
@@ -194,6 +235,9 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                 </span>
               )}
             </span>
+            {recordIndex !== -1 && (
+              <Trophy className="mr-2 h-4 w-4 shrink-0 text-amber-500" aria-label="New personal best" />
+            )}
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
             </span>
@@ -383,11 +427,25 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                     variant="ghost"
                     size="sm"
                     aria-label={`Mark set ${index + 1} complete`}
-                    onClick={() => markSetComplete(index)}
+                    onClick={(event) => markSetComplete(index, event.currentTarget)}
                     className="bg-brand h-9 w-9 shrink-0 rounded-full p-0 text-primary-foreground shadow-glow hover:bg-transparent hover:text-primary-foreground hover:brightness-110"
                   >
                     <Check className="!size-4" strokeWidth={3} aria-hidden="true" />
                   </Button>
+                )}
+
+                {/* Said here, on the row, at the moment it happens — not only
+                    in the BEST line underneath, which reports the old figure
+                    and leaves you to do the subtraction. */}
+                {recordIndex === index && (
+                  <span
+                    data-testid="set-record"
+                    className="flex h-7 shrink-0 animate-pop-in items-center gap-1 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-2 text-[11px] font-bold uppercase tracking-wide text-amber-950 shadow-[0_4px_14px_-4px_rgb(245_158_11/0.8)]"
+                  >
+                    <Trophy className="h-3 w-3" aria-hidden="true" />
+                    PR
+                    <span className="sr-only"> — new personal best</span>
+                  </span>
                 )}
               </div>
             );
