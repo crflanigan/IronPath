@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/dialog';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 import {
   DropdownMenu,
@@ -25,7 +24,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Plus, Settings } from 'lucide-react';
+import { Dumbbell, HeartPulse, MoreVertical, Plus } from 'lucide-react';
+import { workoutTemplates } from '@/lib/workout-data';
 import { useViewStack } from './view-stack-provider';
 import { ModalTour, TEMPLATE_STEPS } from './ModalTour';
 import { hasSeenTemplateTour, markTemplateTourSeen } from '@/lib/onboarding';
@@ -67,12 +67,58 @@ function RowOptions({ name, children }: { name: string; children: ReactNode }) {
           if (type === 'touch' || type === 'pen') setOpen(true);
         }}
       >
-        <Button aria-label={`Options for ${name}`} variant="ghost" size="icon">
-          <Settings className="h-4 w-4" />
+        <Button aria-label={`Options for ${name}`} variant="ghost" size="icon" className="rounded-full text-gray-400 dark:text-gray-500">
+          <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">{children}</DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/**
+ * One template, as something you can recognise rather than just read.
+ *
+ * Every row used to be an outlined button holding a name and nothing else, so
+ * "Chest & Shoulders" and "Chest, Shoulders & Legs" differed by two words in
+ * a column of seven near-identical boxes. What tells them apart is what is in
+ * them, so that is now on the row.
+ *
+ * `aria-label` keeps the button's name exactly the template's name; the
+ * second line is description, not identity.
+ */
+function TemplateRow({
+  name,
+  exercises,
+  onSelect,
+}: {
+  name: string;
+  exercises: { region?: string }[];
+  onSelect: () => void;
+}) {
+  const regions = Array.from(new Set(exercises.map(e => e.region).filter(Boolean))) as string[];
+  const cardioOnly = exercises.length === 0;
+  const Icon = cardioOnly ? HeartPulse : Dumbbell;
+  const detail = cardioOnly
+    ? 'Cardio only'
+    : `${exercises.length} ${exercises.length === 1 ? 'exercise' : 'exercises'}` +
+      (regions.length > 0 ? ` · ${regions.slice(0, 3).join(', ')}${regions.length > 3 ? '…' : ''}` : '');
+
+  return (
+    <Button
+      variant="outline"
+      aria-label={name}
+      className="h-auto min-w-0 flex-1 justify-start gap-3 rounded-xl border-gray-200/80 px-3 py-2.5 text-left dark:border-white/[0.08]"
+      onClick={onSelect}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">{name}</span>
+        <span className="block truncate text-xs font-normal text-gray-500 dark:text-gray-400">{detail}</span>
+      </span>
+    </Button>
   );
 }
 
@@ -133,8 +179,8 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
         */}
       <DialogContent className="overflow-hidden p-0">
         <div className="max-h-[85vh] space-y-4 overflow-y-auto overscroll-contain p-6">
-        <DialogHeader>
-          <DialogTitle>Select Workout Template</DialogTitle>
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-xl font-bold">Select Workout Template</DialogTitle>
           <DialogDescription>
             Choose a template to pre-fill your workout details.
           </DialogDescription>
@@ -142,13 +188,11 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
         <div className="flex flex-col space-y-2">
           {visiblePresets.map(name => (
             <div key={name} className="flex items-center space-x-1">
-              <Button
-                variant="outline"
-                className="flex-1 justify-start"
-                onClick={() => onSelectTemplate(name)}
-              >
-                {name}
-              </Button>
+              <TemplateRow
+                name={name}
+                exercises={workoutTemplates[name as keyof typeof workoutTemplates]?.exercises ?? []}
+                onSelect={() => onSelectTemplate(name)}
+              />
               <RowOptions name={name}>
                 <DropdownMenuItem
                   onClick={() => {
@@ -184,14 +228,16 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
           <div className="flex items-center space-x-1">
             <Button
               variant="outline"
-              className="flex-1 justify-start border-primary text-primary hover:bg-primary/10 hover:text-primary"
+              className="h-auto flex-1 justify-start gap-3 rounded-xl border-dashed border-primary/60 bg-primary/[0.04] px-3 py-2.5 text-primary hover:bg-primary/10 hover:text-primary"
               data-builder-tour="create-custom"
               onClick={() => {
                 onCreateCustom();
                 pushView('customWorkoutBuilder');
               }}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <span className="bg-brand flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary-foreground">
+                <Plus className="!size-[18px]" aria-hidden="true" />
+              </span>
               Create Custom Workout
             </Button>
             {/*
@@ -203,20 +249,16 @@ export function WorkoutTemplateSelectorModal({ open, customTemplates, onClose, o
             <div className="h-10 w-10 shrink-0" aria-hidden="true" />
           </div>
 
-          <Separator className="my-2" />
-
           {customTemplates.length > 0 && (
-            <div className="pt-2 space-y-2">
-              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Workouts</div>
+            <div className="space-y-2 pt-4">
+              <div className="eyebrow px-1">Custom Workouts</div>
               {customTemplates.map(t => (
                 <div key={t.id} className="flex items-center space-x-1">
-                  <Button
-                    variant="outline"
-                    className="flex-1 justify-start"
-                    onClick={() => onSelectTemplate(t.name)}
-                  >
-                    {t.name}
-                  </Button>
+                  <TemplateRow
+                    name={t.name}
+                    exercises={t.exercises}
+                    onSelect={() => onSelectTemplate(t.name)}
+                  />
                   <RowOptions name={t.name}>
                     <DropdownMenuItem
                       onClick={() => {

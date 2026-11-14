@@ -140,8 +140,10 @@ test('the flush cannot undo a completed workout', async ({ page }) => {
   }
 
   await page.getByRole('button', { name: 'Complete Workout' }).click();
+  // The summary waits for a tap; it used to leave on a two-second timer.
+  await page.getByRole('button', { name: 'Done' }).click();
 
-  // It navigates back on a timer; wait for that, plus the flush behind it.
+  // Wait for the navigation, plus the flush behind it.
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
   await page.waitForTimeout(600);
 

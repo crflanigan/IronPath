@@ -122,12 +122,11 @@ test('the celebration still fires under the CSP', async ({ page }) => {
     }]));
   }, [date]);
 
-  // Opening a workout already at 100% fires the celebration on mount.
+  // The celebration is the finish screen now, and it fires on Complete rather
+  // than on the last tick — so finish the workout to reach the confetti.
   await page.goto('/workout/1');
-  // `alertdialog`, not `dialog` — the celebration is a Radix AlertDialog, and
-  // `getByRole('dialog')` does not match it. The message is one of ten chosen
-  // at random, so the role is the stable thing to assert on.
-  await expect(page.getByRole('alertdialog'), 'the celebration never appeared')
+  await page.getByRole('button', { name: 'Complete Workout' }).click();
+  await expect(page.getByTestId('workout-finish'), 'the celebration never appeared')
     .toBeVisible({ timeout: 10000 });
   await page.waitForTimeout(1200);
 

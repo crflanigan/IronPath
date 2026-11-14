@@ -48,6 +48,8 @@ test('completing a workout and going back does not claim another tab changed it'
   if (await close.count()) await close.click();
 
   await page.getByRole('button', { name: 'Complete Workout' }).click();
+  // The summary waits for a tap; it used to leave on a two-second timer.
+  await page.getByRole('button', { name: 'Done' }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
 
   // The navigation above is what fires the flush; give it room to misfire.
