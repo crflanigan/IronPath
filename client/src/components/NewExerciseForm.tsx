@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { EXERCISE_IMAGE_SLUGS } from '@/lib/exercise-images';
+import { EXERCISE_IMAGE_SLUGS, imagePathForSlug } from '@/lib/exercise-images';
 import type { CustomExercise } from '@/lib/storage';
 
 type Block = 'main' | 'warmup';
@@ -174,10 +174,15 @@ export function NewExerciseForm({
                 )}
               >
                 <img
-                  src={`/exercise-images/${slug}.jpg`}
+                  src={imagePathForSlug(slug)}
                   alt={slugLabel(slug)}
                   loading="lazy"
-                  className="w-full h-16 object-cover"
+                  // The drawings put the figure in the lower half of the
+                  // frame, so a centred crop shows mostly wall.
+                  className={cn(
+                    'w-full h-16 object-cover',
+                    imagePathForSlug(slug).endsWith('.svg') && 'object-[center_78%]',
+                  )}
                 />
               </button>
             ))}
