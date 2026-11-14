@@ -586,7 +586,7 @@ export function CustomWorkoutBuilderModal({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-600 text-white hover:bg-red-700"
+            className="bg-red-600 bg-none text-white shadow-none hover:bg-red-700"
             onClick={() => {
               if (!pendingRemoval) return;
               localWorkoutStorage.deleteCustomExercise(pendingRemoval.id);

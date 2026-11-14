@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import type { Workout } from '@shared/schema';
-import { BarChart, Calendar, Download, FileText, TrendingUp } from 'lucide-react';
+import { BarChart, Calendar, Check, ChevronRight, Download, Dumbbell, FileText, Flame, Target, Timer, TrendingUp } from 'lucide-react';
 import { parseISODate } from '@/lib/utils';
 import { calculateDayStreak } from '@/lib/streak';
 import { localWorkoutStorage } from '@/lib/storage';
@@ -166,17 +166,27 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Progress History</h2>
-        <div className="flex space-x-1">
+    <div className="max-w-md mx-auto p-4 space-y-4">
+      <div className="flex animate-rise-in items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow !text-primary">Your training</p>
+          <h2 className="whitespace-nowrap text-xl font-bold leading-tight text-gray-900 dark:text-white">Progress History</h2>
+        </div>
+        {/* One segmented control instead of three separate buttons: it is one
+            choice with three values, and now it looks like one. */}
+        <div className="flex rounded-full bg-gray-200/70 p-1 dark:bg-white/[0.07]">
           {(['week', 'month', 'year'] as const).map(period => (
             <Button
               key={period}
-              variant={selectedPeriod === period ? 'default' : 'outline'}
+              variant="ghost"
               size="sm"
+              aria-pressed={selectedPeriod === period}
               onClick={() => setSelectedPeriod(period)}
-              className="capitalize"
+              className={`h-8 rounded-full px-3 text-xs capitalize hover:bg-transparent ${
+                selectedPeriod === period
+                  ? 'bg-card text-gray-900 shadow-sm hover:bg-card dark:bg-white/15 dark:text-white dark:hover:bg-white/15'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
             >
               {period}
             </Button>
@@ -185,34 +195,25 @@ export function HistoryPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.totalWorkouts}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Workouts</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.avgDuration}m</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Avg Duration</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.completionRate}%</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Completion</div>
-          </CardContent>
-        </Card>
+      <div className="grid animate-rise-in grid-cols-2 gap-3">
+        {[
+          { label: 'Workouts', value: String(stats.totalWorkouts), icon: Dumbbell, tone: 'bg-primary/10 text-primary' },
+          { label: 'Day Streak', value: String(stats.currentStreak), icon: Flame, tone: 'bg-orange-500/10 text-orange-500' },
+          { label: 'Avg Duration', value: `${stats.avgDuration}m`, icon: Timer, tone: 'bg-sky-500/10 text-sky-500' },
+          { label: 'Completion', value: `${stats.completionRate}%`, icon: Target, tone: 'bg-violet-500/10 text-violet-500' },
+        ].map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label}>
+            <CardContent className="flex items-center gap-3 p-4">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <div className="nums text-2xl font-bold leading-none text-gray-900 dark:text-white">{value}</div>
+                <div className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">{label}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Weight Progress */}
@@ -220,22 +221,22 @@ export function HistoryPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
+              <span className="mr-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span>
               Weight Progress
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
               {stats.weightProgress.map((progress, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div key={index} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                  <span className="min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">
                     {progress.machine}
                   </span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-green-600">
+                    <span className="nums text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                       +{progress.improvement} lbs
                     </span>
-                    <Badge variant="secondary">{progress.percentage}%</Badge>
+                    <Badge variant="secondary" className="nums border-transparent bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-400">{progress.percentage}%</Badge>
                   </div>
                 </div>
               ))}
@@ -248,7 +249,7 @@ export function HistoryPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <BarChart className="h-5 w-5 mr-2" />
+            <span className="mr-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><BarChart className="h-4 w-4" /></span>
             Workout Types
           </CardTitle>
         </CardHeader>
@@ -265,15 +266,25 @@ export function HistoryPage() {
               show up, with a count for each.
             </p>
           )}
-          <div className="space-y-2">
-            {getWorkoutsByType().map(([type, count]) => (
-              <div key={type} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {type}
-                </span>
-                <Badge variant="outline">{count} workouts</Badge>
-              </div>
-            ))}
+          {/* Each count drawn as a share of the most-trained type, so the
+              balance of a split is visible without reading the numbers. */}
+          <div className="space-y-3.5">
+            {getWorkoutsByType().map(([type, count], _i, all) => {
+              const most = Math.max(...all.map(([, c]) => c), 1);
+              return (
+                <div key={type}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {type}
+                    </span>
+                    <span className="nums shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">{count} workouts</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.07]">
+                    <div className="bg-brand h-full rounded-full" style={{ width: `${(count / most) * 100}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -289,7 +300,7 @@ export function HistoryPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2" />
+            <span className="mr-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-4 w-4" /></span>
             Your lifts
           </CardTitle>
         </CardHeader>
@@ -306,20 +317,23 @@ export function HistoryPage() {
                 key={lift.machine}
                 type="button"
                 onClick={() => setOpenLift(lift)}
-                className="flex w-full items-center justify-between rounded p-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="-mx-2 flex w-[calc(100%+1rem)] items-center justify-between rounded-xl p-2 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/[0.04] dark:active:bg-white/[0.07]"
               >
                 <span className="min-w-0 flex-1 pr-3">
                   <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">
                     {lift.machine}
                   </span>
-                  <span className="block text-xs text-gray-600 dark:text-gray-400">
+                  <span className="nums block text-xs text-gray-500 dark:text-gray-400">
                     {describeProgress(lift)}
                   </span>
                 </span>
                 <Sparkline
                   values={lift.points.map(p => p.weight)}
+                  width={84}
+                  height={28}
                   className="shrink-0 text-primary"
                 />
+                <ChevronRight className="ml-1 h-4 w-4 shrink-0 text-gray-300 dark:text-gray-600" aria-hidden="true" />
               </button>
             ))}
           </div>
@@ -330,7 +344,7 @@ export function HistoryPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Calendar className="h-5 w-5 mr-2" />
+            <span className="mr-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Calendar className="h-4 w-4" /></span>
             Recent Workouts
           </CardTitle>
         </CardHeader>
@@ -340,7 +354,7 @@ export function HistoryPage() {
               No completed workouts yet. Finish one and it will appear here.
             </p>
           )}
-          <div className="space-y-3">
+          <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
             {filteredWorkouts
               .filter(w => w.completed)
               // Newest first. Without the sort this sliced an ascending list
@@ -352,16 +366,16 @@ export function HistoryPage() {
               .map(workout => (
                 <div
                   key={workout.id}
-                  className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
                 >
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">{workout.type}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{formatDate(workout.date)}</div>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div data-testid="recent-type" className="truncate text-sm font-semibold text-gray-900 dark:text-white">{workout.type}</div>
+                    <div data-testid="recent-date" className="text-xs text-gray-500 dark:text-gray-400">{formatDate(workout.date)}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-green-600 font-medium">✅</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{workout.duration}m</div>
-                  </div>
+                  <div className="nums shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-white/[0.07] dark:text-gray-300">{workout.duration}m</div>
                 </div>
               ))}
           </div>
@@ -372,19 +386,19 @@ export function HistoryPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Download className="h-5 w-5 mr-2" />
+            <span className="mr-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Download className="h-4 w-4" /></span>
             Export Data
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <Button variant="outline" onClick={() => handleExport('csv')} className="w-full">
-              <FileText className="h-4 w-4 mr-2" />
-              Export to CSV
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => handleExport('csv')} aria-label="Export to CSV" className="w-full">
+              <FileText className="h-4 w-4" />
+              CSV
             </Button>
-            <Button variant="outline" onClick={() => handleExport('json')} className="w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Export to JSON
+            <Button variant="outline" onClick={() => handleExport('json')} aria-label="Export to JSON" className="w-full">
+              <Download className="h-4 w-4" />
+              JSON
             </Button>
           </div>
         </CardContent>

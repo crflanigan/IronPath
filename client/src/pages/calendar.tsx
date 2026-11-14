@@ -18,6 +18,7 @@ import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import type { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 import { AppTour } from '@/components/AppTour';
+import { CheckCircle2, Flame, PencilRuler, Play, Repeat, Trophy } from 'lucide-react';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { hasSeenTour, recordVisit } from '@/lib/onboarding';
 
@@ -335,39 +336,54 @@ export function CalendarPage() {
       : null);
 
   return (
-    <div className="max-w-md mx-auto p-4 space-y-6">
+    <div className="max-w-md mx-auto p-4 space-y-4">
       {showTour && <AppTour onClose={() => setShowTour(false)} />}
       <InstallPrompt />
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4">
-        <button
-          type="button"
-          aria-label={`Completed: ${stats.completedWorkouts} workouts`}
-          onClick={() => setLocation('/history')}
-          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <div className="text-2xl font-bold text-primary">{stats.completedWorkouts}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
-        </button>
-        <button
-          type="button"
-          aria-label={`Day Streak: ${stats.currentStreak}`}
-          onClick={() => setStreakModalOpen(true)}
-          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Day Streak</div>
-        </button>
-        <button
-          type="button"
-          aria-label={`Top Streak: ${stats.topStreak}`}
-          onClick={() => setLocation('/history')}
-          className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 text-center cursor-pointer transition-colors hover:bg-accent/50 active:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <div className="text-2xl font-bold text-orange-600">{stats.topStreak}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Top Streak</div>
-        </button>
+      {/* Stats: one strip, three figures. They were three separate bordered
+          boxes, which gave a row of numbers the visual weight of three
+          cards. Each is still its own button. */}
+      <div className="grid animate-rise-in grid-cols-3 divide-x divide-gray-100 rounded-2xl border border-gray-200/80 bg-card shadow-card dark:divide-white/[0.06] dark:border-white/[0.06]">
+        {[
+          {
+            label: 'Completed',
+            aria: `Completed: ${stats.completedWorkouts} workouts`,
+            value: stats.completedWorkouts,
+            icon: CheckCircle2,
+            tone: 'text-primary',
+            onClick: () => setLocation('/history'),
+          },
+          {
+            label: 'Day Streak',
+            aria: `Day Streak: ${stats.currentStreak}`,
+            value: stats.currentStreak,
+            icon: Flame,
+            tone: 'text-orange-500',
+            onClick: () => setStreakModalOpen(true),
+          },
+          {
+            label: 'Top Streak',
+            aria: `Top Streak: ${stats.topStreak}`,
+            value: stats.topStreak,
+            icon: Trophy,
+            tone: 'text-amber-500',
+            onClick: () => setLocation('/history'),
+          },
+        ].map(({ label, aria, value, icon: Icon, tone, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            aria-label={aria}
+            onClick={onClick}
+            className="group flex flex-col items-center gap-1 px-2 py-4 text-center transition-colors first:rounded-l-2xl last:rounded-r-2xl hover:bg-gray-50 active:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-white/[0.03] dark:active:bg-white/[0.06]"
+          >
+            <div className="flex items-center gap-1.5">
+              <Icon className={`h-4 w-4 ${tone}`} aria-hidden="true" />
+              <span className="nums text-2xl font-bold leading-none text-gray-900 dark:text-white">{value}</span>
+            </div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</div>
+          </button>
+        ))}
       </div>
 
       {/* Calendar */}
@@ -380,42 +396,33 @@ export function CalendarPage() {
       />
 
 
-      {/* Two states left to explain, so this is a line rather than a card. It
-          used to be a full bordered card teaching three, one of which ("Pending")
-          was on literally every day and so distinguished nothing. Shrinking it
-          pulls Start Today's Workout back above the fold. The Today swatch is a
-          teal square because that is exactly what the calendar draws — a legend
-          that shows the real mark beats one that describes it. */}
-      <div className="flex justify-center items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden="true">✅</span>
-          Completed
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="h-3 w-3 rounded-sm bg-primary" />
-          Today
-        </span>
-      </div>
-
-      {/* Selected Workout Details */}
+      {/* Selected day: the one thing this screen is for, so it is the one
+          place the brand colour is spent freely. */}
       {selectedDate && (
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
-              {(() => {
-                const [year, month, day] = selectedDate.split('-').map(Number);
-                const dateObj = new Date(year, month - 1, day); // Avoids timezone shift
-                return dateObj.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                });
-              })()}
-            </h3>
-            <p className="text-center font-medium">
-              Selected Day's Workout: {selectedWorkoutType ?? 'None'}
-            </p>
-            <Button onClick={handleStartSelectedWorkout} className="w-full">
+        <Card className="animate-rise-in overflow-hidden">
+          <CardContent className="space-y-4 p-5">
+            <div>
+              <h3 className="eyebrow !text-primary">
+                {(() => {
+                  const [year, month, day] = selectedDate.split('-').map(Number);
+                  const dateObj = new Date(year, month - 1, day); // Avoids timezone shift
+                  return dateObj.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                  });
+                })()}
+              </h3>
+              <p
+                className="mt-1 text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white"
+                data-testid="selected-workout-type"
+              >
+                <span className="sr-only">Selected Day's Workout: </span>
+                {selectedWorkoutType ?? 'None'}
+              </p>
+            </div>
+            <Button onClick={handleStartSelectedWorkout} size="lg" className="w-full">
+              <Play className="!size-4 fill-current" aria-hidden="true" />
               {selectedDate === formatLocalDate(new Date())
                 ? "Start Today's Workout"
                 : 'Start This Workout'}
@@ -431,40 +438,41 @@ export function CalendarPage() {
             )}
 
             {/*
-              * "No custom workout scheduled for this date" — which read as
-              * flatly denying the "Selected Day's Workout: Legs" three lines
-              * above it, and had two wrong words in five.
-              *
               * `selectedWorkout` is the stored *record*, so this state has
               * nothing to do with custom templates, and the day is scheduled —
               * the rotation named it. What is absent is anything logged.
               */}
             {!selectedWorkout && (
-              <p className="text-center text-gray-600 dark:text-gray-400">
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                 Nothing logged for this day yet
               </p>
             )}
 
-            {/* Outlined, not filled. This and Start Today's Workout were two
-                identical teal slabs competing for the same attention, when one
-                is the 95% action and this is occasional. Same colour, less ink —
-                the hierarchy comes from turning this down, not from shouting. */}
-            <Button
-              data-tour="custom-workout"
-              className="w-full border-primary text-primary hover:bg-primary/10 hover:text-primary"
-              variant="outline"
-              onClick={() => openTemplateSelector(selectedDate)}
-            >
-              Create or Edit Custom Workout
-            </Button>
+            {/* The two occasional actions, side by side and quiet. They were
+                two more full-width slabs under the primary one, so the card
+                read as a stack of four equal buttons. */}
+            <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-4 dark:border-white/[0.06]">
+              <Button
+                data-tour="custom-workout"
+                aria-label="Create or Edit Custom Workout"
+                className="h-auto flex-col gap-1.5 whitespace-normal rounded-xl bg-gray-50 px-2 py-3 text-xs font-semibold leading-tight text-gray-700 hover:bg-gray-100 dark:bg-white/[0.04] dark:text-gray-200 dark:hover:bg-white/[0.08]"
+                variant="ghost"
+                onClick={() => openTemplateSelector(selectedDate)}
+              >
+                <PencilRuler className="!size-[18px] text-primary" aria-hidden="true" />
+                Custom Workout
+              </Button>
 
-            <Button
-              className="w-full"
-              variant="secondary"
-              onClick={() => setScheduleModalOpen(true)}
-            >
-              Customize Auto-Schedule
-            </Button>
+              <Button
+                aria-label="Customize Auto-Schedule"
+                className="h-auto flex-col gap-1.5 whitespace-normal rounded-xl bg-gray-50 px-2 py-3 text-xs font-semibold leading-tight text-gray-700 hover:bg-gray-100 dark:bg-white/[0.04] dark:text-gray-200 dark:hover:bg-white/[0.08]"
+                variant="ghost"
+                onClick={() => setScheduleModalOpen(true)}
+              >
+                <Repeat className="!size-[18px] text-primary" aria-hidden="true" />
+                Auto-Schedule
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

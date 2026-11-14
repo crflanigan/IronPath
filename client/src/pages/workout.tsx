@@ -12,7 +12,7 @@ import { localWorkoutStorage } from '@/lib/storage';
 import { ConcurrentEditError, StorageWriteError } from '@/lib/storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
-import { Save, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Save, CheckCircle, ArrowLeft, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import confetti from 'canvas-confetti';
@@ -48,6 +48,28 @@ const successMessages = [
 interface WorkoutPageProps {
   workout: Workout;
   onNavigateBack: () => void;
+}
+
+/**
+ * The done/not-done mark for a warm-up row.
+ *
+ * Replaces a ✅ / ◯ pair of text glyphs, which rendered as a colour emoji
+ * next to a thin outline character: two different sizes, two different
+ * weights, and whatever the platform's emoji font felt like drawing.
+ */
+function Tick({ done }: { done: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+        done
+          ? 'border-transparent bg-brand text-primary-foreground shadow-glow'
+          : 'border-gray-300 text-transparent dark:border-gray-600'
+      }`}
+    >
+      {done && <Check className="!size-3.5 animate-pop-in" strokeWidth={3.5} />}
+    </span>
+  );
 }
 
 export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: WorkoutPageProps) {
@@ -438,40 +460,43 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
 
   return (
     <ErrorBoundary>
-      <div className="max-w-md mx-auto p-4 space-y-6" ref={topRef}>
+      <div className="max-w-md mx-auto p-4 space-y-5 scroll-mt-20" ref={topRef}>
       {/* Header */}
-      <div className="flex items-center space-x-3">
+      <div className="flex animate-rise-in items-center gap-3">
         <Button
           aria-label="Go back"
           variant="ghost"
           size="sm"
           onClick={onNavigateBack}
-          className="p-2"
+          className="h-10 w-10 shrink-0 rounded-full border border-gray-200/80 bg-card p-0 shadow-card dark:border-white/[0.06]"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {workout.type}
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow !text-primary">
             {parseISODate(workout.date).toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
               day: 'numeric'
             })}
           </p>
+          <h1 className="truncate text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
+            {workout.type}
+          </h1>
         </div>
       </div>
 
       {/* Progress Header */}
-      <Card>
-        <CardContent className="p-4">
+      {/* Pinned under the app header, so how far through you are is on
+          screen for the whole session instead of only at the top of a page
+          that is several screens long. */}
+      <Card className="sticky top-[4.25rem] z-20 border-gray-200/80 bg-card/85 backdrop-blur-xl dark:bg-gray-800/85">
+        <CardContent className="px-4 py-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Progress:</span>
-                <span className="text-sm font-medium text-primary">
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-baseline space-x-1.5">
+                <span className="eyebrow">Progress:</span>
+                <span className="nums text-sm font-bold text-primary">
                   {stats.completedItems}/{stats.totalItems} items
                 </span>
               </div>
@@ -481,11 +506,12 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                   The clock time is the thing you would actually want to know,
                   and it needs no ticking timer to stay true. */}
               <div className="flex items-center space-x-1">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {lastSavedAt ? 'Saved' : 'Auto-save on'}
                 </span>
                 {lastSavedAt && (
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="nums text-xs font-semibold text-gray-700 dark:text-gray-300">
                     {lastSavedAt.toLocaleTimeString([], {
                       hour: 'numeric',
                       minute: '2-digit',
@@ -496,9 +522,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
             </div>
           </div>
           
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-brand h-2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${stats.percentage}%` }}
             />
           </div>
@@ -508,7 +534,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       {/* Warmup */}
       {(workout.abs.length > 0 || workout.cardio) && (
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white">Warmup</h3>
+          <h3 className="eyebrow px-1">Warmup</h3>
 
           {/* Core Section. Hidden when empty, which a cardio-only workout is:
               an empty headed card reads as something failing to load. */}
@@ -517,7 +543,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
             <CardContent className="p-4">
               {/* "Abs Block" until core became its own muscle group and the
                   section stopped being only abs. */}
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Core Block</h3>
+              <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Core Block</h3>
               {/*
                 * space-y-3 put 16px between one row's tick and the next one's.
                 *
@@ -538,7 +564,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               <div className="space-y-5">
                 {workout.abs.map((absExercise, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className={`text-sm font-medium transition-colors ${absExercise.completed ? 'text-gray-400 line-through decoration-gray-300 dark:text-gray-500 dark:decoration-gray-600' : 'text-gray-800 dark:text-gray-200'}`}>
                       {absExercise.name}
                     </span>
                     <div className="flex items-center space-x-2">
@@ -584,9 +610,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                         onClick={() =>
                           handleAbsUpdate(index, 'completed', !absExercise.completed)
                         }
-                        className={absExercise.completed ? 'text-green-600' : 'text-gray-400'}
+                        className="hover:bg-transparent"
                       >
-                        {absExercise.completed ? '✅' : '◯'}
+                        <Tick done={Boolean(absExercise.completed)} />
                       </Button>
                     </div>
                   </div>
@@ -606,9 +632,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
                   size="sm"
                   aria-label={`Mark cardio ${workout.cardio?.completed ? 'incomplete' : 'complete'}`}
                   onClick={() => handleCardioUpdate('completed', !workout.cardio?.completed)}
-                  className={workout.cardio?.completed ? 'text-green-600' : 'text-gray-400'}
+                  className="hover:bg-transparent"
                 >
-                  {workout.cardio?.completed ? '✅' : '◯'}
+                  <Tick done={Boolean(workout.cardio?.completed)} />
                 </Button>
               </div>
 
@@ -666,7 +692,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           nothing looks like a rendering failure rather than an empty section. */}
       {workout.exercises.length > 0 && (
       <div className="space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Main Workout</h3>
+        <h3 className="eyebrow px-1">Main Workout</h3>
 
         {workout.exercises.map((exercise, index) => (
           <ErrorBoundary key={`${exercise.machine}-${index}`}>
@@ -686,18 +712,21 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       <div className="space-y-3" ref={completeRef}>
         <Button
           onClick={() => handleSave()}
-          className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+          variant="outline"
+          size="lg"
+          className="w-full"
         >
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="h-4 w-4" />
           Save Workout
         </Button>
         
           <Button
             onClick={handleCompleteWorkout}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            size="lg"
+            className="w-full"
             disabled={workout.completed ?? false}
           >
-          <CheckCircle className="h-4 w-4 mr-2" />
+          <CheckCircle className="h-4 w-4" />
           {workout.completed ? 'Workout Completed' : 'Complete Workout'}
         </Button>
       </div>
