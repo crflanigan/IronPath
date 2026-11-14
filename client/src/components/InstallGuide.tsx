@@ -8,6 +8,7 @@ import {
   subscribeToInstallability,
 } from '@/lib/install';
 import { iosBrowser } from '@/lib/onboarding';
+import { localWorkoutStorage } from '@/lib/storage';
 
 /**
  * How to install IronPath, wherever that question gets asked.
@@ -52,6 +53,24 @@ export function InstallGuide({ onInstalled }: { onInstalled?: () => void }) {
           <strong>Add to Home Screen</strong>. It opens full screen, with no
           address bar, and works with no signal.
         </p>
+        {/*
+          On iOS a home-screen app gets its own storage, separate from the
+          browser tab it was added from. Anyone who logged workouts here first
+          opened the installed app to an empty calendar and, reasonably,
+          concluded their history was gone. It is not — but nothing said how to
+          bring it along. Only shown when there is something to bring.
+        */}
+        {localWorkoutStorage.getBackupStatus().completed > 0 && (
+          <p
+            className="text-xs leading-relaxed text-amber-700 dark:text-amber-400"
+            data-testid="install-carry-over"
+          >
+            <strong>Bringing your workouts along:</strong> on iPhone the
+            home-screen app starts empty. Tap <strong>Export Backup</strong> in
+            Settings first, then <strong>Restore From Backup</strong> inside
+            the installed app.
+          </p>
+        )}
         {!inSafari && (
           <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
             No <strong>Add to Home Screen</strong> in that menu? Open{' '}

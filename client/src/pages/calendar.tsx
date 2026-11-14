@@ -19,6 +19,7 @@ import type { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 import { AppTour } from '@/components/AppTour';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { BackupReminder } from '@/components/BackupReminder';
 import { hasSeenTour, recordVisit } from '@/lib/onboarding';
 
 /** One visit per page load, not per mount. See the effect that reads it. */
@@ -338,6 +339,7 @@ export function CalendarPage() {
     <div className="max-w-md mx-auto p-4 space-y-6">
       {showTour && <AppTour onClose={() => setShowTour(false)} />}
       <InstallPrompt />
+      <BackupReminder />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-3 gap-4">

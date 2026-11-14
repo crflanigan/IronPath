@@ -3,10 +3,11 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { localWorkoutStorage } from '@/lib/storage';
+import { localWorkoutStorage, StorageWriteError } from '@/lib/storage';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
 import { toast } from '@/hooks/use-toast';
-import { backupFilename, describeBackup, downloadJson, readJsonFile } from '@/lib/backup';
+import { backUpNow, describeAge, describeBackup, readJsonFile } from '@/lib/backup';
+import { isStoragePersistent } from '@/lib/durability';
 import { resetTour } from '@/lib/onboarding';
 import { InstallGuide } from '@/components/InstallGuide';
 import { installRoute } from '@/lib/install';
@@ -36,16 +37,29 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [pendingImport, setPendingImport] = useState<{ data: unknown; summary: string } | null>(
     null,
   );
+  const [backup, setBackup] = useState(() => localWorkoutStorage.getBackupStatus());
+  const [persistent, setPersistent] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (open) {
       setUsage(localWorkoutStorage.getStorageUsage());
+      setBackup(localWorkoutStorage.getBackupStatus());
+      let live = true;
+      void isStoragePersistent().then(value => live && setPersistent(value));
+      return () => {
+        live = false;
+      };
     }
   }, [open]);
 
   const handleExport = async () => {
     try {
-      downloadJson(backupFilename(), await localWorkoutStorage.exportData());
+      const outcome = await backUpNow();
+      setBackup(localWorkoutStorage.getBackupStatus());
+      void isStoragePersistent().then(setPersistent);
+      if (outcome === 'shared') {
+        toast({ title: 'Backup saved', description: 'Keep that file somewhere other than this phone.' });
+      }
     } catch {
       toast({
         title: 'Export failed',
@@ -80,12 +94,15 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
 
     try {
       await localWorkoutStorage.importData(data);
-    } catch {
-      // importData validates before writing anything, so existing data is
-      // untouched when this happens.
+    } catch (error) {
+      // importData validates before writing anything and rolls back if a
+      // write is refused, so existing data is untouched when this happens.
       toast({
         title: 'Restore failed',
-        description: 'That backup could not be read. Nothing was changed.',
+        description:
+          error instanceof StorageWriteError
+            ? error.message
+            : 'That backup could not be read. Nothing was changed.',
         variant: 'destructive',
       });
       return;
@@ -125,7 +142,24 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
               </Button>
             </label>
           </div>
+          {/* The state of the only safety net there is, where it can be seen
+              without going looking. "Never" is the important one. */}
+          <p
+            className={`text-xs font-medium ${
+              backup.sinceBackup > 0
+                ? 'text-amber-700 dark:text-amber-400'
+                : 'text-gray-600 dark:text-gray-300'
+            }`}
+            data-testid="backup-status"
+          >
+            {backup.lastBackupAt
+              ? `Last backup: ${describeAge(backup.lastBackupAt)}`
+              : 'Never backed up'}
+            {backup.sinceBackup > 0 &&
+              ` · ${backup.sinceBackup} ${backup.sinceBackup === 1 ? 'workout' : 'workouts'} only on this device`}
+          </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
+            IronPath has no account, so this device holds the only copy of your training.
             A backup holds every workout, template, exercise history entry and setting.
             Restoring replaces everything currently on this device.
           </p>
@@ -174,6 +208,13 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)
         </div>
+        {persistent !== null && (
+          <div className="text-sm text-gray-500 dark:text-gray-400" data-testid="storage-durability">
+            {persistent
+              ? 'This browser has agreed not to clear IronPath’s data on its own.'
+              : 'This browser may clear IronPath’s data if the device runs low on space. Installing the app and keeping a backup protect against that.'}
+          </div>
+        )}
         <div className="text-sm text-gray-500 dark:text-gray-400">
           IronPath v{__APP_VERSION__}{' '}
           <span className="text-gray-400 dark:text-gray-500">{__APP_BUILD__}</span>
@@ -194,8 +235,19 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Restore this backup?</AlertDialogTitle>
             <AlertDialogDescription>
-              This file contains {pendingImport?.summary}. Restoring it replaces every workout,
-              template and setting currently on this device. This cannot be undone.
+              This file contains {pendingImport?.summary}.{' '}
+              {/* The mistake this guards against is restoring last month's
+                  file over this month's training, which reads as a routine
+                  confirm unless both numbers are on screen. */}
+              {backup.completed > 0 && (
+                <strong>
+                  This device has {backup.completed} completed{' '}
+                  {backup.completed === 1 ? 'workout' : 'workouts'}
+                  {backup.sinceBackup > 0 && `, ${backup.sinceBackup} of them not in any backup`}.{' '}
+                </strong>
+              )}
+              Restoring replaces every workout, template and setting currently on this device.
+              This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

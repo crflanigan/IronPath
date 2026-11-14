@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from '@/hooks/use-toast';
 import { presetCycleNames } from '@/lib/workout-cycle';
 import type { PersonalBestReset } from '@/lib/personal-best';
+import { requestPersistentStorage } from '@/lib/durability';
 
 export interface CustomWorkoutTemplate {
   id: number;
@@ -25,8 +26,36 @@ const STORAGE_KEYS = {
   STREAK_DAYS: 'ironpath_streak_days',
   QUARANTINE: 'ironpath_quarantined_workouts',
   CUSTOM_EXERCISES: 'ironpath_custom_exercises',
-  PERSONAL_BEST_RESETS: 'ironpath_personal_best_resets'
+  PERSONAL_BEST_RESETS: 'ironpath_personal_best_resets',
+  BACKUP_STATE: 'ironpath_backup_state'
 } as const;
+
+/**
+ * What this device remembers about its own backups.
+ *
+ * Deliberately not part of an exported file: it describes this install, not
+ * the training data, and a restored phone should not inherit another phone's
+ * idea of when it was last backed up.
+ */
+interface BackupState {
+  lastBackupAt?: string;
+  /** Completed workouts at the moment of the last backup. */
+  completedAtBackup?: number;
+  /** Completed workouts when the reminder was last waved away. */
+  completedAtSnooze?: number;
+}
+
+export interface BackupStatus {
+  lastBackupAt: Date | null;
+  completed: number;
+  /** Completed workouts that exist nowhere but this device. */
+  sinceBackup: number;
+  shouldRemind: boolean;
+}
+
+// Roughly two to three weeks of training. Often enough that a lost phone costs
+// little; rare enough that the reminder is not wallpaper.
+export const BACKUP_REMINDER_EVERY = 10;
 
 /**
  * An exercise the user added themselves.
@@ -140,7 +169,9 @@ const exerciseHistorySchema = z.record(
 const backupSchema = z.object({
   version: z.number().optional(),
   exportedAt: z.string().optional(),
-  workouts: z.array(storedWorkoutSchema),
+  // Validated one record at a time in `importData`, the same way the read path
+  // does it, so one unreadable workout cannot veto restoring all the others.
+  workouts: z.array(z.unknown()),
   preferences: storedPreferencesSchema,
   customTemplates: z.array(customTemplateSchema).optional(),
   exerciseHistory: exerciseHistorySchema.optional(),
@@ -697,7 +728,11 @@ export class LocalWorkoutStorage {
     workouts.push(newWorkout);
     this.saveWorkouts(workouts);
     this.setCurrentId(id + 1);
-    
+
+    // There is now something worth keeping, and this runs from a tap — the
+    // moment a browser that asks permission for this is willing to ask.
+    void requestPersistentStorage();
+
     return newWorkout;
   }
 
@@ -1022,24 +1057,150 @@ export class LocalWorkoutStorage {
   }
 
   /**
+   * A backup assembled without validating anything.
+   *
+   * For the crash screen. If the app is down because of something in storage,
+   * `exportData` — which parses and validates — may be the very thing that
+   * throws, and that is the worst moment to be unable to get your data out.
+   * `importData` validates on the way back in, so nothing is lost by skipping
+   * it here.
+   */
+  exportDataUnvalidated(): Record<string, unknown> {
+    const read = (key: string, fallback: unknown): unknown => {
+      try {
+        const stored = this.safeGetItem(key);
+        return stored ? JSON.parse(stored) : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+    return {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      workouts: read(STORAGE_KEYS.WORKOUTS, []),
+      preferences: read(STORAGE_KEYS.PREFERENCES, {}),
+      customTemplates: read(STORAGE_KEYS.CUSTOM_TEMPLATES, []),
+      exerciseHistory: read(STORAGE_KEYS.EXERCISE_HISTORY, {}),
+      autoScheduleWorkouts: read(STORAGE_KEYS.AUTO_SCHEDULE_WORKOUTS, undefined),
+      hiddenPresets: read(STORAGE_KEYS.HIDDEN_PRESETS, {}),
+      presetPrompts: read(STORAGE_KEYS.PRESET_PROMPTS, {}),
+      streakDays: read(STORAGE_KEYS.STREAK_DAYS, undefined),
+      quarantined: read(STORAGE_KEYS.QUARANTINE, []),
+      customExercises: read(STORAGE_KEYS.CUSTOM_EXERCISES, []),
+    };
+  }
+
+  private getBackupState(): BackupState {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.BACKUP_STATE);
+      const parsed = stored ? JSON.parse(stored) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private completedCount(): number {
+    return this.getWorkouts().filter(workout => workout.completed).length;
+  }
+
+  /**
+   * How exposed this device's history is.
+   *
+   * With no account and no server, the phone holds the only copy. Export has
+   * always been there, but nothing ever mentioned it, so in practice the
+   * backup most people had was none.
+   */
+  getBackupStatus(): BackupStatus {
+    const state = this.getBackupState();
+    const completed = this.completedCount();
+    const at = state.lastBackupAt ? new Date(state.lastBackupAt) : null;
+    const lastBackupAt = at && !Number.isNaN(at.getTime()) ? at : null;
+    const backedUp = lastBackupAt ? Math.min(state.completedAtBackup ?? 0, completed) : 0;
+    const acknowledged = Math.max(backedUp, Math.min(state.completedAtSnooze ?? 0, completed));
+    return {
+      lastBackupAt,
+      completed,
+      sinceBackup: completed - backedUp,
+      shouldRemind: completed - acknowledged >= BACKUP_REMINDER_EVERY,
+    };
+  }
+
+  /** Call once a backup file has actually left the app. */
+  recordBackup(at: Date = new Date()): void {
+    this.safeSetItem(
+      STORAGE_KEYS.BACKUP_STATE,
+      JSON.stringify({ lastBackupAt: at.toISOString(), completedAtBackup: this.completedCount() }),
+    );
+  }
+
+  /** "Later": stay quiet until another batch of workouts has built up. */
+  snoozeBackupReminder(): void {
+    this.safeSetItem(
+      STORAGE_KEYS.BACKUP_STATE,
+      JSON.stringify({ ...this.getBackupState(), completedAtSnooze: this.completedCount() }),
+    );
+  }
+
+  /**
    * Replace this install's data with the contents of a backup.
    *
-   * Throws if the payload does not validate, before writing anything — a bad
-   * file must not leave storage half-replaced. Every field beyond workouts and
-   * preferences is optional, so a file produced by an older build still
-   * restores; anything it omits is simply left as-is.
+   * Three promises, each of which this used to break:
+   *
+   * - **An old file still restores.** Workouts go through the same repair the
+   *   read path applies. Without it, a backup taken before `equipment` became
+   *   required was rejected outright — the app could read those records off
+   *   disk but not out of its own backup file.
+   * - **One bad record does not veto the rest.** It is set aside in the
+   *   quarantine, like on the read path, and everything else restores.
+   * - **A failed restore changes nothing.** The writes used to be assumed to
+   *   succeed. In a private tab, or with storage full, they silently landed in
+   *   memory instead: "Backup restored", a reload, and an empty app — after the
+   *   previous data had already been overwritten. Now the previous contents are
+   *   put back and the error says so.
+   *
+   * Every field beyond workouts and preferences is optional; anything a file
+   * omits is left as-is.
    */
-  async importData(data: unknown): Promise<void> {
+  async importData(data: unknown): Promise<{ restored: number; setAside: number }> {
     const backup = backupSchema.parse(data);
 
-    const workouts = backup.workouts.map((workout) => ({
-      ...workout,
-      completed: Boolean(workout.completed),
-      duration: workout.duration ?? null,
-      cardio: workout.cardio ?? undefined,
-      createdAt: workout.createdAt ?? new Date(),
-      updatedAt: workout.updatedAt ?? new Date(),
-    })) as Workout[];
+    const workouts: Workout[] = [];
+    const rejected: QuarantinedWorkout[] = [];
+    for (const candidate of backup.workouts) {
+      const validated = storedWorkoutSchema.safeParse(this.repairStoredWorkout(candidate));
+      if (!validated.success) {
+        rejected.push({
+          quarantinedAt: new Date().toISOString(),
+          reason: validated.error.issues
+            .map(issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+            .join('; '),
+          record: candidate,
+        });
+        continue;
+      }
+      const workout = validated.data;
+      workouts.push({
+        ...workout,
+        completed: Boolean(workout.completed),
+        duration: workout.duration ?? null,
+        cardio: workout.cardio ?? undefined,
+        createdAt: workout.createdAt ?? new Date(),
+        updatedAt: workout.updatedAt ?? new Date(),
+      } as Workout);
+    }
+
+    // Workouts in the file and not one of them readable: that is the wrong
+    // file, not a backup with a few bad records.
+    if (backup.workouts.length > 0 && workouts.length === 0) {
+      throw new Error('No workout in this file could be read.');
+    }
+
+    if (this.storageFailed || typeof localStorage === 'undefined') {
+      throw new StorageWriteError(
+        'This browser is not saving anything right now, so a restore would vanish on reload.',
+      );
+    }
 
     const normalizedPreferences: UserPreferences = {
       id: backup.preferences.id ?? 1,
@@ -1049,8 +1210,10 @@ export class LocalWorkoutStorage {
       updatedAt: backup.preferences.updatedAt ?? new Date(),
     };
 
-    // Validation is complete by this point, so the writes below cannot leave a
-    // partially-restored store behind.
+    const snapshot = Object.values(STORAGE_KEYS).map(
+      key => [key, this.safeGetItem(key)] as const,
+    );
+
     this.saveWorkouts(workouts);
     this.safeSetItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(normalizedPreferences));
 
@@ -1078,18 +1241,74 @@ export class LocalWorkoutStorage {
     if (backup.streakDays) {
       this.saveStreakDays(backup.streakDays);
     }
-    // Carried across so a record set aside on the old device is still
-    // recoverable on the new one rather than quietly disappearing in transit.
     if (backup.customExercises) {
       this.saveCustomExercises(backup.customExercises as CustomExercise[]);
     }
-    if (backup.quarantined) {
-      this.safeSetItem(STORAGE_KEYS.QUARANTINE, JSON.stringify(backup.quarantined));
+    // Carried across so a record set aside on the old device is still
+    // recoverable on the new one rather than quietly disappearing in transit.
+    if (backup.quarantined || rejected.length > 0) {
+      this.safeSetItem(
+        STORAGE_KEYS.QUARANTINE,
+        JSON.stringify([...(backup.quarantined ?? []), ...rejected].slice(-QUARANTINE_LIMIT)),
+      );
     }
 
     // Update current ID to prevent conflicts
     const maxId = Math.max(...workouts.map(w => w.id), 0);
     this.setCurrentId(maxId + 1);
+
+    // What is on this device now *is* a file the user holds, so it counts as
+    // backed up as of when that file was written.
+    const exportedAt = backup.exportedAt ? new Date(backup.exportedAt) : new Date();
+    this.recordBackup(Number.isNaN(exportedAt.getTime()) ? new Date() : exportedAt);
+
+    // Any refused write flips `storageFailed`. Checking once here covers every
+    // write above, including the ones made through helpers that return nothing.
+    if (this.storageFailed) {
+      this.rollBack(snapshot);
+      throw new StorageWriteError(
+        'This browser refused to store the backup. Nothing was changed.',
+      );
+    }
+
+    return { restored: workouts.length, setAside: rejected.length };
+  }
+
+  /**
+   * Put storage back as it was before a restore that did not take.
+   *
+   * Never clears first: if the browser is refusing writes outright, emptying a
+   * key and then failing to refill it would turn a failed restore into data
+   * loss. Shrinking writes and removals go first so that, when the cause was a
+   * full quota, there is room for the rest.
+   */
+  private rollBack(snapshot: ReadonlyArray<readonly [string, string | null]>): void {
+    const current = (key: string) => {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    };
+    const growth = ([key, value]: readonly [string, string | null]) =>
+      (value?.length ?? 0) - (current(key)?.length ?? 0);
+
+    let clean = true;
+    for (const [key, value] of [...snapshot].sort((a, b) => growth(a) - growth(b))) {
+      if (current(key) === value) continue;
+      try {
+        if (value === null) localStorage.removeItem(key);
+        else localStorage.setItem(key, value);
+      } catch (err) {
+        clean = false;
+        console.error(`IronPath: could not roll back ${key}`, err);
+      }
+    }
+
+    if (clean) {
+      this.storageFailed = false;
+      this.memoryStore = {};
+    }
   }
 
   async clearAllData(): Promise<void> {
