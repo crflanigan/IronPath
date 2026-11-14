@@ -72,7 +72,7 @@ function session() {
 async function cardHeight(page: Page, machine: string): Promise<number> {
   const box = await page
     .getByRole('button', { name: new RegExp(`^(Show|Hide) ${machine}$`) })
-    .locator('xpath=ancestor::div[contains(@class,"border-l-4")][1]')
+    .locator('xpath=ancestor::div[@data-exercise-card][1]')
     .boundingBox();
   if (!box) throw new Error(`no card for ${machine}`);
   return box.height;

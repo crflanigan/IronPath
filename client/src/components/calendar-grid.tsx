@@ -1,8 +1,7 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Workout } from '@shared/schema';
-import { generateWorkoutSchedule } from '@/lib/workout-data';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { isSameMonth } from '@/lib/calendar-position';
 
@@ -96,17 +95,8 @@ export function CalendarGrid({
     return days;
   }, [year, month, todayKey]);
 
-  const workoutSchedule = useMemo(
-    () => generateWorkoutSchedule(year, month + 1),
-    [year, month],
-  );
-
   const getWorkoutForDate = (date: string) => {
     return workouts.find(w => w.date === date);
-  };
-
-  const getScheduledWorkoutForDate = (date: string) => {
-    return workoutSchedule.find(w => w.date === date);
   };
 
   const showingCurrentMonth = isSameMonth(currentDate, new Date());
@@ -118,32 +108,28 @@ export function CalendarGrid({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="rounded-2xl border border-gray-200/80 bg-card p-4 shadow-card dark:border-white/[0.06]">
+      <div className="mb-3 flex items-center justify-between">
         <Button
           variant="ghost"
           size="sm"
           aria-label="Previous month"
           onClick={() => navigateMonth('prev')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-10 w-10 rounded-full p-0 text-gray-500 dark:text-gray-400"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </Button>
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {monthNames[month]} {year}
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            {monthNames[month]} <span className="font-medium text-gray-400 dark:text-gray-500">{year}</span>
           </h2>
           {/*
             * The way home.
             *
             * There was none: once you had browsed to June, the only route back
-            * was tapping the arrow the same number of times. That is what made
-            * the old "Start Today's Workout" feel missed — it always acted on
-            * today regardless of what was selected, so it doubled as an escape
-            * hatch, but only by claiming one day while acting on another.
-            *
-            * Hidden while the current month is on screen, so it is not a
-            * permanent control that does nothing most of the time.
+            * was tapping the arrow the same number of times. Hidden while the
+            * current month is on screen, so it is not a permanent control that
+            * does nothing most of the time.
             */}
           {!showingCurrentMonth && (
             <Button
@@ -154,7 +140,7 @@ export function CalendarGrid({
                 onDateChange(now);
                 onSelectDate(formatLocalDate(now));
               }}
-              className="h-auto p-0 text-xs font-medium text-primary hover:bg-transparent hover:text-primary/80"
+              className="mt-0.5 h-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary hover:bg-primary/15 hover:text-primary"
             >
               Today
             </Button>
@@ -165,75 +151,46 @@ export function CalendarGrid({
           size="sm"
           aria-label="Next month"
           onClick={() => navigateMonth('next')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-10 w-10 rounded-full p-0 text-gray-500 dark:text-gray-400"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-1" data-tour="calendar">
         {daysOfWeek.map(day => (
-          <div key={day} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-2">
+          <div key={day} className="eyebrow pb-1 pt-2 text-center !tracking-[0.08em]">
             {day}
           </div>
         ))}
 
         {calendarDays.map((dayData, index) => {
           const workout = getWorkoutForDate(dayData.date);
-          const scheduledWorkout = getScheduledWorkoutForDate(dayData.date);
-          const hasWorkout = workout || scheduledWorkout;
-
-          const sharedClasses =
-            'aspect-square w-full h-auto p-0 flex flex-col items-center justify-center gap-1 text-sm leading-tight rounded-lg';
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
+          const inProgress = Boolean(workout) && !isCompleted;
+
+          /*
+           * A month of circles rather than a month of boxes.
+           *
+           * Every day used to be a bordered white tile, so the grid was 30
+           * identical rectangles and the days that mattered had to shout over
+           * them with a green wash and an emoji. With the tiles gone the page
+           * is quiet by default and three marks carry everything: a soft fill
+           * for a day you trained, the brand fill for today, a ring for the
+           * day you are looking at.
+           */
+          const sharedClasses =
+            'relative aspect-square w-full h-auto p-0 flex flex-col items-center justify-center gap-0.5 text-sm leading-tight rounded-full';
 
           if (!dayData.isCurrentMonth) {
             return (
               <div
                 key={index}
-                className={`${sharedClasses} text-gray-400 dark:text-gray-600`}
+                className={`${sharedClasses} text-gray-300 dark:text-gray-700`}
               >
-                <span className="text-base font-semibold leading-none">{dayData.day}</span>
+                <span className="nums text-[15px] font-medium leading-none">{dayData.day}</span>
               </div>
-            );
-          }
-
-          if (hasWorkout) {
-            return (
-              <Button
-                key={index}
-                variant="ghost"
-                className={cn(
-                  sharedClasses,
-                  'bg-white dark:bg-gray-800 border hover:shadow-md transition-shadow',
-                  // A completed day is washed green, not just checked, so a
-                  // month can be read at a glance instead of hunting for a
-                  // 12px glyph cell by cell.
-                  isCompleted &&
-                    'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700',
-                  // Selection must outrank the completed border, so it comes after.
-                  isSelected
-                    ? 'border-primary ring-2 ring-primary'
-                    : !isCompleted && 'border-gray-200 dark:border-gray-700',
-                  // Today is filled whether or not it is selected. It used to
-                  // drop the fill the moment you selected it, which left the
-                  // 📅 glyph as its only marker — and that glyph is now gone.
-                  //
-                  // `dark:bg-primary` is load-bearing: the base classes carry
-                  // `dark:bg-gray-800`, and tailwind-merge keys variants
-                  // separately, so a bare `bg-primary` never collides with it
-                  // and loses the cascade. Without this, today is unmarked in
-                  // dark mode.
-                  dayData.isToday &&
-                    'bg-primary dark:bg-primary text-white hover:bg-primary/90',
-                )}
-                data-today={dayData.isToday || undefined}
-                onClick={() => onSelectDate(dayData.date)}
-              >
-                <div className="text-base font-semibold leading-none">{dayData.day}</div>
-                {isCompleted && <div className="text-xs">✅</div>}
-              </Button>
             );
           }
 
@@ -243,18 +200,51 @@ export function CalendarGrid({
               variant="ghost"
               className={cn(
                 sharedClasses,
-                dayData.isToday
-                  ? 'bg-primary text-white hover:bg-primary/90'
-                  : '',
-                isSelected && 'border-2 border-primary'
+                'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/5',
+                isCompleted &&
+                  'bg-primary/[0.13] text-primary hover:bg-primary/20 dark:bg-primary/[0.18] dark:text-primary dark:hover:bg-primary/25',
+                // Today is filled whether or not it is selected or completed.
+                // `dark:bg-primary` stays explicit: tailwind-merge keys
+                // variants separately, so a bare `bg-primary` would not
+                // displace a dark-mode background set earlier in this list.
+                dayData.isToday &&
+                  'bg-primary dark:bg-primary bg-brand text-primary-foreground shadow-glow hover:brightness-110 dark:text-primary-foreground',
+                isSelected &&
+                  'ring-2 ring-primary ring-offset-2 ring-offset-card',
               )}
               data-today={dayData.isToday || undefined}
+              data-completed={isCompleted || undefined}
               onClick={() => onSelectDate(dayData.date)}
             >
-              <span className="text-base font-semibold leading-none">{dayData.day}</span>
+              <span className="nums text-[15px] font-semibold leading-none">{dayData.day}</span>
+              {isCompleted && <Check className="!size-3" strokeWidth={3.5} aria-hidden="true" />}
+              {inProgress && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'h-1 w-1 rounded-full',
+                    dayData.isToday ? 'bg-white/90' : 'bg-amber-500',
+                  )}
+                />
+              )}
             </Button>
           );
         })}
+      </div>
+
+      {/* Two marks to explain, drawn exactly as the grid draws them — a
+          legend that shows the real mark beats one that describes it. */}
+      <div className="mt-4 flex items-center justify-center gap-5 border-t border-gray-100 pt-3 text-xs font-medium text-gray-500 dark:border-white/[0.06] dark:text-gray-400">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Check className="h-2.5 w-2.5" strokeWidth={4} />
+          </span>
+          Completed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="bg-brand h-3.5 w-3.5 rounded-full" />
+          Today
+        </span>
       </div>
     </div>
   );

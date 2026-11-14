@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Exercise, ExerciseSet } from '@shared/schema';
-import { Check, Clock, HelpCircle } from 'lucide-react';
+import { Check, HelpCircle, Trophy } from 'lucide-react';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
@@ -154,17 +154,27 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
     const currentWeight = weights.length > 0 ? Math.max(...weights) : 0;
     const difference = currentWeight - personalBest!.weight;
 
-    if (difference > 0) return { change: `↑ +${difference} lbs`, color: 'text-blue-600' };
-    if (difference < 0) return { change: `↓ ${Math.abs(difference)} lbs`, color: 'text-red-600' };
+    if (difference > 0) return { change: `↑ +${difference} lbs`, color: 'text-emerald-600 dark:text-emerald-400' };
+    if (difference < 0) return { change: `↓ ${Math.abs(difference)} lbs`, color: 'text-red-500' };
     return { change: '', color: '' };
   };
 
-  const borderColor = localExercise.completed ? 'border-green-500' : 
-                     isActive ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600';
+  /*
+   * State is carried by the whole card, not by a coloured stripe down its
+   * left edge. The stripe was three colours of the same 4px line: easy to
+   * miss, and green/blue/grey said nothing the eye could read at a scroll.
+   * Now the exercise you are on is lit — a brand ring and a soft glow — the
+   * finished ones recede, and everything else is a plain card.
+   */
+  const cardTone = localExercise.completed
+    ? 'bg-primary/[0.06] border-primary/20 dark:bg-primary/[0.07] dark:border-primary/20 shadow-none'
+    : isActive
+      ? 'border-primary/50 dark:border-primary/50 ring-1 ring-primary/30 shadow-[0_10px_32px_-16px_var(--primary)]'
+      : '';
 
   return (
     <>
-    <Card className={`border-l-4 ${borderColor}`}>
+    <Card data-exercise-card className={`transition-shadow duration-300 ${cardTone}`}>
       {collapsed ? (
         <CardContent className="p-3">
           <button
@@ -175,16 +185,18 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
             className="flex w-full items-center justify-between text-left"
           >
             <span className="min-w-0 flex-1 pr-3">
-              <span className="block truncate text-sm font-medium text-gray-900 dark:text-white">
+              <span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">
                 {localExercise.machine}
               </span>
               {topSet?.weight !== undefined && (
-                <span className="block text-xs text-gray-600 dark:text-gray-400">
+                <span className="nums block text-xs text-gray-500 dark:text-gray-400">
                   {topSet.weight} lbs{topSet.reps !== undefined && ` × ${topSet.reps} reps`}
                 </span>
               )}
             </span>
-            <Check className="h-5 w-5 shrink-0 text-green-500" />
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
+            </span>
           </button>
         </CardContent>
       ) : (
@@ -203,15 +215,15 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
               aria-label={`Hide ${localExercise.machine}`}
               className="min-w-0 flex-1 pr-2 text-left"
             >
-              <h4 className="font-medium text-gray-900 dark:text-white">{localExercise.machine}</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h4 className="font-semibold text-gray-900 dark:text-white">{localExercise.machine}</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {localExercise.region} • {localExercise.feel} Feel
               </p>
             </button>
           ) : (
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">{localExercise.machine}</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h4 className="font-semibold text-gray-900 dark:text-white">{localExercise.machine}</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {localExercise.region} • {localExercise.feel} Feel
               </p>
             </div>
@@ -243,16 +255,32 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                 <span className="sr-only">{`Show reference photo for ${localExercise.machine}`}</span>
               </button>
             )}
-            {localExercise.completed && <Check className="h-5 w-5 text-green-500" />}
-            {isActive && !localExercise.completed && <Clock className="h-5 w-5 text-blue-500" />}
+            {localExercise.completed && (
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
+              </span>
+            )}
+            {isActive && !localExercise.completed && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                Now
+              </span>
+            )}
           </div>
         </div>
 
         {/* Sets */}
         <div className="space-y-2">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Sets
+          {/* Column heads. The placeholders said the same thing, but only
+              while a field was empty — and these are prefilled from last time,
+              so in practice the three boxes were never labelled. */}
+          <div className="eyebrow flex items-center space-x-2 px-2" aria-hidden="true">
+            <span className="w-8">Sets</span>
+            <span className="w-16 text-center">lbs</span>
+            <span className="w-2" />
+            <span className="w-14 text-center">reps</span>
+            <span className="w-16 text-center">rest</span>
           </div>
+          <div className="sr-only">Sets</div>
           
           {localExercise.sets.map((set, index) => {
             const status = getSetStatus(set, index);
@@ -263,18 +291,20 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
             return (
               <div
                 key={index}
-                className={`flex items-center space-x-2 p-2 rounded ${
-                  status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' :
-                  status === 'current' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' :
-                  'bg-gray-50 dark:bg-gray-700'
+                className={`flex items-center space-x-2 rounded-xl border p-2 transition-colors duration-200 ${
+                  status === 'completed' ? 'border-transparent bg-primary/10 dark:bg-primary/[0.12]' :
+                  status === 'current' ? 'border-primary/40 bg-card shadow-sm dark:bg-white/[0.03]' :
+                  'border-transparent bg-gray-50 dark:bg-white/[0.03]'
                 }`}
               >
-                <span className={`text-sm font-medium w-8 ${
-                  status === 'completed' ? 'text-green-600 dark:text-green-400' :
-                  status === 'current' ? 'text-blue-600 dark:text-blue-400' :
-                  'text-gray-400 dark:text-gray-500'
-                }`}>
-                  {index + 1}
+                <span className="flex w-8 shrink-0 items-center">
+                  <span className={`nums flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                    status === 'completed' ? 'bg-primary text-primary-foreground' :
+                    status === 'current' ? 'bg-primary/15 text-primary' :
+                    'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                  }`}>
+                    {status === 'completed' ? <Check className="h-3 w-3 animate-pop-in" strokeWidth={4} aria-label={String(index + 1)} /> : index + 1}
+                  </span>
                 </span>
                 
                 <Input
@@ -290,7 +320,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                     }
                   }}
                   onFocus={focusToEnd}
-                  className={`w-16 text-sm ${weightError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  className={`nums w-16 px-1 text-center text-sm font-semibold ${weightError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="lbs"
                   disabled={false}
                 />
@@ -310,7 +340,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                     }
                   }}
                   onFocus={focusToEnd}
-                  className={`w-14 text-sm ${repsError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  className={`nums w-14 px-1 text-center text-sm font-semibold ${repsError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="reps"
                   disabled={false}
                 />
@@ -343,7 +373,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                     });
                     updateSet(index, 'rest', formatRest(digits));
                   }}
-                  className={`w-16 text-sm ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  className={`nums w-16 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-300 ${restError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   placeholder="rest"
                   disabled={false}
                 />
@@ -354,9 +384,9 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                     size="sm"
                     aria-label={`Mark set ${index + 1} complete`}
                     onClick={() => markSetComplete(index)}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="bg-brand h-9 w-9 shrink-0 rounded-full p-0 text-primary-foreground shadow-glow hover:bg-transparent hover:text-primary-foreground hover:brightness-110"
                   >
-                    ✓
+                    <Check className="!size-4" strokeWidth={3} aria-hidden="true" />
                   </Button>
                 )}
               </div>
@@ -382,10 +412,11 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
             type="button"
             onClick={() => onResetBest?.(localExercise.machine, personalBest!)}
             disabled={!onResetBest}
-            className="mt-2 flex w-full items-center space-x-2 rounded text-left disabled:cursor-default"
+            className="mt-3 flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-gray-100 pt-3 text-left disabled:cursor-default dark:border-white/[0.06]"
           >
-            <span className="text-xs text-gray-500 dark:text-gray-400">BEST:</span>
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+            <span className="eyebrow">BEST:</span>
+            <span className="nums text-xs font-semibold text-gray-700 dark:text-gray-200">
               {personalBest!.weight} lbs × {personalBest!.reps} reps
             </span>
             {personalBest!.date && (

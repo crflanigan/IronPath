@@ -33,7 +33,7 @@ test('starting from a selected day creates the workout for that day', async ({ p
   const start = page.getByRole('button', { name: 'Start This Workout' });
   await expect(start).toBeVisible();
 
-  const advertised = (await page.getByText(/Selected Day's Workout:/).textContent())
+  const advertised = (await page.getByTestId('selected-workout-type').textContent())
     ?.replace(/Selected Day's Workout:\s*/, '')
     .trim();
   expect(advertised, 'panel should name a workout type').toBeTruthy();

@@ -56,11 +56,19 @@ export function Sparkline({ values, width = 64, height = 20, className }: Sparkl
       className={className}
       aria-hidden="true"
     >
+      {/* A wash under the line, so the shape reads at a glance and not only
+          as a hairline. */}
+      <path
+        d={`${d} L${x(values.length - 1).toFixed(1)},${height} L${x(0).toFixed(1)},${height} Z`}
+        fill="currentColor"
+        opacity={0.12}
+        stroke="none"
+      />
       <path
         d={d}
         fill="none"
         stroke="currentColor"
-        strokeWidth={1.5}
+        strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

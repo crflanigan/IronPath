@@ -58,10 +58,10 @@ test('Recent Workouts shows the newest five, newest first', async ({ page }) => 
   await seed(page, Array.from({ length: 10 }, (_, i) => workout(i + 1, i, true)));
 
   const rows = page.locator('text=Recent Workouts').locator('..').locator('..');
-  const shown = await rows.locator('div.font-medium').allInnerTexts();
+  const shown = await rows.getByTestId('recent-type').allInnerTexts();
   expect(shown.length).toBeGreaterThan(0);
 
-  const dates = await rows.locator('div.text-sm').allInnerTexts();
+  const dates = await rows.getByTestId('recent-date').allInnerTexts();
   const parsed = dates.map(d => new Date(d).getTime()).filter(n => !Number.isNaN(n));
   expect(parsed.length, 'no dated rows found').toBeGreaterThanOrEqual(5);
 

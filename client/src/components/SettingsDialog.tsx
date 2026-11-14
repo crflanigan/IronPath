@@ -1,7 +1,6 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { ChevronRight, Download, Eye, Repeat, Sparkles, Upload, type LucideIcon } from 'lucide-react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { localWorkoutStorage } from '@/lib/storage';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
@@ -15,15 +14,52 @@ import { installRoute } from '@/lib/install';
 function InstallSection() {
   if (installRoute() === 'none') return null;
   return (
-    <>
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-900 dark:text-white">
-          Install IronPath
-        </p>
+    <div>
+      <p className="eyebrow mb-2 px-1">Install IronPath</p>
+      <div className="rounded-xl bg-gray-50 p-4 dark:bg-white/[0.04]">
         <InstallGuide />
       </div>
-      <Separator />
-    </>
+    </div>
+  );
+}
+
+const rowClass =
+  'flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100 active:bg-gray-200/70 dark:text-gray-100 dark:hover:bg-white/[0.05] dark:active:bg-white/[0.08]';
+
+function RowIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </span>
+  );
+}
+
+function SettingsGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="eyebrow mb-2 px-1">{label}</p>
+      <div className="divide-y divide-gray-200/70 overflow-hidden rounded-xl bg-gray-50 dark:divide-white/[0.06] dark:bg-white/[0.04]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SettingsRow({
+  icon,
+  onClick,
+  children,
+}: {
+  icon: LucideIcon;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button type="button" onClick={onClick} className={rowClass}>
+      <RowIcon icon={icon} />
+      <span className="flex-1">{children}</span>
+      <ChevronRight className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -105,12 +141,46 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
             viewport, hanging off both ends with nothing to scroll. */}
         <DialogContent className="overflow-hidden p-0">
         <div className="max-h-[85vh] space-y-4 overflow-y-auto overscroll-contain p-6">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-xl font-bold">Settings</DialogTitle>
           <DialogDescription>Manage app data and preferences.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <Button onClick={handleExport} className="w-full">Export Backup</Button>
+        {/*
+          * A grouped list, not a stack of slabs.
+          *
+          * This was eight full-width buttons in four colours — two of them the
+          * brightest thing in the app, for the two actions used least. Rows in
+          * quiet groups put everything at one volume, with the one destructive
+          * action set apart at the bottom in red text rather than a red wall.
+          */}
+        <SettingsGroup label="Training">
+          <SettingsRow icon={Repeat} onClick={() => setScheduleOpen(true)}>
+            Customize Auto-Schedule
+          </SettingsRow>
+          <SettingsRow
+            icon={Eye}
+            onClick={() => { localWorkoutStorage.saveHiddenPresets({}); toast({ title: 'Presets restored', description: 'All presets are visible.' }); }}
+          >
+            Show Hidden Workout Presets
+          </SettingsRow>
+          {/* Replaces a "don't show this again" checkbox on the tour itself.
+              Skipping already means never again, so the only control worth
+              having is the one that brings it back. */}
+          <SettingsRow
+            icon={Sparkles}
+            onClick={() => {
+              resetTour();
+              window.location.reload();
+            }}
+          >
+            Replay welcome tour
+          </SettingsRow>
+        </SettingsGroup>
+
+        <SettingsGroup label="Your data">
+          <SettingsRow icon={Download} onClick={handleExport}>
+            Export Backup
+          </SettingsRow>
           <div>
             <input
               id="import-file"
@@ -119,67 +189,56 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
               onChange={handleFileChosen}
               className="hidden"
             />
-            <label htmlFor="import-file">
-              <Button asChild className="w-full cursor-pointer">
-                <span>Restore From Backup</span>
-              </Button>
+            <label htmlFor="import-file" className="block cursor-pointer">
+              <span className={rowClass}>
+                <RowIcon icon={Upload} />
+                <span className="flex-1">Restore From Backup</span>
+                <ChevronRight className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
+              </span>
             </label>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            A backup holds every workout, template, exercise history entry and setting.
-            Restoring replaces everything currently on this device.
-          </p>
-          <Button className="w-full" variant="secondary" onClick={() => setScheduleOpen(true)}>
-            Customize Auto-Schedule
-          </Button>
-          <Button className="w-full" variant="secondary" onClick={() => { localWorkoutStorage.saveHiddenPresets({}); toast({ title: 'Presets restored', description: 'All presets are visible.' }); }}>
-            Show Hidden Workout Presets
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full">Reset All Data</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset Application</AlertDialogTitle>
-                <AlertDialogDescription>This will delete all workouts and preferences. Continue?</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={async () => { await localWorkoutStorage.clearAllData(); window.location.reload(); }}>Reset</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-        <Separator />
+        </SettingsGroup>
+        <p className="px-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          A backup holds every workout, template, exercise history entry and setting.
+          Restoring replaces everything currently on this device.
+        </p>
+
         {/* The permanent answer to "how do I get this on my phone?".
-            Renders nothing once the app is installed. The tour covers this
-            too, but a tour is seen once and skippable — this is where someone
-            looks a week later, or when a friend asks them. */}
+            Renders nothing once the app is installed. */}
         <InstallSection />
-        {/* Replaces a "don't show this again" checkbox on the tour itself.
-            Skipping already means never again, so the only control worth
-            having is the one that brings it back. */}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => {
-            resetTour();
-            window.location.reload();
-          }}
-        >
-          Replay welcome tour
-        </Button>
-        <Separator />
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          IronPath v{__APP_VERSION__}{' '}
-          <span className="text-gray-400 dark:text-gray-500">{__APP_BUILD__}</span>
-          <br />
-          Created by Casey Flanigan<br />
-          This is an open source project which can be found here: https://github.com/crflanigan/IronPath
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              type="button"
+              className="w-full rounded-xl bg-red-500/[0.08] px-4 py-3.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/15 active:bg-red-500/20 dark:text-red-400"
+            >
+              Reset All Data
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Application</AlertDialogTitle>
+              <AlertDialogDescription>This will delete all workouts and preferences. Continue?</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-red-600 bg-none text-white shadow-none hover:bg-red-700" onClick={async () => { await localWorkoutStorage.clearAllData(); window.location.reload(); }}>Reset</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <div className="space-y-1 px-1 pt-1 text-center text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+          <div className="nums">
+            Storage Usage: {Math.round(usage.percent * 100)}% ({(usage.used / 1024).toFixed(1)} KB of {(usage.limit / 1024).toFixed(1)} KB)
+          </div>
+          <div>
+            IronPath v{__APP_VERSION__}{' '}
+            <span className="text-gray-400 dark:text-gray-500">{__APP_BUILD__}</span>
+            <br />
+            Created by Casey Flanigan<br />
+            This is an open source project which can be found here: https://github.com/crflanigan/IronPath
+          </div>
         </div>
         </div>
         </DialogContent>

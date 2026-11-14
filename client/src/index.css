@@ -3,48 +3,54 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(178, 84%, 41%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
-  --radius: 0.5rem;
+  --background: #f5f7f9;
+  --foreground: #090d12;
+  --muted: #edf0f3;
+  --muted-foreground: #5d6a78;
+  --popover: #ffffff;
+  --popover-foreground: #090d12;
+  --card: #ffffff;
+  --card-foreground: #090d12;
+  --border: #e0e5ea;
+  --input: #d5dbe2;
+  /* Channels and colour both: Tailwind needs the channels to apply an
+     opacity (`bg-primary/10`), plain CSS wants the finished colour. */
+  --primary-hsl: 176 88% 36%;
+  --primary: hsl(var(--primary-hsl));
+  --primary-strong: hsl(183, 90%, 31%);
+  --primary-foreground: #ffffff;
+  --secondary: #edf0f3;
+  --secondary-foreground: #131920;
+  --accent: #edf0f3;
+  --accent-foreground: #131920;
+  --destructive: hsl(0, 78%, 56%);
+  --destructive-foreground: #ffffff;
+  --ring: hsl(176, 88%, 36%);
+  --radius: 0.875rem;
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(178, 84%, 41%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  --background: #090d12;
+  --foreground: #f2f5f8;
+  --muted: #1a212a;
+  --muted-foreground: #94a0ad;
+  --popover: #131920;
+  --popover-foreground: #f2f5f8;
+  --card: #131920;
+  --card-foreground: #f2f5f8;
+  --border: #222b35;
+  --input: #2b3541;
+  --primary-hsl: 174 80% 46%;
+  --primary: hsl(var(--primary-hsl));
+  --primary-strong: hsl(183, 85%, 38%);
+  --primary-foreground: #04110f;
+  --secondary: #1d252e;
+  --secondary-foreground: #f2f5f8;
+  --accent: #1d252e;
+  --accent-foreground: #f2f5f8;
+  --destructive: hsl(0, 70%, 48%);
+  --destructive-foreground: #ffffff;
+  --ring: hsl(174, 80%, 46%);
 }
 
 @layer base {
@@ -52,8 +58,74 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+    /*
+     * No scroll anchoring on the document.
+     *
+     * Chromium nudges the scroll position to keep on-screen content still
+     * while the page above it changes size. Here that meant the page could
+     * already be 16px down by the time the welcome tour opened — as the
+     * loading state gave way to the real content — and the tour, which puts
+     * the page back where it found it, faithfully restored the wrong place.
+     * The app sets its own scroll positions; iOS Safari has never anchored.
+     */
+    overflow-anchor: none;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* The page's backdrop: a faint wash of the brand colour behind the top of
+     the screen, so the header and first card sit in light rather than on a
+     flat fill. Fixed, so it does not scroll away. */
+  .app-backdrop {
+    background-image:
+      radial-gradient(60rem 22rem at 50% -8rem, color-mix(in srgb, var(--primary) 14%, transparent), transparent 70%);
+    background-attachment: fixed;
+  }
+  .dark .app-backdrop {
+    background-image:
+      radial-gradient(60rem 24rem at 50% -8rem, color-mix(in srgb, var(--primary) 20%, transparent), transparent 70%);
+  }
+
+  /* The brand gradient, used sparingly: primary actions, today, progress. */
+  .bg-brand {
+    background-image: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  }
+
+  .text-brand {
+    background-image: linear-gradient(135deg, var(--primary), var(--primary-strong));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Figures line up in columns and do not jitter as they change. */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -179,7 +251,7 @@
  * everything outside the dialog.
  */
 [data-tour-active='true'] {
-  outline: 2px solid hsl(178, 84%, 41%);
+  outline: 2px solid var(--primary);
   outline-offset: 4px;
   border-radius: 0.5rem;
   /* Enough to clear the sticky tour panel beneath it, so `block: 'end'`
