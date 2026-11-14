@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { backUpNow } from '@/lib/backup';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -49,6 +50,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <RefreshCw className="w-4 h-4 mr-2" /> Reload App
             </Button>
           </div>
+          {/* The way out. A crash caused by something in storage will happen
+              again on every reload, and without this the data behind it is
+              unreachable — there is no server copy to fall back on. */}
+          <p className="max-w-xs text-xs text-muted-foreground">
+            Your workouts are still saved on this device. If this keeps
+            happening, save a copy of them first.
+          </p>
+          <Button variant="outline" size="sm" onClick={() => void backUpNow()}>
+            Save a backup
+          </Button>
         </div>
       );
     }
