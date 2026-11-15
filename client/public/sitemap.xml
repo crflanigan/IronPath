@@ -7,18 +7,22 @@
 
   /workout/:id is deliberately absent: those are per-device records that exist
   only in one person's browser.
+
+  /history is absent too. It is a real route, but every page is served from
+  the same index.html, whose canonical is the home page — so listing it asked
+  Google to index a URL that itself says "index the home page instead", and
+  to a crawler it is an empty stats screen with nothing on it anyway.
+
+  The http:// and www. forms of the address are not listed and should not be:
+  they redirect here. Search Console reports them as "Page with redirect",
+  which is a description, not a fault, and "validating" it can only ever fail
+  because the redirect is the intended behaviour.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ironpath.app/</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-11-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://ironpath.app/history</loc>
-    <lastmod>2026-07-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>
 </urlset>

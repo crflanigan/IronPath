@@ -12,7 +12,9 @@ import { localWorkoutStorage } from '@/lib/storage';
 import { ConcurrentEditError, StorageWriteError } from '@/lib/storage';
 import type { Workout, Exercise, AbsExercise, Cardio } from '@shared/schema';
 import { parseISODate } from '@/lib/utils';
-import { Save, CheckCircle, ArrowLeft, Check } from 'lucide-react';
+import { Save, CheckCircle, ArrowLeft, Check, HelpCircle } from 'lucide-react';
+import { ExerciseImageDialog } from '@/components/ExerciseImageDialog';
+import { hasExerciseImage } from '@/lib/exercise-images';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import { WorkoutFinish, pickHeadline, type WorkoutFinishData } from '@/components/WorkoutFinish';
@@ -65,6 +67,10 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
+  /** The warm-up exercise whose picture is open, if any. */
+  const [preview, setPreview] = useState<string | null>(null);
+  const customImageSlug = (name: string) =>
+    localWorkoutStorage.getCustomExercises().find(e => e.name === name)?.imageSlug;
   const { updateWorkout, workouts } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
 
@@ -555,9 +561,24 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               <div className="space-y-5">
                 {workout.abs.map((absExercise, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className={`text-sm font-medium transition-colors ${absExercise.completed ? 'text-gray-400 line-through decoration-gray-300 dark:text-gray-500 dark:decoration-gray-600' : 'text-gray-800 dark:text-gray-200'}`}>
-                      {absExercise.name}
-                    </span>
+                    {/* The name is the way in to its picture, as it is in the
+                        builder. A separate "?" button would be one more small
+                        target in the column people already mis-tap. */}
+                    {hasExerciseImage(absExercise.name, customImageSlug(absExercise.name)) ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreview(absExercise.name)}
+                        aria-label={`Show how to do ${absExercise.name}`}
+                        className={`flex min-w-0 items-center gap-1.5 text-left text-sm font-medium transition-colors ${absExercise.completed ? 'text-gray-400 line-through decoration-gray-300 dark:text-gray-500 dark:decoration-gray-600' : 'text-gray-800 dark:text-gray-200'}`}
+                      >
+                        <span className="min-w-0">{absExercise.name}</span>
+                        <HelpCircle className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <span className={`text-sm font-medium transition-colors ${absExercise.completed ? 'text-gray-400 line-through decoration-gray-300 dark:text-gray-500 dark:decoration-gray-600' : 'text-gray-800 dark:text-gray-200'}`}>
+                        {absExercise.name}
+                      </span>
+                    )}
                     <div className="flex items-center space-x-2">
                       {absExercise.reps !== undefined ? (
                         <>
@@ -722,6 +743,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
       </div>
+      <ExerciseImageDialog
+        exerciseName={preview ?? ''}
+        imageSlug={preview ? customImageSlug(preview) : undefined}
+        open={preview !== null}
+        onOpenChange={isOpen => !isOpen && setPreview(null)}
+      />
+
       <WorkoutFinish
         data={finish}
         onDone={() => {

@@ -93,16 +93,16 @@ function TemplateRow({
   onSelect,
 }: {
   name: string;
-  exercises: { region?: string }[];
+  exercises: unknown[];
   onSelect: () => void;
 }) {
-  const regions = Array.from(new Set(exercises.map(e => e.region).filter(Boolean))) as string[];
   const cardioOnly = exercises.length === 0;
   const Icon = cardioOnly ? HeartPulse : Dumbbell;
+  // Just the count. It also listed the muscle groups, which ran off the end
+  // of the row on a phone — and a truncated list tells you less than no list.
   const detail = cardioOnly
     ? 'Cardio only'
-    : `${exercises.length} ${exercises.length === 1 ? 'exercise' : 'exercises'}` +
-      (regions.length > 0 ? ` · ${regions.slice(0, 3).join(', ')}${regions.length > 3 ? '…' : ''}` : '');
+    : `${exercises.length} ${exercises.length === 1 ? 'exercise' : 'exercises'}`;
 
   return (
     <Button
