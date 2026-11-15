@@ -9,57 +9,6 @@
  * Kept in step with `client/public/exercise-images/` by a test, which also
  * checks the service worker precaches exactly this set.
  */
-/**
- * Images drawn as vectors by `scripts/build-exercise-art.mjs`, rather than
- * stored as photos. A few kilobytes each, against roughly forty for a JPEG.
- *
- * These ten are the core-block exercises, which never had an image at all.
- */
-export const CORE_ILLUSTRATED_SLUGS: readonly string[] = [
-  'crunch',
-  'reverse-crunch',
-  'cross-leg-crunch',
-  'side-oblique-crunch',
-  'straight-leg-thrust',
-  'legs-up-vertical-crunch',
-  'jack-knife',
-  'knee-raise',
-  'side-oblique-knee-raise',
-  'side-oblique-leg-raise',
-];
-
-/**
- * Common movements the built-in library does not include, drawn so there is
- * something fitting to choose for a custom exercise.
- *
- * Chosen, not guessed: a custom exercise gets one of these only when it is
- * picked for it. Pictures on custom exercises are opt-in by design, and a
- * drawing appearing on somebody's existing "Deadlift" because the name
- * happened to match would be the app deciding that for them.
- */
-export const EXTRA_ILLUSTRATED_SLUGS: readonly string[] = [
-  'plank',
-  'bear-crawl',
-  'mountain-climber',
-  'glute-bridge',
-  'deadlift',
-  'barbell-squat',
-  'bench-press',
-  'pull-up',
-  'lunge',
-  'kettlebell-swing',
-  'farmers-carry',
-  'dumbbell-curl',
-];
-
-export const ILLUSTRATED_SLUGS: readonly string[] = [
-  ...CORE_ILLUSTRATED_SLUGS,
-  ...EXTRA_ILLUSTRATED_SLUGS,
-];
-
-const CHOSEN_ONLY = new Set(EXTRA_ILLUSTRATED_SLUGS);
-const ILLUSTRATED = new Set(ILLUSTRATED_SLUGS);
-
 export const EXERCISE_IMAGE_SLUGS: readonly string[] = [
   '1-arm-curl-with-twist',
   '45-degree-leg-press',
@@ -99,7 +48,6 @@ export const EXERCISE_IMAGE_SLUGS: readonly string[] = [
   'straight-bar-pushdown',
   'v-bar-pushdown',
   'wide-grip-pulldown',
-  ...ILLUSTRATED_SLUGS,
 ];
 
 const SLUG_SET = new Set(EXERCISE_IMAGE_SLUGS);
@@ -119,16 +67,10 @@ export function slugForExercise(name: string): string {
     .replace(/[^a-z0-9-]/g, '');
 }
 
-/** Where a known slug's file lives. Photos are JPEGs; drawings are SVGs. */
-export function imagePathForSlug(slug: string): string {
-  return `/exercise-images/${slug}.${ILLUSTRATED.has(slug) ? 'svg' : 'jpg'}`;
-}
-
 /** Path to a photo, or null when there is no photo for this exercise. */
 export function exerciseImageSrc(name: string, explicitSlug?: string | null): string | null {
   const slug = explicitSlug ?? slugForExercise(name);
-  if (!explicitSlug && CHOSEN_ONLY.has(slug)) return null;
-  return SLUG_SET.has(slug) ? imagePathForSlug(slug) : null;
+  return SLUG_SET.has(slug) ? `/exercise-images/${slug}.jpg` : null;
 }
 
 /** Whether there is anything worth showing if the user taps this exercise. */
