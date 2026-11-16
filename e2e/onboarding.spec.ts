@@ -39,11 +39,14 @@ test.describe('the first-run tour', () => {
 
     const tour = page.getByTestId('app-tour');
     await expect(tour).toBeVisible();
-    await expect(tour.getByText('Step 1 of 4')).toBeVisible();
+    await expect(tour.getByText('Step 1 of 5')).toBeVisible();
     await expect(tour.getByRole('heading', { name: 'Your month at a glance' })).toBeVisible();
 
     // Scoped to the tour: a bare "Next" also matches the calendar's
     // "Next month" button.
+    await tour.getByRole('button', { name: 'Next' }).click();
+    await expect(tour.getByRole('heading', { name: 'Which days do you train?' })).toBeVisible();
+
     await tour.getByRole('button', { name: 'Next' }).click();
     await expect(tour.getByRole('heading', { name: 'Build your own' })).toBeVisible();
 
@@ -81,7 +84,7 @@ test.describe('the first-run tour', () => {
     await page.reload();
 
     // Telling someone who already installed it how to install it is noise.
-    await expect(page.getByTestId('app-tour').getByText('Step 1 of 3')).toBeVisible();
+    await expect(page.getByTestId('app-tour').getByText('Step 1 of 4')).toBeVisible();
   });
 
   test('keeps every highlight clear of its own panel', async ({ page }) => {

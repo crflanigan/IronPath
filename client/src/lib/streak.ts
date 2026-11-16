@@ -11,6 +11,7 @@ export function calculateDayStreak(workouts: Workout[], streakDays: number[]): n
   const startDate = lastCompleted && lastCompleted > new Date() ? lastCompleted : new Date();
   let streak = 0;
   const date = new Date(startDate);
+  const todayString = formatLocalDate(new Date());
 
   for (let i = 0; i < 365; i++) {
     const dateString = formatLocalDate(date);
@@ -20,6 +21,11 @@ export function calculateDayStreak(workouts: Workout[], streakDays: number[]): n
     if (isStreakDay) {
       if (completed) {
         streak++;
+      } else if (dateString === todayString) {
+        // Today is not over. A streak used to read 0 from midnight until the
+        // day's workout was finished, so thirty days in a row showed as none
+        // every morning. It is broken by a day that ended without a workout,
+        // not by one that has not happened yet.
       } else {
         break;
       }

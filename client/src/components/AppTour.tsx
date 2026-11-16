@@ -2,9 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { isStandalone, markTourSeen } from '@/lib/onboarding';
 import { InstallGuide } from '@/components/InstallGuide';
 import { TourPanel } from '@/components/TourPanel';
+import { TrainingDayPicker, describeTrainingDays } from '@/components/TrainingDayPicker';
+import { getTrainingDays } from '@/lib/workout-data';
+import { localWorkoutStorage } from '@/lib/storage';
 
 /**
- * The first-run tour: three steps, plus an install step for anyone not
+ * The first-run tour: four steps, plus an install step for anyone not
  * already running from a home screen.
  *
  * Two decisions worth knowing before changing this:
@@ -29,6 +32,8 @@ interface Step {
   body: string;
   /** Renders the platform-specific install instructions under the body. */
   install?: boolean;
+  /** Renders the weekday toggles under the body. */
+  days?: boolean;
 }
 
 const BASE_STEPS: Step[] = [
@@ -36,6 +41,20 @@ const BASE_STEPS: Step[] = [
     target: 'calendar',
     title: 'Your month at a glance',
     body: 'Tap any day to see what is scheduled and start it. Days you finish fill in, so a glance tells you how the month went.',
+  },
+  /*
+   * The one question the tour asks rather than tells.
+   *
+   * The schedule put a workout on all seven days, and the setting that said
+   * otherwise was hidden behind the streak number. A newcomer who trains three
+   * days a week met a calendar that expected seven and a streak that broke on
+   * day two. Asking here means the first calendar they see is already theirs.
+   */
+  {
+    target: 'calendar',
+    title: 'Which days do you train?',
+    body: 'Turn off the days you rest. Nothing is scheduled on them and they never break your streak. You can change this any time.',
+    days: true,
   },
   {
     target: 'custom-workout',
@@ -81,8 +100,16 @@ interface Rect {
   height: number;
 }
 
-export function AppTour({ onClose }: { onClose: () => void }) {
+export function AppTour({
+  onClose,
+  onTrainingDaysChange,
+}: {
+  onClose: () => void;
+  /** Lets the calendar behind the tour redraw as days are toggled. */
+  onTrainingDaysChange?: () => void;
+}) {
   const [index, setIndex] = useState(0);
+  const [trainingDays, setTrainingDays] = useState(getTrainingDays);
   const [rect, setRect] = useState<Rect | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   // Fixed at mount: the step list must not change length underneath an index.
@@ -254,6 +281,22 @@ export function AppTour({ onClose }: { onClose: () => void }) {
         isLast={isLast}
       >
         {step.install && <InstallGuide />}
+        {step.days && (
+          <div className="space-y-2 pt-1">
+            <TrainingDayPicker
+              value={trainingDays}
+              onChange={days => {
+                // Saved on every tap, so Skip and Next both keep the answer.
+                setTrainingDays(days);
+                localWorkoutStorage.saveStreakDays(days);
+                onTrainingDaysChange?.();
+              }}
+            />
+            <p className="text-center text-sm font-semibold text-primary" data-testid="training-days-summary">
+              {describeTrainingDays(trainingDays)}
+            </p>
+          </div>
+        )}
       </TourPanel>
     </div>
   );

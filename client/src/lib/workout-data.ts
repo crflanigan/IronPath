@@ -836,11 +836,14 @@ export const workoutTemplates: Partial<Record<WorkoutType, {
       }
     ],
     abs: [
+      // Two of these six were listed twice, so the block read as four moves
+      // with two repeats. The repeats are now the two moves this template
+      // never used.
       { name: "Crunch", reps: 30 },
       { name: "Straight Leg Thrust", reps: 30 },
       { name: "Side Oblique Crunch", reps: 30 },
-      { name: "Straight Leg Thrust", reps: 30 },
-      { name: "Side Oblique Crunch", reps: 30 },
+      { name: "Knee Raise", reps: 30 },
+      { name: "Reverse Crunch", reps: 30 },
       { name: "Cross-Leg Crunch", reps: 30 }
     ]
   }
@@ -877,23 +880,73 @@ export function getWorkoutCycle(): string[] {
   return cycle.length > 0 ? cycle : defaultWorkoutCycle;
 }
 
-// Generate workout schedule for a given month
-export function generateWorkoutSchedule(year: number, month: number): { date: string; type: string }[] {
-  const schedule: { date: string; type: string }[] = [];
-  const cycle = getWorkoutCycle();
-  const daysInMonth = new Date(year, month, 0).getDate();
+const EPOCH_DAY = Date.UTC(1970, 0, 1) / 86400000;
+/** 1 January 1970 was a Thursday. */
+const EPOCH_WEEKDAY = 4;
 
-  const baseDay = Date.UTC(1970, 0, 1) / 86400000;
+/**
+ * The days of the week someone trains, as `Date#getDay()` numbers.
+ *
+ * Stored under the streak setting, because that is where it began: "which
+ * days count toward my streak" and "which days do I train" are one question.
+ * An empty list is treated as every day — a schedule with no training days
+ * has nothing to show, and it is far more likely to be a slip than a plan.
+ */
+export function getTrainingDays(): number[] {
+  const days = localWorkoutStorage.getStreakDays().filter(d => d >= 0 && d <= 6);
+  const unique = Array.from(new Set(days)).sort();
+  return unique.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : unique;
+}
+
+/**
+ * What the rotation has for one date.
+ *
+ * The rotation advances once per *training* day, not once per calendar day.
+ * It used to index by calendar day, which meant the workouts falling on days
+ * you never train were simply never offered: on a 14-step cycle every weekday
+ * only ever sees the same two entries. Someone training every day gets exactly
+ * the schedule they always had, since then the two counts are the same number.
+ *
+ * On a rest day `type` is the next training day's workout, so "train anyway"
+ * has something sensible to start.
+ */
+export function scheduleForDate(
+  date: Date,
+  cycle: string[] = getWorkoutCycle(),
+  trainingDays: number[] = getTrainingDays(),
+): { type: string; rest: boolean } {
+  const dayIndex =
+    Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000) - EPOCH_DAY;
+
+  let position = dayIndex;
+  if (trainingDays.length < 7) {
+    // Training days strictly before this date: whole weeks, then the part week.
+    const weeks = Math.floor(dayIndex / 7);
+    const remainder = ((dayIndex % 7) + 7) % 7;
+    let partial = 0;
+    for (let i = 0; i < remainder; i++) {
+      if (trainingDays.includes((EPOCH_WEEKDAY + i) % 7)) partial++;
+    }
+    position = weeks * trainingDays.length + partial;
+  }
+
+  const index = ((position % cycle.length) + cycle.length) % cycle.length;
+  return { type: cycle[index], rest: !trainingDays.includes(date.getDay()) };
+}
+
+// Generate workout schedule for a given month
+export function generateWorkoutSchedule(
+  year: number,
+  month: number,
+): { date: string; type: string; rest: boolean }[] {
+  const cycle = getWorkoutCycle();
+  const trainingDays = getTrainingDays();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const schedule: { date: string; type: string; rest: boolean }[] = [];
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateObj = new Date(year, month - 1, day);
-    const dayIndex = Math.floor(Date.UTC(year, month - 1, day) / 86400000) - baseDay;
-    const typeIndex = dayIndex % cycle.length;
-
-    schedule.push({
-      date: formatLocalDate(dateObj),
-      type: cycle[typeIndex]
-    });
+    schedule.push({ date: formatLocalDate(dateObj), ...scheduleForDate(dateObj, cycle, trainingDays) });
   }
 
   return schedule;
@@ -901,10 +954,5 @@ export function generateWorkoutSchedule(year: number, month: number): { date: st
 
 // Get today's workout type
 export function getTodaysWorkoutType(): string {
-  const today = new Date();
-
-  const baseDay = Date.UTC(1970, 0, 1) / 86400000;
-  const dayIndex = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000) - baseDay;
-  const cycle = getWorkoutCycle();
-  return cycle[dayIndex % cycle.length];
+  return scheduleForDate(new Date()).type;
 }
