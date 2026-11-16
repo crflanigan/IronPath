@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CalendarGrid } from '@/components/calendar-grid';
 import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
-import { generateWorkoutSchedule, workoutTemplates } from '@/lib/workout-data';
+import { getTrainingDays, scheduleForDate, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
 import { readCalendarPosition, writeCalendarPosition } from '@/lib/calendar-position';
 import { calculateDayStreak, calculateTopDayStreak } from '@/lib/streak';
@@ -18,7 +18,8 @@ import { CustomizeStreakModal } from '@/components/CustomizeStreakModal';
 import type { Workout, Exercise, AbsExercise } from '@shared/schema';
 import { CustomWorkoutTemplate, localWorkoutStorage } from '@/lib/storage';
 import { AppTour } from '@/components/AppTour';
-import { CheckCircle2, Flame, PencilRuler, Play, Repeat, Trophy } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, ChevronDown, Coffee, Flame, PencilRuler, Play, Repeat, Trophy } from 'lucide-react';
+import { describeTrainingDays } from '@/components/TrainingDayPicker';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { hasSeenTour, recordVisit } from '@/lib/onboarding';
 
@@ -63,6 +64,9 @@ export function CalendarPage() {
   // Read once at mount rather than on every render: finishing the tour writes
   // the flag, and re-reading it would tear the overlay down mid-transition.
   const [showTour, setShowTour] = useState(() => !hasSeenTour());
+  // Bumped when the tour changes training days, so the calendar underneath
+  // redraws from storage while the tour is still open.
+  const [, setScheduleVersion] = useState(0);
   const {
     workouts,
     getWorkoutByDate,
@@ -323,21 +327,57 @@ export function CalendarPage() {
 
   const stats = getWorkoutStats();
 
-  const selectedWorkoutType = selectedWorkout?.type ||
-    (selectedDate
-      ? (() => {
-          const dateObj = parseISODate(selectedDate);
-          const schedule = generateWorkoutSchedule(
-            dateObj.getFullYear(),
-            dateObj.getMonth() + 1
-          );
-          return schedule.find(w => w.date === selectedDate)?.type || null;
-        })()
-      : null);
+  const trainingDays = getTrainingDays();
+  const scheduled = selectedDate ? scheduleForDate(parseISODate(selectedDate)) : null;
+  const selectedWorkoutType = selectedWorkout?.type || scheduled?.type || null;
+  // A rest day is only a rest day until something is logged on it.
+  const isRestDay = !selectedWorkout && Boolean(scheduled?.rest);
+
+  /*
+   * What the day's workout contains, before it is started.
+   *
+   * Starting a workout creates the record, so until now the only way to find
+   * out what "Chest & Shoulders" meant was to commit to it. The name alone is
+   * enough for whoever wrote the template and nobody else.
+   */
+  const contents = (() => {
+    if (selectedWorkout) {
+      return {
+        exercises: selectedWorkout.exercises.map(e => e.machine),
+        core: selectedWorkout.abs.length,
+        cardio: Boolean(selectedWorkout.cardio),
+      };
+    }
+    if (!selectedWorkoutType) return null;
+    const builtIn = workoutTemplates[selectedWorkoutType as keyof typeof workoutTemplates];
+    const custom = customTemplates.find(t => t.name === selectedWorkoutType);
+    const source = builtIn ?? custom;
+    if (!source) return null;
+    return {
+      exercises: source.exercises.map(e => e.machine),
+      core: (source.abs ?? []).length,
+      cardio: true,
+    };
+  })();
+  const contentsSummary = contents
+    ? [
+        contents.exercises.length > 0 &&
+          `${contents.exercises.length} ${contents.exercises.length === 1 ? 'exercise' : 'exercises'}`,
+        contents.core > 0 && `${contents.core} core`,
+        contents.cardio && 'cardio',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-4">
-      {showTour && <AppTour onClose={() => setShowTour(false)} />}
+      {showTour && (
+        <AppTour
+          onClose={() => setShowTour(false)}
+          onTrainingDaysChange={() => setScheduleVersion(v => v + 1)}
+        />
+      )}
       <InstallPrompt />
 
       {/* Stats: one strip, three figures. They were three separate bordered
@@ -393,6 +433,7 @@ export function CalendarPage() {
         onSelectDate={handleSelectDate}
         workouts={workouts}
         selectedDate={selectedDate}
+        trainingDays={trainingDays}
       />
 
 
@@ -418,14 +459,55 @@ export function CalendarPage() {
                 data-testid="selected-workout-type"
               >
                 <span className="sr-only">Selected Day's Workout: </span>
-                {selectedWorkoutType ?? 'None'}
+                {isRestDay ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Coffee className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    Rest day
+                  </span>
+                ) : (
+                  selectedWorkoutType ?? 'None'
+                )}
               </p>
+              {isRestDay && selectedWorkoutType && (
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400" data-testid="rest-day-next">
+                  Next up: <span className="font-semibold text-gray-700 dark:text-gray-200">{selectedWorkoutType}</span>
+                </p>
+              )}
             </div>
-            <Button onClick={handleStartSelectedWorkout} size="lg" className="w-full">
+
+            {contents && contents.exercises.length + contents.core > 0 && (
+              <details className="group rounded-xl bg-gray-50 dark:bg-white/[0.04]" data-testid="workout-contents">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 [&::-webkit-details-marker]:hidden">
+                  <span className="nums">{contentsSummary}</span>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                    <span className="group-open:hidden">What's in it</span>
+                    <span className="hidden group-open:inline">Hide</span>
+                    <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </span>
+                </summary>
+                <ol className="space-y-1 px-3.5 pb-3 text-sm text-gray-600 dark:text-gray-300">
+                  {contents.exercises.map((name, i) => (
+                    <li key={`${name}-${i}`} className="flex gap-2">
+                      <span className="nums w-5 shrink-0 text-right text-gray-400">{i + 1}</span>
+                      <span>{name}</span>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
+
+            <Button
+              onClick={handleStartSelectedWorkout}
+              size="lg"
+              variant={isRestDay ? 'outline' : 'default'}
+              className="w-full"
+            >
               <Play className="!size-4 fill-current" aria-hidden="true" />
-              {selectedDate === formatLocalDate(new Date())
-                ? "Start Today's Workout"
-                : 'Start This Workout'}
+              {isRestDay
+                ? 'Train anyway'
+                : selectedDate === formatLocalDate(new Date())
+                  ? "Start Today's Workout"
+                  : 'Start This Workout'}
             </Button>
 
             {selectedWorkout && (
@@ -442,7 +524,7 @@ export function CalendarPage() {
               * nothing to do with custom templates, and the day is scheduled —
               * the rotation named it. What is absent is anything logged.
               */}
-            {!selectedWorkout && (
+            {!selectedWorkout && !isRestDay && (
               <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                 Nothing logged for this day yet
               </p>
@@ -451,7 +533,7 @@ export function CalendarPage() {
             {/* The two occasional actions, side by side and quiet. They were
                 two more full-width slabs under the primary one, so the card
                 read as a stack of four equal buttons. */}
-            <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-4 dark:border-white/[0.06]">
+            <div className="grid grid-cols-3 gap-2 border-t border-gray-100 pt-4 dark:border-white/[0.06]">
               <Button
                 data-tour="custom-workout"
                 aria-label="Create or Edit Custom Workout"
@@ -471,6 +553,19 @@ export function CalendarPage() {
               >
                 <Repeat className="!size-[18px] text-primary" aria-hidden="true" />
                 Auto-Schedule
+              </Button>
+
+              {/* Lived only behind the streak number, where nobody looking
+                  for "I don't train on weekends" would think to tap. */}
+              <Button
+                data-tour="training-days"
+                aria-label={`Training days: ${describeTrainingDays(trainingDays)}`}
+                className="h-auto flex-col gap-1.5 whitespace-normal rounded-xl bg-gray-50 px-2 py-3 text-xs font-semibold leading-tight text-gray-700 hover:bg-gray-100 dark:bg-white/[0.04] dark:text-gray-200 dark:hover:bg-white/[0.08]"
+                variant="ghost"
+                onClick={() => setStreakModalOpen(true)}
+              >
+                <CalendarCheck className="!size-[18px] text-primary" aria-hidden="true" />
+                Training Days
               </Button>
             </div>
           </CardContent>

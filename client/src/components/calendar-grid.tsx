@@ -18,6 +18,8 @@ interface CalendarGridProps {
   onSelectDate: (date: string) => void;
   workouts: Workout[];
   selectedDate?: string | null;
+  /** `Date#getDay()` numbers. Days outside it are drawn as rest days. */
+  trainingDays?: number[];
 }
 
 export function CalendarGrid({
@@ -25,7 +27,8 @@ export function CalendarGrid({
   onDateChange,
   onSelectDate,
   workouts,
-  selectedDate
+  selectedDate,
+  trainingDays
 }: CalendarGridProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -169,6 +172,9 @@ export function CalendarGrid({
           const isCompleted = workout?.completed || false;
           const isSelected = selectedDate === dayData.date;
           const inProgress = Boolean(workout) && !isCompleted;
+          // The grid starts on Sunday, so the column is the weekday. A day
+          // with something logged is never drawn as rest, whatever the plan.
+          const isRest = !workout && trainingDays !== undefined && !trainingDays.includes(index % 7);
 
           /*
            * A month of circles rather than a month of boxes.
@@ -201,6 +207,7 @@ export function CalendarGrid({
               className={cn(
                 sharedClasses,
                 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/5',
+                isRest && 'text-gray-400 dark:text-gray-500',
                 isCompleted &&
                   'bg-primary/[0.13] text-primary hover:bg-primary/20 dark:bg-primary/[0.18] dark:text-primary dark:hover:bg-primary/25',
                 // Today is filled whether or not it is selected or completed.
@@ -213,6 +220,7 @@ export function CalendarGrid({
                   'ring-2 ring-primary ring-offset-2 ring-offset-card',
               )}
               data-today={dayData.isToday || undefined}
+              data-rest={isRest || undefined}
               data-completed={isCompleted || undefined}
               onClick={() => onSelectDate(dayData.date)}
             >

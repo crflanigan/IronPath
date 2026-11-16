@@ -14,6 +14,7 @@ const KEYS = {
   INSTALL_DISMISSED: 'ironpath_install_dismissed',
   BUILDER_TOUR_SEEN: 'ironpath_builder_tour_seen',
   TEMPLATE_TOUR_SEEN: 'ironpath_template_tour_seen',
+  FIRST_WORKOUT_TIP_DISMISSED: 'ironpath_first_workout_tip_dismissed',
 } as const;
 
 function read(key: string): string | null {
@@ -57,6 +58,14 @@ export function markTemplateTourSeen(): void {
   write(KEYS.TEMPLATE_TOUR_SEEN, '1');
 }
 
+export function hasDismissedFirstWorkoutTip(): boolean {
+  return read(KEYS.FIRST_WORKOUT_TIP_DISMISSED) === '1';
+}
+
+export function dismissFirstWorkoutTip(): void {
+  write(KEYS.FIRST_WORKOUT_TIP_DISMISSED, '1');
+}
+
 /**
  * Used by the Replay tour button in Settings.
  *
@@ -69,6 +78,7 @@ export function resetTour(): void {
     localStorage.removeItem(KEYS.TOUR_SEEN);
     localStorage.removeItem(KEYS.BUILDER_TOUR_SEEN);
     localStorage.removeItem(KEYS.TEMPLATE_TOUR_SEEN);
+    localStorage.removeItem(KEYS.FIRST_WORKOUT_TIP_DISMISSED);
   } catch {
     // Nothing to do; the button simply will not have taken effect.
   }

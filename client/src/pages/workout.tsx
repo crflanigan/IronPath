@@ -25,6 +25,17 @@ import {
   workoutVolume,
 } from '@/lib/workout-summary';
 import { calculateDayStreak } from '@/lib/streak';
+import { dismissFirstWorkoutTip, hasDismissedFirstWorkoutTip } from '@/lib/onboarding';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
@@ -67,6 +78,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
+  const [tipDismissed, setTipDismissed] = useState(hasDismissedFirstWorkoutTip);
+  /** How many items are unticked, while asking whether to finish anyway. */
+  const [confirmFinish, setConfirmFinish] = useState<number | null>(null);
   /** The warm-up exercise whose picture is open, if any. */
   const [preview, setPreview] = useState<string | null>(null);
   const customImageSlug = (name: string) =>
@@ -280,27 +294,38 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     setWorkout(prev => ({ ...prev, cardio: updatedCardio }));
   };
 
-  const handleCompleteWorkout = async () => {
-    const allExercisesComplete = workout.exercises.every(e => e.completed);
-    const allAbsComplete = workout.abs.every(a => a.completed);
-    // A workout with no cardio block has nothing outstanding there. Requiring
-    // `cardio.completed` unconditionally left such a workout impossible to
-    // finish — the button refused forever, with no cardio section to tick.
-    const cardioComplete = !workout.cardio || Boolean(workout.cardio.completed);
-    const allFieldsFilled = workout.exercises.every(ex =>
-      ex.sets.every(
-        s => s.weight !== undefined && s.reps !== undefined
-      )
-    );
+  /*
+   * Finishing no longer requires every box ticked.
+   *
+   * It used to refuse outright — "Please complete all exercises" — unless
+   * every exercise, every core move and the cardio block were all done. One
+   * machine in use, or no time for the treadmill, and the session could never
+   * be finished: no finish screen, nothing on the calendar, a broken streak
+   * for a workout that happened. Now anything unticked is named and asked
+   * about once, and what was actually done is what gets recorded. Every total
+   * downstream already counts completed sets only, so nothing skipped is
+   * credited.
+   */
+  const handleCompleteWorkout = async (confirmed = false) => {
+    const setsDone = workout.exercises.some(e => e.sets.some(s => s.completed));
+    const anythingDone =
+      setsDone || workout.abs.some(a => a.completed) || Boolean(workout.cardio?.completed);
+    const outstanding = stats.totalItems - stats.completedItems;
 
-    if (!allExercisesComplete || !allAbsComplete || !cardioComplete || !allFieldsFilled) {
+    if (!anythingDone && stats.totalItems > 0) {
       toast({
-        title: "Incomplete workout",
-        description: "Please complete all exercises before marking as complete",
+        title: "Nothing logged yet",
+        description: "Tick off what you did, then finish.",
         variant: "destructive"
       });
       return;
     }
+
+    if (outstanding > 0 && !confirmed) {
+      setConfirmFinish(outstanding);
+      return;
+    }
+    setConfirmFinish(null);
 
     const completedExercises = workout.exercises.map((e) =>
       e.completed
@@ -438,6 +463,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   };
 
   const stats = getProgressStats();
+  const showFirstTip =
+    !tipDismissed && !workout.completed && !workouts.some(w => w.completed);
 
   useEffect(() => {
     if (
@@ -706,6 +733,38 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       <div className="space-y-4">
         <h3 className="eyebrow px-1">Main Workout</h3>
 
+        {/*
+          * Said once, on the first workout, where the question comes up.
+          *
+          * The built-in templates arrive with weights filled in, and nothing
+          * said whose they were. A newcomer met "Pec Fly, 160 lbs" as if it
+          * were an instruction. Gone for good after the first finished
+          * workout, or sooner if dismissed.
+          */}
+        {showFirstTip && (
+          <div
+            data-testid="first-workout-tip"
+            className="animate-rise-in rounded-2xl border border-primary/25 bg-primary/[0.06] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-200"
+          >
+            <p className="font-semibold text-gray-900 dark:text-white">The numbers are a starting point</p>
+            <ul className="mt-1.5 list-disc space-y-1 pl-4">
+              <li>Change any weight or rep count to what you actually do. IronPath remembers it for next time.</li>
+              <li>Tap the tick after each set.</li>
+              <li>Skip whatever you can't do today. You can finish the workout without it.</li>
+            </ul>
+            <button
+              type="button"
+              onClick={() => {
+                dismissFirstWorkoutTip();
+                setTipDismissed(true);
+              }}
+              className="mt-2.5 text-sm font-semibold text-primary"
+            >
+              Got it
+            </button>
+          </div>
+        )}
+
         {workout.exercises.map((exercise, index) => (
           <ErrorBoundary key={`${exercise.machine}-${index}`}>
             <ExerciseForm
@@ -733,7 +792,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
         
           <Button
-            onClick={handleCompleteWorkout}
+            onClick={() => handleCompleteWorkout()}
             size="lg"
             className={`w-full ${celebrated && !workout.completed ? 'animate-pulse [animation-duration:1.6s]' : ''}`}
             disabled={workout.completed ?? false}
@@ -749,6 +808,28 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         open={preview !== null}
         onOpenChange={isOpen => !isOpen && setPreview(null)}
       />
+
+      <AlertDialog
+        open={confirmFinish !== null}
+        onOpenChange={isOpen => !isOpen && setConfirmFinish(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finish now?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmFinish} of {stats.totalItems} {stats.totalItems === 1 ? 'item is' : 'items are'} not
+              fully ticked off. Only the sets you ticked are recorded, and the workout still
+              counts for today.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep going</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleCompleteWorkout(true)}>
+              Finish workout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <WorkoutFinish
         data={finish}

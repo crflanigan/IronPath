@@ -93,13 +93,19 @@ describe('a workout that does have a cardio block', () => {
     expect(screen.getByText('1/2 items')).toBeTruthy();
   });
 
-  it('still refuses to complete while cardio is outstanding', () => {
+  it('asks before finishing while cardio is outstanding, and no longer refuses', () => {
     render(<WorkoutPage workout={withCardio} onNavigateBack={() => {}} />);
 
     fireEvent.click(screen.getByText('Complete Workout'));
 
-    const titles = mockToast.mock.calls.map(call => call[0]?.title);
-    expect(titles).toContain('Incomplete workout');
+    // Nothing is saved until the question is answered.
     expect(mockUpdateWorkout).not.toHaveBeenCalled();
+    expect(screen.getByText('Finish now?')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('Finish workout'));
+
+    expect(mockUpdateWorkout.mock.calls.at(-1)?.[1]).toMatchObject({ completed: true });
+    const titles = mockToast.mock.calls.map(call => call[0]?.title);
+    expect(titles).not.toContain('Incomplete workout');
   });
 });
