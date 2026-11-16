@@ -25,6 +25,9 @@ import {
   workoutVolume,
 } from '@/lib/workout-summary';
 import { calculateDayStreak } from '@/lib/streak';
+import { RestTimer, primeRestSound, type RestState } from '@/components/RestTimer';
+import { restSeconds, restTimerEnabled } from '@/lib/workout-prefs';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
@@ -67,6 +70,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
+  const [rest, setRest] = useState<RestState | null>(null);
+  // The screen stays on for as long as there is a workout left to log.
+  useWakeLock(!initialWorkout.completed && finish === null);
   /** The warm-up exercise whose picture is open, if any. */
   const [preview, setPreview] = useState<string | null>(null);
   const customImageSlug = (name: string) =>
@@ -714,6 +720,18 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               isActive={index === currentExerciseIndex}
               personalBest={bests.get(exercise.machine)}
               onResetBest={(machine, current) => setResetting({ machine, current })}
+              onSetComplete={(restTime, exerciseDone) => {
+                if (!restTimerEnabled()) return;
+                // Nothing to rest for after the last set of the last exercise.
+                const moreToDo = workout.exercises.some((e, i) => i !== index && !e.completed);
+                if (exerciseDone && !moreToDo) {
+                  setRest(null);
+                  return;
+                }
+                primeRestSound();
+                const seconds = restSeconds(restTime);
+                setRest({ endsAt: Date.now() + seconds * 1000, total: seconds });
+              }}
             />
           </ErrorBoundary>
         ))}
@@ -749,6 +767,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         open={preview !== null}
         onOpenChange={isOpen => !isOpen && setPreview(null)}
       />
+
+      {finish === null && <RestTimer rest={rest} onChange={setRest} />}
 
       <WorkoutFinish
         data={finish}
