@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { RestTimer, primeRestSound, type RestState } from '@/components/RestTimer';
+import { restSeconds, restTimerEnabled } from '@/lib/workout-prefs';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,9 +28,6 @@ import {
   workoutVolume,
 } from '@/lib/workout-summary';
 import { calculateDayStreak } from '@/lib/streak';
-import { RestTimer, primeRestSound, type RestState } from '@/components/RestTimer';
-import { restSeconds, restTimerEnabled } from '@/lib/workout-prefs';
-import { useWakeLock } from '@/hooks/use-wake-lock';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
@@ -70,15 +70,15 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [celebrated, setCelebrated] = useState(false);
   const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
-  const [rest, setRest] = useState<RestState | null>(null);
-  // The screen stays on for as long as there is a workout left to log.
-  useWakeLock(!initialWorkout.completed && finish === null);
   /** The warm-up exercise whose picture is open, if any. */
   const [preview, setPreview] = useState<string | null>(null);
   const customImageSlug = (name: string) =>
     localWorkoutStorage.getCustomExercises().find(e => e.name === name)?.imageSlug;
   const { updateWorkout, workouts } = useWorkoutStorage();
   const { toast, dismiss } = useToast();
+  const [rest, setRest] = useState<RestState | null>(null);
+  // The screen stays on for as long as there is a workout left to log.
+  useWakeLock(!initialWorkout.completed && finish === null);
 
   /**
    * What you walked in with, per exercise — the heaviest set logged in any
@@ -761,14 +761,13 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         </Button>
       </div>
       </div>
+      {finish === null && <RestTimer rest={rest} onChange={setRest} />}
       <ExerciseImageDialog
         exerciseName={preview ?? ''}
         imageSlug={preview ? customImageSlug(preview) : undefined}
         open={preview !== null}
         onOpenChange={isOpen => !isOpen && setPreview(null)}
       />
-
-      {finish === null && <RestTimer rest={rest} onChange={setRest} />}
 
       <WorkoutFinish
         data={finish}
