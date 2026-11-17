@@ -36,6 +36,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { RestTimer, primeRestSound, type RestState } from '@/components/RestTimer';
+import { keepScreenOnEnabled, restSeconds, restTimerEnabled, setRestTimerEnabled } from '@/lib/workout-prefs';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
@@ -79,8 +82,12 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const [celebrated, setCelebrated] = useState(false);
   const [finish, setFinish] = useState<WorkoutFinishData | null>(null);
   const [tipDismissed, setTipDismissed] = useState(hasDismissedFirstWorkoutTip);
+  const [timerOn, setTimerOn] = useState(restTimerEnabled);
   /** How many items are unticked, while asking whether to finish anyway. */
   const [confirmFinish, setConfirmFinish] = useState<number | null>(null);
+  const [rest, setRest] = useState<RestState | null>(null);
+  // The screen stays on for as long as there is a workout left to log.
+  useWakeLock(keepScreenOnEnabled() && !initialWorkout.completed && finish === null);
   /** The warm-up exercise whose picture is open, if any. */
   const [preview, setPreview] = useState<string | null>(null);
   const customImageSlug = (name: string) =>
@@ -752,16 +759,32 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               <li>Tap the tick after each set.</li>
               <li>Skip whatever you can't do today. You can finish the workout without it.</li>
             </ul>
-            <button
-              type="button"
-              onClick={() => {
-                dismissFirstWorkoutTip();
-                setTipDismissed(true);
-              }}
-              className="mt-2.5 text-sm font-semibold text-primary"
-            >
-              Got it
-            </button>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  dismissFirstWorkoutTip();
+                  setTipDismissed(true);
+                }}
+                className="min-h-[44px] text-sm font-semibold text-primary"
+              >
+                Got it
+              </button>
+              {/* Offered once, here, to the person most likely to want it. It is
+                  off otherwise, and lives in Settings after this. */}
+              <button
+                type="button"
+                aria-pressed={timerOn}
+                onClick={() => {
+                  setRestTimerEnabled(!timerOn);
+                  setTimerOn(!timerOn);
+                  if (timerOn) setRest(null);
+                }}
+                className="min-h-[44px] text-sm font-medium text-gray-600 underline decoration-gray-300 underline-offset-4 dark:text-gray-300 dark:decoration-gray-600"
+              >
+                {timerOn ? 'Rest timer on. Turn off' : 'Time my rest between sets'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -773,6 +796,18 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
               isActive={index === currentExerciseIndex}
               personalBest={bests.get(exercise.machine)}
               onResetBest={(machine, current) => setResetting({ machine, current })}
+              onSetComplete={(restTime, exerciseDone) => {
+                if (!restTimerEnabled()) return;
+                // Nothing to rest for after the last set of the last exercise.
+                const moreToDo = workout.exercises.some((e, i) => i !== index && !e.completed);
+                if (exerciseDone && !moreToDo) {
+                  setRest(null);
+                  return;
+                }
+                primeRestSound();
+                const seconds = restSeconds(restTime);
+                setRest({ endsAt: Date.now() + seconds * 1000, total: seconds });
+              }}
             />
           </ErrorBoundary>
         ))}
@@ -830,6 +865,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {finish === null && <RestTimer rest={rest} onChange={setRest} />}
 
       <WorkoutFinish
         data={finish}
