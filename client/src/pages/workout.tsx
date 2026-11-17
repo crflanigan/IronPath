@@ -458,7 +458,15 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       cardioComplete,
       totalItems,
       completedItems,
-      percentage: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+      percentage: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+      // The bar moves on every set. Counted in whole exercises it sat still
+      // through the first three ticks of a session, as if nothing had registered.
+      barPercentage: (() => {
+        const sets = workout.exercises.flatMap(e => e.sets);
+        const total = sets.length + totalAbs + (hasCardio ? 1 : 0);
+        const done = sets.filter(s => s.completed).length + completedAbs + cardioComplete;
+        return total > 0 ? Math.round((done / total) * 100) : 0;
+      })(),
     };
   };
 
@@ -548,8 +556,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           
           <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
             <div
+              data-testid="progress-bar"
               className="bg-brand h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${stats.percentage}%` }}
+              style={{ width: `${stats.barPercentage}%` }}
             />
           </div>
         </CardContent>

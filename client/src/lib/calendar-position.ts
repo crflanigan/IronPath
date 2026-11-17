@@ -24,14 +24,30 @@ export interface CalendarPosition {
   selectedDate: string;
 }
 
+/**
+ * The day a position was saved on, as YYYY-MM-DD.
+ *
+ * "Gone when you next open the app" was the intent above, and it is not what a
+ * phone does: an installed app is suspended, not closed, and comes back days
+ * later with its session intact. A position is therefore only honoured on the
+ * day it was saved. After midnight it is yesterday's browsing, and the calendar
+ * opening on yesterday with "Workout Completed" where today's start button
+ * should be is exactly the fresh-open failure described above.
+ */
+export function localDay(date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 const isMonth = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 export function readCalendarPosition(): CalendarPosition | null {
   try {
     const raw = sessionStorage.getItem(KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<CalendarPosition>;
+    const parsed = JSON.parse(raw) as Partial<CalendarPosition> & { savedOn?: unknown };
     if (!isMonth(parsed.month) || !isMonth(parsed.selectedDate)) return null;
+    if (parsed.savedOn !== localDay()) return null;
     return { month: parsed.month, selectedDate: parsed.selectedDate };
   } catch {
     // A private-mode browser can refuse sessionStorage outright. Losing your
@@ -42,7 +58,7 @@ export function readCalendarPosition(): CalendarPosition | null {
 
 export function writeCalendarPosition(position: CalendarPosition): void {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify(position));
+    sessionStorage.setItem(KEY, JSON.stringify({ ...position, savedOn: localDay() }));
   } catch {
     /* see above */
   }

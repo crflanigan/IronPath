@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useViewStack } from '@/components/view-stack-provider';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { WorkoutCard } from '@/components/workout-card';
 import { useWorkoutStorage } from '@/hooks/use-workout-storage';
 import { getTrainingDays, scheduleForDate, workoutTemplates } from '@/lib/workout-data';
 import { parseISODate, formatLocalDate } from '@/lib/utils';
-import { readCalendarPosition, writeCalendarPosition } from '@/lib/calendar-position';
+import { localDay, readCalendarPosition, writeCalendarPosition } from '@/lib/calendar-position';
 import { calculateDayStreak, calculateTopDayStreak } from '@/lib/streak';
 import { WorkoutTemplateSelectorModal } from '@/components/WorkoutTemplateSelectorModal';
 import { CustomWorkoutBuilderModal } from '@/components/CustomWorkoutBuilderModal';
@@ -53,6 +53,30 @@ export function CalendarPage() {
       selectedDate,
     });
   }, [currentDate, selectedDate]);
+  /*
+   * The app left open overnight. A phone suspends an installed app rather than
+   * closing it, so the next morning nothing remounts and nothing reloads: the
+   * calendar would still be on yesterday, with yesterday marked as today. When
+   * the app comes back to the front on a different day than it last drew, it
+   * goes to today, the same as a fresh open.
+   */
+  const drawnOn = useRef(localDay());
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState !== 'visible') return;
+      const today = localDay();
+      if (today === drawnOn.current) return;
+      drawnOn.current = today;
+      setCurrentDate(new Date());
+      setSelectedDate(today);
+    };
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('focus', check);
+    };
+  }, []);
   const { currentView, pushView, popView } = useViewStack();
   const [, setLocation] = useLocation();
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
@@ -459,7 +483,11 @@ export function CalendarPage() {
                 data-testid="selected-workout-type"
               >
                 <span className="sr-only">Selected Day's Workout: </span>
-                {isRestDay ? (
+                {/* Once something is logged, the day is what you did, not what
+                    the rotation had pencilled in. */}
+                {selectedWorkout ? (
+                  selectedWorkout.type
+                ) : isRestDay ? (
                   <span className="inline-flex items-center gap-2">
                     <Coffee className="h-5 w-5 text-gray-400" aria-hidden="true" />
                     Rest day
@@ -468,14 +496,14 @@ export function CalendarPage() {
                   selectedWorkoutType ?? 'None'
                 )}
               </p>
-              {isRestDay && selectedWorkoutType && (
+              {!selectedWorkout && isRestDay && selectedWorkoutType && (
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400" data-testid="rest-day-next">
                   Next up: <span className="font-semibold text-gray-700 dark:text-gray-200">{selectedWorkoutType}</span>
                 </p>
               )}
             </div>
 
-            {contents && contents.exercises.length + contents.core > 0 && (
+            {!selectedWorkout && contents && contents.exercises.length + contents.core > 0 && (
               <details className="group rounded-xl bg-gray-50 dark:bg-white/[0.04]" data-testid="workout-contents">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 [&::-webkit-details-marker]:hidden">
                   <span className="nums">{contentsSummary}</span>
@@ -496,19 +524,24 @@ export function CalendarPage() {
               </details>
             )}
 
-            <Button
-              onClick={handleStartSelectedWorkout}
-              size="lg"
-              variant={isRestDay ? 'outline' : 'default'}
-              className="w-full"
-            >
-              <Play className="!size-4 fill-current" aria-hidden="true" />
-              {isRestDay
-                ? 'Train anyway'
-                : selectedDate === formatLocalDate(new Date())
-                  ? "Start Today's Workout"
-                  : 'Start This Workout'}
-            </Button>
+            {/* Only while the day is empty. It used to stay, reading "Start
+                Today's Workout", above a card for the workout already started
+                or already finished. */}
+            {!selectedWorkout && (
+              <Button
+                onClick={handleStartSelectedWorkout}
+                size="lg"
+                variant={isRestDay ? 'outline' : 'default'}
+                className="w-full"
+              >
+                <Play className="!size-4 fill-current" aria-hidden="true" />
+                {isRestDay
+                  ? 'Train anyway'
+                  : selectedDate === formatLocalDate(new Date())
+                    ? "Start Today's Workout"
+                    : 'Start This Workout'}
+              </Button>
+            )}
 
             {selectedWorkout && (
               <WorkoutCard

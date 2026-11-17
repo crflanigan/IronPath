@@ -37,7 +37,7 @@ test('completing a workout and going back does not claim another tab changed it'
   await page.getByLabel('Workout name').fill('Just Cardio');
   await page.getByRole('button', { name: 'Save Workout' }).click();
   await page.getByRole('button', { name: 'Just Cardio', exact: true }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Start Workout', exact: true }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
 
   await page.getByPlaceholder('mm:ss').first().fill('20:00');
