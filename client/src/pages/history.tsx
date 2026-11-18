@@ -88,7 +88,7 @@ export function HistoryPage() {
     // duration as measured.
     const timed = completed.filter(w => w.startedAt && typeof w.duration === 'number');
     const totalDuration = timed.reduce((sum, w) => sum + (w.duration ?? 0), 0);
-    const avgDuration = timed.length > 0 ? Math.round(totalDuration / timed.length) : 0;
+    const avgDuration = timed.length > 0 ? Math.round(totalDuration / timed.length) : null;
 
     const streakDays = localWorkoutStorage.getStreakDays();
     const currentStreak = calculateDayStreak(workouts, streakDays);
@@ -199,7 +199,7 @@ export function HistoryPage() {
         {[
           { label: 'Workouts', value: String(stats.totalWorkouts), icon: Dumbbell, tone: 'bg-primary/10 text-primary' },
           { label: 'Day Streak', value: String(stats.currentStreak), icon: Flame, tone: 'bg-orange-500/10 text-orange-500' },
-          { label: 'Avg Duration', value: `${stats.avgDuration}m`, icon: Timer, tone: 'bg-sky-500/10 text-sky-500' },
+          { label: 'Avg Duration', value: stats.avgDuration === null ? '–' : `${stats.avgDuration}m`, icon: Timer, tone: 'bg-sky-500/10 text-sky-500' },
           { label: 'Completion', value: `${stats.completionRate}%`, icon: Target, tone: 'bg-violet-500/10 text-violet-500' },
         ].map(({ label, value, icon: Icon, tone }) => (
           <Card key={label}>
@@ -277,7 +277,7 @@ export function HistoryPage() {
                     <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
                       {type}
                     </span>
-                    <span className="nums shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">{count} workouts</span>
+                    <span className="nums shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">{count} {count === 1 ? 'workout' : 'workouts'}</span>
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.07]">
                     <div className="bg-brand h-full rounded-full" style={{ width: `${(count / most) * 100}%` }} />
@@ -375,7 +375,10 @@ export function HistoryPage() {
                     <div data-testid="recent-type" className="truncate text-sm font-semibold text-gray-900 dark:text-white">{workout.type}</div>
                     <div data-testid="recent-date" className="text-xs text-gray-500 dark:text-gray-400">{formatDate(workout.date)}</div>
                   </div>
-                  <div className="nums shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-white/[0.07] dark:text-gray-300">{workout.duration}m</div>
+                  {/* Untimed workouts have no duration; the pill used to read "m". */}
+                  {typeof workout.duration === 'number' && (
+                    <div className="nums shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-white/[0.07] dark:text-gray-300">{workout.duration}m</div>
+                  )}
                 </div>
               ))}
           </div>

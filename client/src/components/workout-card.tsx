@@ -1,9 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Workout } from '@shared/schema';
-import { parseISODate } from '@/lib/utils';
 import {
-  Calendar,
   Clock,
   CheckCircle,
   PlayCircle,
@@ -33,33 +31,24 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
   const totalExercises = workout.exercises.length;
   const completionPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
-  const formatDate = (dateString: string) => {
-    const date = parseISODate(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const begun =
+    workout.exercises.some(e => e.completed || e.sets.some(s => s.completed)) ||
+    workout.abs.some(a => a.completed) ||
+    Boolean(workout.cardio?.completed);
 
   return (
     <div className="relative rounded-xl bg-gray-50 p-4 dark:bg-white/[0.04]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate text-base font-semibold text-gray-900 dark:text-white">
-            {workout.type}
-          </div>
-          <div className="mt-0.5 flex items-center text-xs text-gray-500 dark:text-gray-400">
-            <Calendar className="mr-1 h-3.5 w-3.5" />
-            {formatDate(workout.date)}
-            {workout.duration && (
-              <>
-                <span className="mx-1.5">•</span>
-                <Clock className="mr-1 h-3.5 w-3.5" />
-                {workout.duration} min
-              </>
-            )}
-          </div>
+      <div className="flex items-center justify-between gap-3">
+        {/* The panel this sits in is already headed with the day and the
+            workout's name; repeating both here only gave the name less room
+            than it needed. */}
+        <div className="flex min-w-0 items-center text-xs text-gray-500 dark:text-gray-400">
+          {typeof workout.duration === 'number' && workout.duration > 0 && (
+            <>
+              <Clock className="mr-1 h-3.5 w-3.5" />
+              {workout.duration} min
+            </>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Badge
@@ -122,20 +111,19 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
           />
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onView} className="flex-1">
+        {/* One button, for the one thing there is to do. There were two that
+            opened the same screen, and on a finished workout the second was a
+            disabled "Completed" beside a badge already saying so. */}
+        {workout.completed ? (
+          <Button variant="outline" onClick={onView} className="w-full">
             View Details
           </Button>
-          <Button
-            size="sm"
-            onClick={onStart}
-            className="flex-1"
-            disabled={workout.completed ?? false}
-          >
+        ) : (
+          <Button onClick={onStart} className="w-full">
             <PlayCircle className="h-4 w-4" />
-            {workout.completed ? 'Completed' : 'Start'}
+            {begun ? 'Continue Workout' : 'Start Workout'}
           </Button>
-        </div>
+        )}
       </div>
     </div>
   );
