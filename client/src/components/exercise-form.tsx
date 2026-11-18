@@ -3,13 +3,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Exercise, ExerciseSet } from '@shared/schema';
-import { Check, HelpCircle, Trophy } from 'lucide-react';
+import { Check, HelpCircle, StickyNote, Trophy } from 'lucide-react';
 import { ExerciseImageDialog } from './ExerciseImageDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCursorEndOnFocus } from '@/hooks/use-cursor-end-on-focus';
 import { hasExerciseImage } from '@/lib/exercise-images';
 import { formatBestDate, type PersonalBest } from '@/lib/personal-best';
-import { localWorkoutStorage } from '@/lib/storage';
+import { EXERCISE_NOTE_MAX, localWorkoutStorage } from '@/lib/storage';
 import { recordSetIndex } from '@/lib/workout-summary';
 import confetti from 'canvas-confetti';
 
@@ -30,9 +30,31 @@ interface ExerciseFormProps {
    * makes no sense, in which case the line renders as plain text.
    */
   onResetBest?: (machine: string, current: PersonalBest) => void;
+  /**
+   * Called from inside the tap that ticks a set, with that set's rest time.
+   * `exerciseDone` is true when it was the exercise's last unticked set.
+   */
+  onSetComplete?: (rest: string, exerciseDone: boolean) => void;
 }
 
-export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBest, onResetBest }: ExerciseFormProps) {
+export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBest, onResetBest, onSetComplete }: ExerciseFormProps) {
+  /*
+   * A standing note for this exercise: seat height, pin, grip.
+   *
+   * The things you work out once per machine and then forget by the next
+   * visit. It belongs to the exercise, not the session, so it is read from
+   * its own store and shows up wherever this exercise does.
+   */
+  const [note, setNote] = useState(
+    () => localWorkoutStorage.getExerciseNotes()[exercise.machine] ?? '',
+  );
+  const [editingNote, setEditingNote] = useState(false);
+  const saveNote = (value: string) => {
+    const trimmed = value.trim();
+    localWorkoutStorage.saveExerciseNote(exercise.machine, trimmed);
+    setNote(trimmed);
+    setEditingNote(false);
+  };
   const [localExercise, setLocalExercise] = useState<Exercise>(exercise);
   const [restDigits, setRestDigits] = useState<string[]>(
     exercise.sets.map((s) => s.rest?.replace(/\D/g, '') || '')
@@ -168,6 +190,7 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
     };
     setLocalExercise(updatedExercise);
     onUpdate(updatedExercise);
+    onSetComplete?.(rest, exerciseCompleted);
 
     // Only the set that takes the record celebrates: a second set at the same
     // weight is good work, not a second record.
@@ -311,6 +334,38 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
             )}
           </div>
         </div>
+
+        {editingNote ? (
+          <Input
+            autoFocus
+            type="text"
+            aria-label={`Note for ${localExercise.machine}`}
+            defaultValue={note}
+            maxLength={EXERCISE_NOTE_MAX}
+            placeholder="Seat height, pin, grip…"
+            onBlur={e => saveNote(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+              if (e.key === 'Escape') setEditingNote(false);
+            }}
+            className="mb-3 h-9 text-sm"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditingNote(true)}
+            aria-label={note ? `Edit note for ${localExercise.machine}` : `Add a note for ${localExercise.machine}`}
+            data-testid="exercise-note"
+            className={`-mt-1 mb-3 flex max-w-full items-center gap-1.5 rounded-lg py-1 text-left text-xs ${
+              note
+                ? 'font-medium text-gray-700 dark:text-gray-200'
+                : 'text-gray-400 hover:text-primary dark:text-gray-500'
+            }`}
+          >
+            <StickyNote className={`h-3.5 w-3.5 shrink-0 ${note ? 'text-primary' : ''}`} aria-hidden="true" />
+            <span className="truncate">{note || 'Add a note'}</span>
+          </button>
+        )}
 
         {/* Sets */}
         <div className="space-y-2">

@@ -1,6 +1,7 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ChevronRight, Download, Eye, Repeat, Sparkles, Upload, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Download, Eye, Repeat, Sparkles, Smartphone, Timer, Upload, Volume2, type LucideIcon } from 'lucide-react';
+import { keepScreenOnEnabled, restTimerEnabled, restTimerSoundEnabled, setKeepScreenOnEnabled, setRestTimerEnabled, setRestTimerSoundEnabled } from '@/lib/workout-prefs';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { localWorkoutStorage } from '@/lib/storage';
 import { AutoScheduleModal } from '@/components/AutoScheduleModal';
@@ -63,9 +64,55 @@ function SettingsRow({
   );
 }
 
+function SettingsSwitch({
+  icon,
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  icon: LucideIcon;
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={rowClass}
+    >
+      <RowIcon icon={icon} />
+      <span className="flex-1">
+        {label}
+        {hint && <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">{hint}</span>}
+      </span>
+      <span
+        aria-hidden="true"
+        className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ${
+          checked ? 'bg-brand' : 'bg-gray-300 dark:bg-white/15'
+        }`}
+      >
+        <span
+          className={`h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+            checked ? 'translate-x-5' : ''
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [restTimer, setRestTimer] = useState(restTimerEnabled);
+  const [restSound, setRestSound] = useState(restTimerSoundEnabled);
+  const [screenOn, setScreenOn] = useState(keepScreenOnEnabled);
   const [usage, setUsage] = useState({ percent: 0, used: 0, limit: 0 });
   // Held between choosing a file and confirming the replace, so the summary
   // shown in the dialog describes the file actually about to be restored.
@@ -177,6 +224,31 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           </SettingsRow>
         </SettingsGroup>
 
+        <SettingsGroup label="During a workout">
+          <SettingsSwitch
+            icon={Smartphone}
+            label="Keep screen on"
+            hint="While a workout is open"
+            checked={screenOn}
+            onChange={on => { setKeepScreenOnEnabled(on); setScreenOn(on); }}
+          />
+          <SettingsSwitch
+            icon={Timer}
+            label="Rest timer"
+            hint="Counts down your rest when you tick a set"
+            checked={restTimer}
+            onChange={on => { setRestTimerEnabled(on); setRestTimer(on); }}
+          />
+          {restTimer && (
+            <SettingsSwitch
+              icon={Volume2}
+              label="Sound when rest ends"
+              checked={restSound}
+              onChange={on => { setRestTimerSoundEnabled(on); setRestSound(on); }}
+            />
+          )}
+        </SettingsGroup>
+
         <SettingsGroup label="Your data">
           <SettingsRow icon={Download} onClick={handleExport}>
             Export Backup
@@ -199,7 +271,7 @@ export function SettingsDialog({ children }: { children: React.ReactNode }) {
           </div>
         </SettingsGroup>
         <p className="px-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-          A backup holds every workout, template, exercise history entry and setting.
+          A backup holds every workout, template, exercise history entry, note and setting.
           Restoring replaces everything currently on this device.
         </p>
 

@@ -25,7 +25,8 @@ const STORAGE_KEYS = {
   STREAK_DAYS: 'ironpath_streak_days',
   QUARANTINE: 'ironpath_quarantined_workouts',
   CUSTOM_EXERCISES: 'ironpath_custom_exercises',
-  PERSONAL_BEST_RESETS: 'ironpath_personal_best_resets'
+  PERSONAL_BEST_RESETS: 'ironpath_personal_best_resets',
+  EXERCISE_NOTES: 'ironpath_exercise_notes'
 } as const;
 
 /**
@@ -58,6 +59,9 @@ export interface QuarantinedWorkout {
   reason: string;
   record: unknown;
 }
+
+/** Long enough for "seat 4, pin 7, feet high", short enough to stay one line. */
+export const EXERCISE_NOTE_MAX = 80;
 
 // Enough to recover from a bad release without letting a pathological store
 // grow without bound.
@@ -144,6 +148,7 @@ const backupSchema = z.object({
   preferences: storedPreferencesSchema,
   customTemplates: z.array(customTemplateSchema).optional(),
   exerciseHistory: exerciseHistorySchema.optional(),
+  exerciseNotes: z.record(z.string(), z.string()).optional(),
   autoScheduleWorkouts: z.array(z.string()).optional(),
   hiddenPresets: z.record(z.string(), z.boolean()).optional(),
   presetPrompts: z.record(z.string(), z.boolean()).optional(),
@@ -169,6 +174,7 @@ export interface IronPathBackup {
   preferences: UserPreferences;
   customTemplates: CustomWorkoutTemplate[];
   exerciseHistory: Record<string, ExerciseHistoryEntry>;
+  exerciseNotes?: Record<string, string>;
   autoScheduleWorkouts: string[];
   hiddenPresets: Record<string, boolean>;
   presetPrompts: Record<string, boolean>;
@@ -603,6 +609,37 @@ export class LocalWorkoutStorage {
     );
   }
 
+  /**
+   * A standing note per exercise: seat height, pin position, which grip.
+   *
+   * Keyed by exercise name, like personal bests and history, so it follows the
+   * exercise into every workout that contains it rather than living on one
+   * session's record.
+   */
+  getExerciseNotes(): Record<string, string> {
+    try {
+      const stored = this.safeGetItem(STORAGE_KEYS.EXERCISE_NOTES);
+      const parsed: unknown = stored ? JSON.parse(stored) : null;
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const notes: Record<string, string> = {};
+      for (const [name, note] of Object.entries(parsed)) {
+        if (typeof note === 'string' && note.trim() !== '') notes[name] = note;
+      }
+      return notes;
+    } catch {
+      return {};
+    }
+  }
+
+  /** An empty note removes the entry, so cleared notes do not accumulate. */
+  saveExerciseNote(exercise: string, note: string): void {
+    const notes = this.getExerciseNotes();
+    const trimmed = note.trim().slice(0, EXERCISE_NOTE_MAX);
+    if (trimmed === '') delete notes[exercise];
+    else notes[exercise] = trimmed;
+    this.safeSetItem(STORAGE_KEYS.EXERCISE_NOTES, JSON.stringify(notes));
+  }
+
   getStreakDays(): number[] {
     try {
       const stored = this.safeGetItem(STORAGE_KEYS.STREAK_DAYS);
@@ -1012,6 +1049,7 @@ export class LocalWorkoutStorage {
       preferences: await this.getUserPreferences(),
       customTemplates: this.getCustomTemplatesInternal(),
       exerciseHistory: this.getExerciseHistory(),
+      exerciseNotes: this.getExerciseNotes(),
       autoScheduleWorkouts: this.getAutoScheduleWorkouts(),
       hiddenPresets: this.getHiddenPresets(),
       presetPrompts: this.getPresetPromptPrefs(),
@@ -1065,6 +1103,9 @@ export class LocalWorkoutStorage {
     }
     if (backup.exerciseHistory) {
       this.saveExerciseHistory(backup.exerciseHistory);
+    }
+    if (backup.exerciseNotes) {
+      this.safeSetItem(STORAGE_KEYS.EXERCISE_NOTES, JSON.stringify(backup.exerciseNotes));
     }
     if (backup.autoScheduleWorkouts) {
       this.saveAutoScheduleWorkouts(backup.autoScheduleWorkouts);
