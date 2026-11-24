@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import confetti from 'canvas-confetti';
-import { Check, Dumbbell, Flame, Layers, Timer, Trophy, TrendingUp } from 'lucide-react';
+import { Check, Dumbbell, Flame, Layers, Timer, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { NewBest } from '@/lib/workout-summary';
+import { formatBestDate } from '@/lib/personal-best';
+
+/** "1 lb", "60 lbs". */
+const lbs = (n: number) => `${n} ${n === 1 ? 'lb' : 'lbs'}`;
 
 /**
  * The end of a workout.
@@ -15,6 +19,12 @@ import type { NewBest } from '@/lib/workout-summary';
  *
  * It waits for a tap rather than dismissing itself. The old timer existed
  * because there was nothing to read.
+ *
+ * It no longer compares the total with the last session of the same workout
+ * ("2,394 lbs more than your last…"). That difference mostly measured how many
+ * sets were ticked each time, not strength, and read as a gimmick to the
+ * person it was congratulating. Strength shows where it is real: per
+ * exercise, as a personal best.
  */
 
 export interface WorkoutFinishData {
@@ -23,8 +33,6 @@ export interface WorkoutFinishData {
   /** Minutes, or null when the session could not be timed honestly. */
   duration: number | null;
   volume: number;
-  /** Tonnage of the last session of this same type, when there is one. */
-  previousVolume?: number;
   sets: number;
   streak: number;
   bests: NewBest[];
@@ -153,8 +161,6 @@ export function WorkoutFinish({
   const sets = useCountUp(data?.sets ?? 0, open);
   const streak = useCountUp(data?.streak ?? 0, open);
 
-  const delta =
-    data && data.previousVolume !== undefined ? data.volume - data.previousVolume : undefined;
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={next => !next && onDone()}>
@@ -216,18 +222,6 @@ export function WorkoutFinish({
                 />
               </div>
 
-              {/* Only when it is good news or neutral. Nobody needs the app to
-                  tell them, on the way out, that last week was better. */}
-              {delta !== undefined && delta > 0 && (
-                <p
-                  className="mt-3 flex animate-rise-in items-center justify-center gap-1.5 text-sm font-medium text-emerald-600 [animation-delay:200ms] dark:text-emerald-400"
-                  data-testid="finish-delta"
-                >
-                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
-                  {delta.toLocaleString()} lbs more than your last {data.type}
-                </p>
-              )}
-
               {hasBests && (
                 <div className="mt-5 animate-rise-in [animation-delay:280ms]" data-testid="finish-bests">
                   <h3 className="eyebrow mb-2 px-1 !text-amber-600 dark:!text-amber-400">
@@ -247,17 +241,22 @@ export function WorkoutFinish({
                             {best.machine}
                           </div>
                           <div className="nums text-xs text-gray-500 dark:text-gray-400">
-                            was {best.previous.weight} lbs × {best.previous.reps}
+                            {/* Dated, so a figure that looks wrong can be traced to
+                                the day it was ticked, and reset from that exercise's
+                                BEST line if it was a slip. */}
+                            was {lbs(best.previous.weight)} × {best.previous.reps}
+                            {best.previous.date && <> · {formatBestDate(best.previous.date)}</>}
+                            {best.previous.manual && <> · set by you</>}
                           </div>
                         </div>
                         <div className="nums shrink-0 text-right">
                           <div className="text-base font-bold text-gray-900 dark:text-white">
-                            {best.weight} lbs × {best.reps}
+                            {lbs(best.weight)} × {best.reps}
                           </div>
                           <div className="text-xs font-semibold text-amber-600 dark:text-amber-400">
                             {best.weight > best.previous.weight
-                              ? `+${best.weight - best.previous.weight} lbs`
-                              : `+${best.reps - best.previous.reps} reps`}
+                              ? `+${lbs(best.weight - best.previous.weight)}`
+                              : `+${best.reps - best.previous.reps} ${best.reps - best.previous.reps === 1 ? 'rep' : 'reps'}`}
                           </div>
                         </div>
                       </li>

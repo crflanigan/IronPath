@@ -104,14 +104,16 @@ test('finishing shows what the session amounted to, and waits for you', async ({
   await expect(finish.getByTestId('finish-volume')).toHaveText('3,050lbs');
   await expect(finish.getByTestId('finish-sets')).toHaveText('4');
   await expect(finish.getByTestId('finish-streak')).toHaveText('1');
-  // Last week was 3,000.
-  await expect(finish.getByTestId('finish-delta')).toContainText('50 lbs more than your last Chest Day');
+  // No "N lbs more than last time": it measured ticking, not strength.
+  await expect(finish).not.toContainText('more than your last');
 
   const bests = finish.getByTestId('finish-bests');
   await expect(bests).toContainText('New personal best');
   await expect(bests).toContainText('Seated Chest Press');
   await expect(bests).toContainText('105 lbs × 10');
   await expect(bests).toContainText('+5 lbs');
+  // The old figure carries its date, so a wrong one can be traced.
+  await expect(bests).toContainText(/was 100 lbs × 10 · \d{1,2} \w{3} \d{4}|was 100 lbs × 10 · \w{3} \d{1,2}, \d{4}/);
   await expect(bests).not.toContainText('Pec Fly');
 
   // Still here: nothing dismisses it but you.
@@ -133,5 +135,4 @@ test('a session with no records shows no trophy section', async ({ page }) => {
   const finish = page.getByTestId('workout-finish');
   await expect(finish.getByTestId('finish-volume')).toHaveText('3,000lbs');
   await expect(finish.getByTestId('finish-bests')).toHaveCount(0);
-  await expect(finish.getByTestId('finish-delta')).toHaveCount(0);
 });

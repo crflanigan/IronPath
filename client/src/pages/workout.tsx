@@ -21,7 +21,6 @@ import { WorkoutFinish, pickHeadline, type WorkoutFinishData } from '@/component
 import {
   completedSetCount,
   newPersonalBests,
-  previousOfSameType,
   workoutVolume,
 } from '@/lib/workout-summary';
 import { calculateDayStreak } from '@/lib/streak';
@@ -39,12 +38,20 @@ import {
 import { RestTimer, primeRestSound, type RestState } from '@/components/RestTimer';
 import { keepScreenOnEnabled, restSeconds, restTimerEnabled, setRestTimerEnabled } from '@/lib/workout-prefs';
 import { useWakeLock } from '@/hooks/use-wake-lock';
+import { ElapsedTime } from '@/components/ElapsedTime';
 
 /**
  * Above this, an elapsed time is measuring a forgotten tab rather than a
  * session, so nothing is recorded.
  */
 const MAX_PLAUSIBLE_MINUTES = 4 * 60;
+
+/** A stored start time, which may be a Date, an ISO string, or missing. */
+function toDate(value: Date | string | null | undefined): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 
 interface WorkoutPageProps {
@@ -118,6 +125,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     setWorkout(initialWorkout);
     workoutRef.current = initialWorkout;
     lastSavedRef.current = JSON.stringify(initialWorkout);
+    startedAtRef.current = toDate(initialWorkout.startedAt);
+    setStartedAt(startedAtRef.current);
   }, [initialWorkout]);
 
   const lastSavedRef = useRef<string>(JSON.stringify(initialWorkout));
@@ -134,6 +143,18 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
   const expectedUpdatedAtRef = useRef<Date | null>(initialWorkout.updatedAt ?? null);
 
   const workoutRef = useRef<Workout>(initialWorkout);
+
+  /*
+   * When this session started, held here as well as on the stored record.
+   *
+   * Autosave stamps `startedAt` on the record, but this page never saw it: it
+   * keeps its own copy of the workout, which nothing refreshes while it is
+   * open. So a workout ticked through and finished without leaving the page
+   * measured its duration from a start time of null, and the summary said
+   * "—". It only worked if you had left and come back before finishing.
+   */
+  const [startedAt, setStartedAt] = useState<Date | null>(() => toDate(initialWorkout.startedAt));
+  const startedAtRef = useRef<Date | null>(startedAt);
   const autoSaveEnabledRef = useRef<boolean>(true);
 
   const topRef = useRef<HTMLDivElement>(null);
@@ -162,7 +183,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     // Reaching here means something actually changed, which is the honest
     // moment a workout started — not when the record was created, since the
     // calendar can create one hours before anybody trains.
-    const startedAt = currentWorkout.startedAt ?? new Date();
+    const startedAt = startedAtRef.current ?? currentWorkout.startedAt ?? new Date();
 
     try {
       const saved = await updateWorkout(
@@ -217,6 +238,15 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       });
     }
   }, [updateWorkout, toast, dismiss]);
+
+  // The clock starts with the first change, not the first save two seconds
+  // later, and not when the record was created.
+  useEffect(() => {
+    if (startedAtRef.current || workout.completed) return;
+    if (JSON.stringify(workout) === lastSavedRef.current) return;
+    startedAtRef.current = new Date();
+    setStartedAt(startedAtRef.current);
+  }, [workout]);
 
   useEffect(() => {
     if (!autoSaveEnabled || !workout?.id) return;
@@ -370,6 +400,9 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         cardio: completedWorkout.cardio,
         completed: true,
         duration: completedWorkout.duration,
+        // Finishing inside the two seconds before the first autosave would
+        // otherwise leave a duration with no start time behind it.
+        ...(startedAtRef.current ? { startedAt: startedAtRef.current } : {}),
       });
 
       /*
@@ -391,7 +424,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
       // summary, saying something smaller about the same event.
       if (toastIdRef.current) dismiss(toastIdRef.current);
 
-      const previous = previousOfSameType(workouts, completedWorkout);
       setFinish({
         type: completedWorkout.type,
         dateLabel: parseISODate(completedWorkout.date).toLocaleDateString('en-US', {
@@ -401,7 +433,6 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
         }),
         duration: completedWorkout.duration,
         volume: workoutVolume(completedWorkout),
-        previousVolume: previous ? workoutVolume(previous) : undefined,
         sets: completedSetCount(completedWorkout),
         // The stored list has not re-rendered with this completion yet, so
         // count it in by hand.
@@ -434,8 +465,8 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
    * left open — and no number is better than a wrong one.
    */
   const calculateWorkoutDuration = (): number | null => {
-    const startedAt = workout.startedAt ? new Date(workout.startedAt) : null;
-    if (!startedAt || Number.isNaN(startedAt.getTime())) return null;
+    const startedAt = startedAtRef.current ?? toDate(workout.startedAt);
+    if (!startedAt) return null;
 
     const minutes = Math.round((Date.now() - startedAt.getTime()) / 60_000);
     if (minutes < 0 || minutes > MAX_PLAUSIBLE_MINUTES) return null;
@@ -531,33 +562,31 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
           that is several screens long. */}
       <Card className="sticky top-[4.25rem] z-20 border-gray-200/80 bg-card/85 backdrop-blur-xl dark:bg-gray-800/85">
         <CardContent className="px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex w-full items-center justify-between">
-              <div className="flex items-baseline space-x-1.5">
-                <span className="eyebrow">Progress:</span>
-                <span className="nums text-sm font-bold text-primary">
-                  {stats.completedItems}/{stats.totalItems} items
-                </span>
-              </div>
-              {/* Was a hardcoded ✅ — a status light with one possible state,
-                  in the most valuable strip of the workout screen. A green
-                  check also reads as "just saved" rather than "autosave is on".
-                  The clock time is the thing you would actually want to know,
-                  and it needs no ticking timer to stay true. */}
-              <div className="flex items-center space-x-1">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="nums text-sm font-bold text-primary">
+              {stats.completedItems}/{stats.totalItems} items
+            </span>
+            <div className="flex items-center gap-3">
+              {/* Was a hardcoded ✅, a status light with one possible state.
+                  The save time it once carried gave way to the clock beside
+                  it, which is the time you actually want during a set. */}
+              <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span title={lastSavedAt ? `Saved at ${lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : undefined}>
                   {lastSavedAt ? 'Saved' : 'Auto-save on'}
                 </span>
-                {lastSavedAt && (
-                  <span className="nums text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    {lastSavedAt.toLocaleTimeString([], {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
+              </span>
+              {/* A finished workout shows what it took, not a clock still
+                  running from its start. */}
+              {workout.completed ? (
+                typeof workout.duration === 'number' && (
+                  <span data-testid="elapsed-time" className="nums text-sm font-bold text-gray-900 dark:text-white">
+                    {workout.duration} min
                   </span>
-                )}
-              </div>
+                )
+              ) : (
+                <ElapsedTime since={startedAt} />
+              )}
             </div>
           </div>
           

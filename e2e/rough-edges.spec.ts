@@ -20,12 +20,14 @@ test('a day with a workout on it offers that workout, not a second start', async
   // Nothing ticked yet: it is there to be started, once.
   await expect(page.getByRole('button', { name: 'Start Workout' })).toBeVisible();
   await expect(page.getByRole('button', { name: "Start Today's Workout" })).toHaveCount(0);
-  await expect(page.getByTestId('workout-contents')).toHaveCount(0);
+  // Still worth a look inside until it is under way.
+  await expect(page.getByTestId('workout-contents')).toBeVisible();
 
   await page.getByRole('button', { name: 'Start Workout' }).click();
   await tick(page).click();
   await page.goBack();
   await expect(page.getByRole('button', { name: 'Continue Workout' })).toBeVisible();
+  await expect(page.getByTestId('workout-contents')).toHaveCount(0);
 
   // Finished: one way in, and no disabled button repeating the badge.
   await page.getByRole('button', { name: 'Continue Workout' }).click();

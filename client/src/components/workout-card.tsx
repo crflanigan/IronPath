@@ -18,6 +18,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from '@/components/ui/alert-dialog';
+import { workoutBegun } from '@/lib/workout-summary';
 
 interface WorkoutCardProps {
   workout: Workout;
@@ -31,10 +32,7 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
   const totalExercises = workout.exercises.length;
   const completionPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
 
-  const begun =
-    workout.exercises.some(e => e.completed || e.sets.some(s => s.completed)) ||
-    workout.abs.some(a => a.completed) ||
-    Boolean(workout.cardio?.completed);
+  const begun = workoutBegun(workout);
 
   return (
     <div className="relative rounded-xl bg-gray-50 p-4 dark:bg-white/[0.04]">

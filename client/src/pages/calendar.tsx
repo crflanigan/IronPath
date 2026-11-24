@@ -22,6 +22,7 @@ import { CalendarCheck, CheckCircle2, ChevronDown, Coffee, Flame, PencilRuler, P
 import { describeTrainingDays } from '@/components/TrainingDayPicker';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { hasSeenTour, recordVisit } from '@/lib/onboarding';
+import { workoutBegun } from '@/lib/workout-summary';
 
 /** One visit per page load, not per mount. See the effect that reads it. */
 let visitRecorded = false;
@@ -503,7 +504,11 @@ export function CalendarPage() {
               )}
             </div>
 
-            {!selectedWorkout && contents && contents.exercises.length + contents.core > 0 && (
+            {/* Shown until the day's workout is under way. Hiding it as soon as a
+                record existed hid it from every custom workout, which gets its
+                record the moment it is picked, before anyone has looked inside. */}
+            {(!selectedWorkout || !workoutBegun(selectedWorkout)) &&
+              contents && contents.exercises.length + contents.core > 0 && (
               <details className="group rounded-xl bg-gray-50 dark:bg-white/[0.04]" data-testid="workout-contents">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 [&::-webkit-details-marker]:hidden">
                   <span className="nums">{contentsSummary}</span>

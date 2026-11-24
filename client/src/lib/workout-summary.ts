@@ -84,11 +84,25 @@ export function newPersonalBests(
 }
 
 /**
- * The last time this same workout was completed, for "more than last time".
- * Same type only — comparing leg day's tonnage with arm day's says nothing.
+ * Whether anything in this workout has been ticked yet.
+ *
+ * A workout record exists from the moment a day is given one, which for a
+ * custom workout is the moment it is picked, so "has a record" says nothing
+ * about whether anyone has trained.
  */
-export function previousOfSameType(workouts: Workout[], current: Workout): Workout | undefined {
-  return workouts
-    .filter(w => w.completed && w.id !== current.id && w.type === current.type && w.date <= current.date)
-    .sort((a, b) => b.date.localeCompare(a.date))[0];
+export function workoutBegun(workout: Pick<Workout, 'exercises' | 'abs' | 'cardio'>): boolean {
+  return (
+    workout.exercises.some(e => e.completed || e.sets.some(s => s.completed)) ||
+    workout.abs.some(a => a.completed) ||
+    Boolean(workout.cardio?.completed)
+  );
+}
+
+/** Elapsed seconds as "4:07", or "1:04:07" from an hour on. */
+export function formatElapsed(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = String(safe % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
