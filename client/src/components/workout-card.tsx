@@ -18,6 +18,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from '@/components/ui/alert-dialog';
+import { workoutProgress } from '@/lib/workout-summary';
 
 interface WorkoutCardProps {
   workout: Workout;
@@ -27,14 +28,8 @@ interface WorkoutCardProps {
 }
 
 export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardProps) {
-  const completedExercises = workout.exercises.filter(e => e.completed).length;
-  const totalExercises = workout.exercises.length;
-  const completionPercentage = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
-
-  const begun =
-    workout.exercises.some(e => e.completed || e.sets.some(s => s.completed)) ||
-    workout.abs.some(a => a.completed) ||
-    Boolean(workout.cardio?.completed);
+  // Counted the same way as the workout screen's own progress bar.
+  const progress = workoutProgress(workout);
 
   return (
     <div className="relative rounded-xl bg-gray-50 p-4 dark:bg-white/[0.04]">
@@ -100,14 +95,15 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-gray-500 dark:text-gray-400">Progress:</span>
           <span className="nums font-semibold text-primary">
-            {completedExercises}/{totalExercises} exercises
+            {progress.completedItems}/{progress.totalItems} items
           </span>
         </div>
 
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
           <div
             className="bg-brand h-full rounded-full transition-all duration-500"
-            style={{ width: `${completionPercentage}%` }}
+            data-testid="card-progress-bar"
+            style={{ width: `${progress.barPercentage}%` }}
           />
         </div>
 
@@ -121,7 +117,9 @@ export function WorkoutCard({ workout, onStart, onView, onDelete }: WorkoutCardP
         ) : (
           <Button onClick={onStart} className="w-full">
             <PlayCircle className="h-4 w-4" />
-            {begun ? 'Continue Workout' : 'Start Workout'}
+            {/* Shown only once something is ticked; before that the
+                calendar offers the big Start button instead. */}
+            Continue Workout
           </Button>
         )}
       </div>

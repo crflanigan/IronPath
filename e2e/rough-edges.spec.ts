@@ -14,18 +14,23 @@ async function startToday(page: Page) {
 
 test('a day with a workout on it offers that workout, not a second start', async ({ page }) => {
   await startToday(page);
+  const firstUrl = page.url();
   await page.getByRole('button', { name: 'Go back' }).click();
   await expect(page).toHaveURL(/\/$/);
 
-  // Nothing ticked yet: it is there to be started, once.
-  await expect(page.getByRole('button', { name: 'Start Workout' })).toBeVisible();
-  await expect(page.getByRole('button', { name: "Start Today's Workout" })).toHaveCount(0);
-  await expect(page.getByTestId('workout-contents')).toHaveCount(0);
+  // Nothing ticked yet: it looks exactly as it did before it was opened,
+  // and starting it again opens the same workout rather than a second one.
+  await expect(page.getByRole('button', { name: "Start Today's Workout" })).toBeVisible();
+  await expect(page.getByTestId('workout-contents')).toBeVisible();
+  await expect(page.getByText('Pending')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Start Workout' }).click();
+  await page.getByRole('button', { name: "Start Today's Workout" }).click();
+  await expect(page).toHaveURL(firstUrl);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ironpath_workouts') ?? '[]').length)).toBe(1);
   await tick(page).click();
   await page.goBack();
   await expect(page.getByRole('button', { name: 'Continue Workout' })).toBeVisible();
+  await expect(page.getByTestId('workout-contents')).toHaveCount(0);
 
   // Finished: one way in, and no disabled button repeating the badge.
   await page.getByRole('button', { name: 'Continue Workout' }).click();

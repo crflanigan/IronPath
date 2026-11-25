@@ -3,8 +3,9 @@ import type { Exercise, Workout } from '@shared/schema';
 import {
   completedSetCount,
   newPersonalBests,
-  previousOfSameType,
+  formatElapsed,
   recordSetIndex,
+  workoutBegun,
   workoutVolume,
 } from './workout-summary';
 
@@ -79,16 +80,21 @@ describe('the personal bests in a finished workout', () => {
   });
 });
 
-describe('the session to compare against', () => {
-  it('is the most recent completed workout of the same type', () => {
-    const current = workout(9, '2026-02-01', 'Legs', []);
-    const list = [
-      workout(1, '2026-01-01', 'Legs', []),
-      workout(2, '2026-01-15', 'Legs', []),
-      workout(3, '2026-01-20', 'Chest', []),
-      workout(4, '2026-01-25', 'Legs', [], false),
-      current,
-    ];
-    expect(previousOfSameType(list, current)?.id).toBe(2);
+describe('whether a workout has begun', () => {
+  it('is false for a fresh record, and true from the first tick of anything', () => {
+    const fresh = workout(1, '2026-02-01', 'Legs', [exercise('Leg Press', [[100, 10, false]])]);
+    expect(workoutBegun(fresh)).toBe(false);
+    expect(workoutBegun(workout(2, '2026-02-01', 'Legs', [exercise('Leg Press', [[100, 10, true]])]))).toBe(true);
+    expect(workoutBegun({ ...fresh, abs: [{ name: 'Crunch', reps: 30, completed: true }] } as Workout)).toBe(true);
+  });
+});
+
+describe('the elapsed clock', () => {
+  it('reads minutes and seconds, then hours once there are any', () => {
+    expect(formatElapsed(0)).toBe('0:00');
+    expect(formatElapsed(247)).toBe('4:07');
+    expect(formatElapsed(3599)).toBe('59:59');
+    expect(formatElapsed(3600 + 247)).toBe('1:04:07');
+    expect(formatElapsed(-5)).toBe('0:00');
   });
 });

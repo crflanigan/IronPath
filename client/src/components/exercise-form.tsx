@@ -396,15 +396,33 @@ export function ExerciseForm({ exercise, onUpdate, isActive = false, personalBes
                   'border-transparent bg-gray-50 dark:bg-white/[0.03]'
                 }`}
               >
-                <span className="flex w-8 shrink-0 items-center">
-                  <span className={`nums flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                    status === 'completed' ? 'bg-primary text-primary-foreground' :
-                    status === 'current' ? 'bg-primary/15 text-primary' :
-                    'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-400'
-                  }`}>
-                    {status === 'completed' ? <Check className="h-3 w-3 animate-pop-in" strokeWidth={4} aria-label={String(index + 1)} /> : index + 1}
+                {/* A ticked set can be unticked. It could not: the tick button
+                    disappeared once used, and a set ticked by mistake was
+                    recorded as lifted with no way back short of deleting the
+                    workout. The badge that shows the tick is the undo, so it
+                    adds nothing to the row. Taller than it looks, to be hit
+                    with a thumb, without growing the row. */}
+                {status === 'completed' ? (
+                  <button
+                    type="button"
+                    aria-label={`Mark set ${index + 1} incomplete`}
+                    onClick={() => updateSet(index, 'completed', false)}
+                    className="-my-1 flex h-11 w-8 shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-90">
+                      <Check className="h-3 w-3 animate-pop-in" strokeWidth={4} aria-hidden="true" />
+                    </span>
+                  </button>
+                ) : (
+                  <span className="flex w-8 shrink-0 items-center">
+                    <span className={`nums flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                      status === 'current' ? 'bg-primary/15 text-primary' :
+                      'bg-gray-200 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </span>
                   </span>
-                </span>
+                )}
                 
                 <Input
                   type="text"

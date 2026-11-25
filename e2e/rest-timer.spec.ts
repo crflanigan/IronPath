@@ -78,7 +78,7 @@ test('the timer never covers the tick it was started from', async ({ page }) => 
   // The next set's tick must still be tappable with the timer up.
   await firstTick(page).click();
   await firstTick(page).click();
-  await expect(page.locator('[data-exercise-card]').first().getByRole('button', { name: /^Mark set/ })).toHaveCount(0);
+  await expect(page.locator('[data-exercise-card]').first().getByRole('button', { name: /^Mark set \d+ complete$/ })).toHaveCount(0);
 });
 
 test('nothing counts down unless it was asked for', async ({ page }) => {

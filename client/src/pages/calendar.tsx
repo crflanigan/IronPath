@@ -22,6 +22,7 @@ import { CalendarCheck, CheckCircle2, ChevronDown, Coffee, Flame, PencilRuler, P
 import { describeTrainingDays } from '@/components/TrainingDayPicker';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { hasSeenTour, recordVisit } from '@/lib/onboarding';
+import { workoutBegun } from '@/lib/workout-summary';
 
 /** One visit per page load, not per mount. See the effect that reads it. */
 let visitRecorded = false;
@@ -356,6 +357,18 @@ export function CalendarPage() {
   const selectedWorkoutType = selectedWorkout?.type || scheduled?.type || null;
   // A rest day is only a rest day until something is logged on it.
   const isRestDay = !selectedWorkout && Boolean(scheduled?.rest);
+  /*
+   * Whether the day's workout is still to do: nothing saved yet, or saved
+   * with nothing ticked. Both get the same panel.
+   *
+   * They did not. A built-in workout is saved when you tap Start, but a custom
+   * one is saved the moment it is picked, so a picked custom workout showed a
+   * progress card (an empty bar, "0/1 exercises", Pending) where a built-in
+   * one showed its contents and the big Start button. The difference was only
+   * whether a record existed yet, which is nothing the person chose.
+   */
+  const notStarted =
+    !selectedWorkout || (!selectedWorkout.completed && !workoutBegun(selectedWorkout));
 
   /*
    * What the day's workout contains, before it is started.
@@ -503,7 +516,10 @@ export function CalendarPage() {
               )}
             </div>
 
-            {!selectedWorkout && contents && contents.exercises.length + contents.core > 0 && (
+            {/* Shown until the day's workout is under way. Hiding it as soon as a
+                record existed hid it from every custom workout, which gets its
+                record the moment it is picked, before anyone has looked inside. */}
+            {notStarted && contents && contents.exercises.length + contents.core > 0 && (
               <details className="group rounded-xl bg-gray-50 dark:bg-white/[0.04]" data-testid="workout-contents">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 [&::-webkit-details-marker]:hidden">
                   <span className="nums">{contentsSummary}</span>
@@ -524,10 +540,11 @@ export function CalendarPage() {
               </details>
             )}
 
-            {/* Only while the day is empty. It used to stay, reading "Start
-                Today's Workout", above a card for the workout already started
-                or already finished. */}
-            {!selectedWorkout && (
+            {/* Only until the workout is under way. It used to stay, reading
+                "Start Today's Workout", above a card for the workout already
+                started or already finished. For a workout already saved to the
+                day it opens that one; it never makes a second. */}
+            {notStarted && (
               <Button
                 onClick={handleStartSelectedWorkout}
                 size="lg"
@@ -543,7 +560,7 @@ export function CalendarPage() {
               </Button>
             )}
 
-            {selectedWorkout && (
+            {selectedWorkout && !notStarted && (
               <WorkoutCard
                 workout={selectedWorkout}
                 onStart={() => navigateToWorkout(selectedWorkout)}
@@ -561,6 +578,19 @@ export function CalendarPage() {
               <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                 Nothing logged for this day yet
               </p>
+            )}
+
+            {/* The way back from picking the wrong workout, which the progress
+                card's bin used to be. Nothing has been ticked, so there is
+                nothing to lose and nothing to confirm. */}
+            {selectedWorkout && notStarted && (
+              <button
+                type="button"
+                onClick={handleDeleteSelectedWorkout}
+                className="mx-auto -mt-1 flex min-h-[44px] items-center px-3 text-sm font-medium text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800 dark:text-gray-400 dark:decoration-gray-600 dark:hover:text-gray-200"
+              >
+                Remove from this day
+              </button>
             )}
 
             {/* The two occasional actions, side by side and quiet. They were
