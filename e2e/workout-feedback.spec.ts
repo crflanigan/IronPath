@@ -80,8 +80,14 @@ test('a custom workout can be looked inside from the calendar before it is start
   await contents.getByText("What's in it").click();
   await expect(contents.getByRole('listitem')).toHaveText(['1Wide Grip Pulldown', '2Seated Row']);
 
+  // Unstarted, it looks like a built-in day: the big Start button, no
+  // progress card with an empty bar.
+  await expect(page.getByRole('button', { name: "Start Today's Workout" })).toBeVisible();
+  await expect(page.getByText('Pending')).toHaveCount(0);
+  await expect(page.getByTestId('card-progress-bar')).toHaveCount(0);
+
   // Once something is ticked, the card's progress takes over from the preview.
-  await page.getByRole('button', { name: 'Start Workout' }).click();
+  await page.getByRole('button', { name: "Start Today's Workout" }).click();
   // A custom workout's sets start empty.
   await setNumericValue(page.getByLabel('Weight, set 1').first(), '120');
   await setNumericValue(page.getByLabel('Reps, set 1').first(), '10');
@@ -89,6 +95,34 @@ test('a custom workout can be looked inside from the calendar before it is start
   await page.getByRole('button', { name: 'Go back' }).click();
   await expect(page.getByRole('button', { name: 'Continue Workout' })).toBeVisible();
   await expect(contents).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Remove from this day' })).toHaveCount(0);
+  // One set of six, plus a core move and cardio: the card's bar has moved,
+  // counted the same way as the workout screen's.
+  await expect(page.getByTestId('card-progress-bar')).toHaveAttribute('style', /width: 13%/);
+});
+
+test('a custom workout picked by mistake can be taken off the day', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('ironpath_template_tour_seen', '1');
+    if (localStorage.getItem('ironpath_custom_templates')) return;
+    const set = { weight: undefined, reps: undefined, rest: '', completed: false };
+    localStorage.setItem('ironpath_custom_templates', JSON.stringify([{
+      id: 1, name: 'My Pull Day', abs: [], includeInAutoSchedule: false,
+      exercises: [{ machine: 'Seated Row', region: 'Back', equipment: 'machine', feel: 'Medium', completed: false, sets: [set, set, set] }],
+    }]));
+  });
+  await page.goto('/');
+  const scheduled = (await page.getByTestId('selected-workout-type').textContent())!.replace("Selected Day's Workout: ", '').trim();
+
+  await page.getByRole('button', { name: 'Create or Edit Custom Workout' }).click();
+  await page.getByRole('button', { name: 'My Pull Day', exact: true }).click();
+  await expect(page.getByTestId('selected-workout-type')).toContainText('My Pull Day');
+
+  await page.getByRole('button', { name: 'Remove from this day' }).click();
+  // Back to what the rotation had planned, with nothing saved.
+  await expect(page.getByTestId('selected-workout-type')).toContainText(scheduled);
+  await expect(page.getByRole('button', { name: 'Remove from this day' })).toHaveCount(0);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ironpath_workouts') ?? '[]').length)).toBe(0);
 });
 
 test('the clock runs from the first tick, and the summary has the duration', async ({ page }) => {

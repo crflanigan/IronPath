@@ -21,6 +21,7 @@ import { WorkoutFinish, pickHeadline, type WorkoutFinishData } from '@/component
 import {
   completedSetCount,
   newPersonalBests,
+  workoutProgress,
   workoutVolume,
 } from '@/lib/workout-summary';
 import { calculateDayStreak } from '@/lib/streak';
@@ -475,40 +476,7 @@ export function WorkoutPage({ workout: initialWorkout, onNavigateBack }: Workout
     return Math.max(minutes, 1);
   };
 
-  const getProgressStats = () => {
-    const completedExercises = workout.exercises.filter(e => e.completed).length;
-    const totalExercises = workout.exercises.length;
-    const completedAbs = workout.abs.filter(a => a.completed).length;
-    const totalAbs = workout.abs.length;
-    // Only count cardio when the workout actually has a cardio block, or the
-    // total is permanently one higher than anything the user can complete.
-    const hasCardio = Boolean(workout.cardio);
-    const cardioComplete = hasCardio && workout.cardio?.completed ? 1 : 0;
-
-    const totalItems = totalExercises + totalAbs + (hasCardio ? 1 : 0);
-    const completedItems = completedExercises + completedAbs + cardioComplete;
-
-    return {
-      completedExercises,
-      totalExercises,
-      completedAbs,
-      totalAbs,
-      cardioComplete,
-      totalItems,
-      completedItems,
-      percentage: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
-      // The bar moves on every set. Counted in whole exercises it sat still
-      // through the first three ticks of a session, as if nothing had registered.
-      barPercentage: (() => {
-        const sets = workout.exercises.flatMap(e => e.sets);
-        const total = sets.length + totalAbs + (hasCardio ? 1 : 0);
-        const done = sets.filter(s => s.completed).length + completedAbs + cardioComplete;
-        return total > 0 ? Math.round((done / total) * 100) : 0;
-      })(),
-    };
-  };
-
-  const stats = getProgressStats();
+  const stats = workoutProgress(workout);
   const showFirstTip =
     !tipDismissed && !workout.completed && !workouts.some(w => w.completed);
 

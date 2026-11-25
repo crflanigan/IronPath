@@ -98,6 +98,37 @@ export function workoutBegun(workout: Pick<Workout, 'exercises' | 'abs' | 'cardi
   );
 }
 
+/**
+ * How far through a workout is, the same on every screen that shows it.
+ *
+ * `completedItems / totalItems` counts exercises, core moves and the cardio
+ * block, which is what the label reads. The bar fills per set instead: in
+ * whole exercises it sat still through the first three ticks of a session,
+ * as if nothing had registered. The calendar's card used to count exercises
+ * only, so after a set or two it still showed an empty bar.
+ */
+export function workoutProgress(workout: Pick<Workout, 'exercises' | 'abs' | 'cardio'>) {
+  const completedAbs = workout.abs.filter(a => a.completed).length;
+  // Cardio counts only when the workout has a cardio block, or the total is
+  // permanently one higher than anything that can be completed.
+  const hasCardio = Boolean(workout.cardio);
+  const cardioDone = hasCardio && workout.cardio?.completed ? 1 : 0;
+
+  const totalItems = workout.exercises.length + workout.abs.length + (hasCardio ? 1 : 0);
+  const completedItems =
+    workout.exercises.filter(e => e.completed).length + completedAbs + cardioDone;
+
+  const sets = workout.exercises.flatMap(e => e.sets);
+  const units = sets.length + workout.abs.length + (hasCardio ? 1 : 0);
+  const unitsDone = sets.filter(s => s.completed).length + completedAbs + cardioDone;
+
+  return {
+    completedItems,
+    totalItems,
+    barPercentage: units > 0 ? Math.round((unitsDone / units) * 100) : 0,
+  };
+}
+
 /** Elapsed seconds as "4:07", or "1:04:07" from an hour on. */
 export function formatElapsed(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));

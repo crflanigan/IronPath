@@ -43,7 +43,7 @@ test('a cardio-only workout is usable and can be completed', async ({ page }) =>
   // Selecting a custom template attaches it to the selected day; the day card
   // is where you actually start it.
   await page.getByRole('button', { name: 'Long Walk', exact: true }).click();
-  await page.getByRole('button', { name: 'Start Workout', exact: true }).click();
+  await page.getByRole('button', { name: "Start Today's Workout" }).click();
   await expect(page).toHaveURL(/\/workout\/\d+$/);
 
   // Nothing to lift, so neither headed section should render an empty shell.
